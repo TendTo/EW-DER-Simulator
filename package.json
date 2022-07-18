@@ -1,0 +1,21 @@
+{
+  "name": "ew-simulation",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "start": "npm start --prefix simulator",
+    "compile": "npm run compile --prefix contracts",
+    "test": "npm test --prefix contracts",
+    "watch": "npm run watch --prefix simulator"
+  },
+  "author": "",
+  "license": "ISC",
+  "workspaces": [
+    "contracts",
+    "simulator"
+  ]
+}
