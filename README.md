@@ -2,7 +2,10 @@
 
 Simulate the interaction of DERs with the Energy Web testnet (Volta)
 
-### Todo:
+## Flow
+![flow](./docs/flow.jpg)
+
+### Todo
 
 - [ ] Interazione con la blockchain Volta
 - [ ] Aggiungere funzionalità di flessibilità
