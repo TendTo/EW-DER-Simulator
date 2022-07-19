@@ -23,7 +23,8 @@ export default class IPCHandler {
   }
 
   startSimulation = (event: IpcMainEvent, data: SimulationSetup) => {
-    this.aggregator = new Aggregator(data.mnemonic, data.sk, data.numberOfDERs);
+    this.aggregator = new Aggregator(data.seed, data.sk, data.numberOfDERs);
+    this.aggregator.startSimulation();
   };
 
   stopSimulation = (event: IpcMainEvent) => {

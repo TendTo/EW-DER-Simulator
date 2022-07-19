@@ -19,7 +19,7 @@ export type GetApiType<
 };
 
 export type SimulationSetup = {
-  mnemonic: string;
+  seed: string;
   sk: string;
   numberOfDERs: number;
 };

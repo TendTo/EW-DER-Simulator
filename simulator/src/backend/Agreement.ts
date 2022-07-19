@@ -1,4 +1,4 @@
-import { IAggregatorContract } from "src/typechain-types";
+import { IAggregatorContract } from "../typechain-types";
 import { EnergySource } from "./constants";
 
 class Agreement {

@@ -1,5 +1,6 @@
 import { app, BrowserWindow } from "electron";
 import * as path from "path";
+import IPCHandler from "./backend/IPCHandler";
 
 class Main {
   private mainWindow: BrowserWindow;
@@ -16,6 +17,8 @@ class Main {
     });
 
     this.mainWindow.loadFile(path.join(__dirname, "../../index.html"));
+    IPCHandler.init(this.mainWindow);
+    IPCHandler.registerHandlers();
   }
 
   private onWindowAllClosed() {
@@ -28,13 +31,11 @@ class Main {
     if (BrowserWindow.getAllWindows().length === 0) this.createWindow();
   }
 
-  private registerIPC() {}
-
   public init() {
+    console.log("INIT");
     app.on("ready", this.createWindow);
     app.on("window-all-closed", this.onWindowAllClosed);
     app.on("activate", this.onActivate);
-    this.registerIPC();
   }
 }
 

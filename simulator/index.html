@@ -15,7 +15,7 @@
     <script
       defer
       type="module"
-      src="dist/js/window/index.js"
+      src="dist/js/window/window.js"
       charset="utf-8"
     ></script>
   </head>
@@ -28,26 +28,31 @@
         <div class="pane-group">
           <div class="pane-sm sidebar">
             <div class="padded">
-              <form>
+              <form id="settings">
                 <div class="form-group">
                   <label>Private key</label>
                   <input
+                    name="sk"
                     type="password"
                     class="form-control"
                     placeholder="Seed"
+                    required
                   />
                 </div>
                 <div class="form-group">
                   <label>Initial seed</label>
                   <input
+                    name="seed"
                     type="password"
                     class="form-control"
                     placeholder="Seed"
+                    required
                   />
                 </div>
                 <div class="form-group">
                   <label>Number of DERs</label>
                   <input
+                    name="numberOfDERs"
                     type="number"
                     class="form-control"
                     placeholder="Number of DERs"
@@ -57,7 +62,7 @@
                   <button role="button" type="button" class="btn btn-negative">
                     <span class="icon icon-stop"></span>
                   </button>
-                  <button role="button" type="button" class="btn btn-positive">
+                  <button role="button" type="submit" class="btn btn-positive">
                     <span class="icon icon-play"></span>
                   </button>
                 </div>

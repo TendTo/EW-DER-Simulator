@@ -1,7 +1,5 @@
-import type { Chart } from "chart.js";
-
-export default class ChartWrapper {
-  private chart: Chart<"line", number[], number>;
+class ChartWrapper {
+  private chart: any;
   private counter = 0;
   private labels: number[];
   private data: number[];
@@ -54,3 +52,29 @@ export default class ChartWrapper {
     this.chart.update();
   }
 }
+
+class Renderer {
+  private chart: ChartWrapper;
+  constructor() {
+    this.chart = new ChartWrapper();
+    this.addHandlers();
+  }
+
+  private addHandlers() {
+    const form = document.getElementById("settings") as HTMLFormElement;
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const seed = form.seed.value;
+      const sk = form.sk.value;
+      const numberOfDERs = parseInt(form.numberOfDERs.value) || 1;
+      const data = { seed, sk, numberOfDERs };
+      window.electronAPI.send.startSimulation(data);
+      console.log("Simulation started", data);
+    });
+    window.electronAPI.on.newReading((_: any, reading: number) => {
+      this.chart.shiftData(reading);
+    });
+  }
+}
+
+new Renderer();

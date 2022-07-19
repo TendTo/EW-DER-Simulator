@@ -2,7 +2,7 @@ import { Wallet } from "ethers";
 import IoT from "./IoT";
 import { mnemonicToSeed } from "bip39";
 import { hdkey } from "ethereumjs-wallet";
-import { IoTBank__factory } from "src/typechain-types";
+import { IoTBank__factory } from "../typechain-types";
 import { Addresses, ETHPerIoT } from "./constants";
 import IPCHandler from "./IPCHandler";
 
