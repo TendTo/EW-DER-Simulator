@@ -21,7 +21,7 @@ class Aggregator {
 
   private async addIoTDevices() {
     const masterKey = hdkey.fromMasterSeed(await mnemonicToSeed(this.mnemonic));
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < this.numberOfDERs; i++) {
       const wal = masterKey.derivePath(`m/44'/60'/0'/0/${i}`).getWallet();
       this.iots.push(new IoT(this, wal.getPrivateKeyString()));
     }

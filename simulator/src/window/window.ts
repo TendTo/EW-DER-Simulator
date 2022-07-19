@@ -4,7 +4,7 @@ class ChartWrapper {
   private labels: number[];
   private data: number[];
 
-  constructor(canvasId: string = "chart", private maxDataPoints: number = 100) {
+  constructor(canvasId: string = "chart", private maxDataPoints: number = 50) {
     const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
     this.labels = [];
     this.data = [];
@@ -51,6 +51,13 @@ class ChartWrapper {
     }
     this.chart.update();
   }
+
+  public reset() {
+    this.labels = [];
+    this.data = [];
+    this.counter = 0;
+    this.chart.update();
+  }
 }
 
 class Renderer {
@@ -61,6 +68,7 @@ class Renderer {
   }
 
   private addHandlers() {
+    // StartSimulation
     const form = document.getElementById("settings") as HTMLFormElement;
     form.addEventListener("submit", (e) => {
       e.preventDefault();
@@ -71,6 +79,14 @@ class Renderer {
       window.electronAPI.send.startSimulation(data);
       console.log("Simulation started", data);
     });
+    // Stop Simulation
+    const stopButton = document.getElementById("stop") as HTMLButtonElement;
+    stopButton.addEventListener("click", () => {
+      window.electronAPI.send.stopSimulation();
+      this.chart.reset();
+      console.log("Simulation stopped");
+    });
+    // Receive new reading
     window.electronAPI.on.newReading((_: any, reading: number) => {
       this.chart.shiftData(reading);
     });

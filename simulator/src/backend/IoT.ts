@@ -13,7 +13,7 @@ class IoT {
   private wallet: Wallet;
   private stop: boolean;
 
-  constructor(private aggregator: Aggregator, private sk: string) {
+  constructor(private aggregator: Aggregator, sk: string) {
     this.stop = false;
     this.wallet = new Wallet(sk);
     this.agreement = new Agreement();
@@ -21,7 +21,7 @@ class IoT {
       Addresses.AggregatorContract,
       this.wallet
     );
-    console.log(`IoT ${this.wallet.address} - Constructor`);
+    console.log(`IoT ${this.wallet.address} - Created`);
   }
 
   private sleep(ms: number) {
@@ -35,12 +35,14 @@ class IoT {
   async startProducing() {
     while (!this.stop) {
       this.produce();
-      await this.sleep(5000);
+      // Random sleep between 3 and 7 seconds
+      await this.sleep(Math.floor(Math.random() * (7 - 3 + 1)) * 1000);
     }
   }
 
   stopProducing() {
     this.stop = true;
+    console.log(`IoT ${this.address} - Stopped`);
   }
 
   listenToEvents() {
@@ -49,11 +51,12 @@ class IoT {
   }
 
   private provideFlexibility(event: any) {
-    console.log(event);
+    console.log(`IoT ${this.address} - Providing flexibility ${this.agreement.flexibility}`);
   }
 
   private produce() {
-    this.aggregator.onIoTReading(this.agreement.value);
+    // Return the current agreement value with a random variation of 10% of the value
+    this.aggregator.onIoTReading(this.agreement.value + (Math.random() - 0.5) * 0.1 * this.agreement.value);
     console.log(`IoT ${this.address} - Producing...`);
   }
 
