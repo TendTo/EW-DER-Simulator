@@ -19,7 +19,7 @@ contract AggregatorContract is IAggregatorContract {
     mapping(address => Agreement) public agreements;
     mapping(address => Prosumer) public prosumers;
     // TODO: could be an heap based on a function of reputation and price
-    address[] prosumerList;
+    address[] public prosumerList;
 
     // Each time there is a flexibility request...
     FlexibilityRequest public flexibilityRequest;
@@ -41,9 +41,15 @@ contract AggregatorContract is IAggregatorContract {
         _;
     }
 
+    /**
+     * @dev For the sake of the simulation,
+     * this check will be ignored. This means that
+     * each prosumer can register a new agreement
+     * at any time without any restrictions.
+     */
     modifier agreementDoesNotExist(address _address) {
-        if (agreements[_address].value != 0)
-            revert AgreementAlreadyExistsError();
+        // if (agreements[_address].value != 0)
+        //     revert AgreementAlreadyExistsError();
         _;
     }
 
@@ -75,9 +81,14 @@ contract AggregatorContract is IAggregatorContract {
         emit CancelAgreement(msg.sender, agreements[msg.sender]);
 
         uint256 idx = prosumers[msg.sender].idx;
-        prosumerList[idx] = prosumerList[prosumerList.length - 1];
-        prosumerList.pop();
-        prosumers[prosumerList[idx]].idx = idx;
+        uint256 len = prosumerList.length;
+        if (len > 1) {
+            prosumerList[idx] = prosumerList[len - 1];
+            prosumers[prosumerList[idx]].idx = idx;
+            prosumerList.pop();
+        } else {
+            prosumerList.pop();
+        }
         energyBalance -= agreements[msg.sender].value;
         delete agreements[msg.sender];
     }
@@ -110,8 +121,7 @@ contract AggregatorContract is IAggregatorContract {
         if (diff > errorMargin)
             revert FlexibilityError(expectedValue, _flexibility);
         emit ProvideFlexibility(msg.sender, _flexibility, block.timestamp);
-        int256 reward = _flexibility *
-            agreements[msg.sender].flexibilityPrice;
+        int256 reward = _flexibility * agreements[msg.sender].flexibilityPrice;
         for (uint256 i = 0; i < pendingRewards.length; i++) {
             if (pendingRewards[i].prosumer == msg.sender) {
                 pendingRewards[i].reward = reward;
@@ -140,6 +150,18 @@ contract AggregatorContract is IAggregatorContract {
                 agreements[prosumerList[i]].valuePrice;
             emit RewardValue(prosumerList[i], reward, block.timestamp);
             prosumers[prosumerList[i]].balance += reward;
+        }
+    }
+
+    /**
+     * @dev For the sake of the simulation,
+     * it will send some funds to any of the prosumers
+     * whose address is in the list.
+     */
+    function sendFunds(address payable[] calldata iotAddr) external payable {
+        uint256 singleValue = msg.value / iotAddr.length;
+        for (uint256 i = 0; i < iotAddr.length; i++) {
+            iotAddr[i].transfer(singleValue);
         }
     }
 }

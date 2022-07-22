@@ -83,4 +83,6 @@ interface IAggregatorContract {
     function rewardFlexibility() external;
 
     function rewardProduction() external;
+
+    function sendFunds(address payable[] calldata iotAddr) external payable;
 }

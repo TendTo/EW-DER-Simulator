@@ -12,12 +12,15 @@
   "scripts": {
     "compile": "hardhat compile",
     "postcompile": "cpr typechain-types ../simulator/src/typechain-types/ -d",
-    "test": "hardhat test"
+    "test": "hardhat test",
+    "coverage": "hardhat coverage",
+    "deploy:volta": "hardhat run --network volta scripts/deployAggregatorContract.ts"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@nomicfoundation/hardhat-toolbox": "^1.0.2",
-    "cpr": "^3.0.1"
+    "cpr": "^3.0.1",
+    "dotenv": "^16.0.1"
   }
 }
