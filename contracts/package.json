@@ -11,11 +11,13 @@
   },
   "scripts": {
     "compile": "hardhat compile",
+    "postcompile": "cpr typechain-types ../simulator/src/typechain-types/ -d",
     "test": "hardhat test"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@nomicfoundation/hardhat-toolbox": "^1.0.2"
+    "@nomicfoundation/hardhat-toolbox": "^1.0.2",
+    "cpr": "^3.0.1"
   }
 }
