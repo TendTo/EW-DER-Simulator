@@ -7,17 +7,11 @@
     <meta http-equiv="Content-Security-Policy" content="script-src 'self';" />
 
     <!-- Stylesheets -->
-    <link rel="stylesheet" href="dist/css/photon.css" />
-    <link rel="stylesheet" href="dist/css/index.css" />
+    <link rel="stylesheet" href="./css/photon.css" />
+    <link rel="stylesheet" href="./css/index.css" />
 
     <!-- Electron Javascript -->
-    <script defer src="dist/vendor/chart.min.js" charset="utf-8"></script>
-    <script
-      defer
-      type="module"
-      src="dist/js/window/window.js"
-      charset="utf-8"
-    ></script>
+    <script defer type="module" src="../src/frontend/index.ts" charset="utf-8"></script>
   </head>
 
   <body>
@@ -54,13 +48,7 @@
                 </div>
                 <div class="form-group">
                   <label for="sk">Private key</label>
-                  <input
-                    id="sk"
-                    name="sk"
-                    type="password"
-                    class="form-control"
-                    required
-                  />
+                  <input id="sk" name="sk" type="password" class="form-control" required />
                 </div>
                 <div class="form-group">
                   <label for="seed">Initial seed</label>
@@ -85,11 +73,7 @@
                 <div class="form-group">
                   <div class="checkbox">
                     <label>
-                      <input
-                        id="initialFunds"
-                        name="initialFunds"
-                        type="checkbox"
-                      />
+                      <input id="initialFunds" name="initialFunds" type="checkbox" />
                       Send initial funds to the IoTs
                     </label>
                   </div>
@@ -130,12 +114,7 @@
                 <!-- End Time Info -->
                 <!-- Submit buttons -->
                 <div class="align-left gap-1">
-                  <button
-                    id="stop"
-                    role="button"
-                    type="button"
-                    class="btn btn-negative"
-                  >
+                  <button id="stop" role="button" type="button" class="btn btn-negative">
                     <span class="icon icon-stop"></span>
                   </button>
                   <button role="button" type="submit" class="btn btn-positive">
@@ -149,23 +128,31 @@
           <!-- End Side Panel -->
           <!-- Main Panel -->
           <div class="pane padded">
-            <h2>Simulation</h2>
-            <h4 id="aggregatorInfo"></h4>
-            <canvas id="chart" width="400" height="400"></canvas>
+            <div class="flex-row gap-1">
+              <div>
+                <h2>Simulation</h2>
+                <h4 id="aggregatorInfo"></h4>
+                <canvas id="chart" width="400" height="400"></canvas>
+              </div>
+              <div>
+                <h3>Flexibility request</h3>
+                <button id="test" class="btn btn-primary" disabled>Simulate logs</button>
+              </div>
+            </div>
             <!-- Log table -->
             <table class="table-striped">
               <thead>
                 <tr>
-                  <td>Address</td>
-                  <td>Value</td>
-                  <td>Cost</td>
-                  <td>Flexibility</td>
-                  <td>Flexibility cost</td>
+                  <th>Address</th>
+                  <th>Value</th>
+                  <th>Cost</th>
+                  <th>Flexibility</th>
+                  <th>Flexibility cost</th>
                 </tr>
               </thead>
-              <tbody id="logTable">
+              <tbody id="addAgreementLogTBody">
                 <!-- Log row template -->
-                <template id="logRow">
+                <template id="addAgreementLogTemplate">
                   <tr>
                     <td></td>
                     <td></td>
@@ -181,6 +168,9 @@
           </div>
           <!-- End Main Panel -->
         </div>
+        <!-- Spinner -->
+        <div id="spinner" class="spinner"></div>
+        <!-- End Spinner -->
       </div>
     </div>
   </body>

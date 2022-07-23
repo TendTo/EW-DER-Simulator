@@ -6,10 +6,7 @@ import { BlockchainOptions } from "../module";
 import IoTFactory from "./iot/IoTFactory";
 import { IIoT } from "./iot";
 import ITickable from "./ITickable";
-import {
-  AggregatorContract,
-  AggregatorContract__factory,
-} from "../typechain-types";
+import { AggregatorContract, AggregatorContract__factory } from "../typechain-types";
 import { getLogger, Logger } from "log4js";
 
 export default class Aggregator implements ITickable {
@@ -32,32 +29,22 @@ export default class Aggregator implements ITickable {
     this.iots = [];
     this.mnemonic = seed;
     this.numberOfDERs = numberOfDERs;
-    this.contract = AggregatorContract__factory.connect(
-      contractAddress,
-      this.wallet
-    );
+    this.contract = AggregatorContract__factory.connect(contractAddress, this.wallet);
     this.aggregatedValue = 0;
     this.logger.log(`Aggregator ${this.wallet.address} - Created`);
   }
 
   private async sendBalance() {
     const balance = await this.wallet.getBalance();
-    IPCHandler.onAggregatorBalance(
-      this.wallet.address,
-      utils.formatEther(balance)
-    );
+    IPCHandler.onAggregatorBalance(this.wallet.address, utils.formatEther(balance));
     this.logger.log(`Aggregator ${this.wallet.address} - Balance ${balance}`);
   }
 
-  private requestFlexibility(
-    startTimestamp: number,
-    endTimestamp: number,
-    flexibility: number
-  ) {
+  private requestFlexibility(startTimestamp: number, endTimestamp: number, flexibility: number) {
     this.logger.log(
       `Aggregator ${this.wallet.address} - Request flexibility from ${startTimestamp} to ${endTimestamp} of ${flexibility} Watts`
     );
-    return this.contract.requestFlexibility(1, 1);
+    return this.contract.requestFlexibility(1, 1, 1);
   }
 
   private distributeFounds() {
@@ -87,13 +74,9 @@ export default class Aggregator implements ITickable {
 
   public async setupSimulation(initialFunds: boolean) {
     this.logger.log(`Aggregator ${this.wallet.address} - Setup production`);
-    this.iots = await IoTFactory.createIoTs(
-      this,
-      this.mnemonic,
-      this.numberOfDERs
-    );
+    this.iots = await IoTFactory.createIoTs(this, this.mnemonic, this.numberOfDERs);
     if (initialFunds) await this.distributeFounds();
-    await this.registerAgreements();
+    // await this.registerAgreements();
     this.setupClock();
     await this.sendBalance();
   }

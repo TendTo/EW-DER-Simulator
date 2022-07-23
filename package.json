@@ -7,12 +7,14 @@
     "doc": "docs"
   },
   "scripts": {
+    "clean": "npm run clean --prefix simulator",
     "start": "npm start --prefix simulator",
     "compile": "npm run compile --prefix contracts",
     "test": "npm test --prefix contracts",
     "watch": "npm run watch --prefix simulator",
     "coverage": "npm run coverage --prefix contracts",
-    "deploy:volta": "npm run deploy:volta --prefix contracts"
+    "deploy:volta": "npm run deploy:volta --prefix contracts",
+    "build": "npm run build --prefix simulator"
   },
   "author": "",
   "license": "ISC",

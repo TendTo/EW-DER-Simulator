@@ -1,13 +1,18 @@
+import { IpcProvider } from "@ethersproject/providers";
 import { ipcMain, IpcMainEvent, BrowserWindow } from "electron";
+import { getLogger, Logger } from "log4js";
 import { BlockchainOptions, ClockOptions } from "../module";
 import Aggregator from "./Aggregator";
 import Clock from "./clock";
 
 export default class IPCHandler {
   private static instance: IPCHandler;
+  private readonly logger: Logger;
   private aggregator: Aggregator;
 
-  private constructor(private window: BrowserWindow) {}
+  private constructor(private window: BrowserWindow) {
+    this.logger = getLogger("default");
+  }
 
   static init(window: BrowserWindow) {
     this.instance = new IPCHandler(window);
@@ -20,11 +25,7 @@ export default class IPCHandler {
 
   static onNewAggregatedReading(reading: number, hour: number) {
     if (this.instance.window === null) throw new Error("Window is null");
-    this.instance.window.webContents.send(
-      "newAggregatedReading",
-      reading,
-      hour
-    );
+    this.instance.window.webContents.send("newAggregatedReading", reading, hour);
   }
 
   static onNewReading(address: string, reading: number, hour: number) {
@@ -34,11 +35,17 @@ export default class IPCHandler {
 
   static onAggregatorBalance(address: string, balance: string) {
     if (this.instance.window === null) throw new Error("Window is null");
-    this.instance.window.webContents.send(
-      "aggregatorBalance",
-      address,
-      balance
-    );
+    this.instance.window.webContents.send("aggregatorBalance", address, balance);
+  }
+
+  static onStartLoading() {
+    if (this.instance.window === null) throw new Error("Window is null");
+    this.instance.window.webContents.send("startLoading");
+  }
+
+  static onStopLoading() {
+    if (this.instance.window === null) throw new Error("Window is null");
+    this.instance.window.webContents.send("stopLoading");
   }
 
   startSimulation = (
@@ -47,16 +54,20 @@ export default class IPCHandler {
     clockOptions: ClockOptions,
     initialFunds: boolean
   ) => {
-    this.aggregator = new Aggregator(
-      blockchainOptions,
-      new Clock(clockOptions)
-    );
-    this.aggregator.setupSimulation(initialFunds).then(() => {
-      this.aggregator.startSimulation();
-    });
+    IPCHandler.onStartLoading();
+    this.aggregator = new Aggregator(blockchainOptions, new Clock(clockOptions));
+    this.aggregator
+      .setupSimulation(initialFunds)
+      .then(() => {
+        this.aggregator.startSimulation();
+      })
+      .catch((err) => {
+        this.logger.error(err);
+      })
+      .finally(() => IPCHandler.onStopLoading);
   };
 
-  stopSimulation = (event: IpcMainEvent) => {
+  stopSimulation = (_: IpcMainEvent) => {
     this.aggregator.stopSimulation();
   };
 }

@@ -17,7 +17,7 @@ class Main {
       },
     });
 
-    this.mainWindow.loadFile(path.join(__dirname, "../../index.html"));
+    this.mainWindow.loadFile(path.join(__dirname, "../frontend/index.html"));
     this.mainWindow.webContents.openDevTools();
     IPCHandler.init(this.mainWindow);
     IPCHandler.registerHandlers();

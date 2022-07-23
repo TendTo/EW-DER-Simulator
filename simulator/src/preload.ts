@@ -12,6 +12,12 @@ const api: ElectronAPI = {
   },
   invoke: {},
   on: {
+    startLoading(listener) {
+      ipcRenderer.on("startLoading", listener);
+    },
+    stopLoading(listener) {
+      ipcRenderer.on("stopLoading", listener);
+    },
     aggregatorBalance(listener) {
       ipcRenderer.on("aggregatorBalance", listener);
     },

@@ -4,8 +4,10 @@
         "moduleResolution": "node",
         "module": "CommonJS",
         "sourceMap": true,
-        "outDir": "dist/js",
+        "outDir": "dist/backend",
         "baseUrl": ".",
+        "esModuleInterop": true,
+        "skipLibCheck": true /* Skip type checking of declaration files. */,
     },
     "include": [
         "src/**/*"

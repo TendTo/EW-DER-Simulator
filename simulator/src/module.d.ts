@@ -1,5 +1,5 @@
 import type { IpcRendererEvent } from "electron";
-import type { Chart } from "chart.js";
+import { WebContents } from "electron/main";
 import { Season } from "./backend/constants";
 
 export type GetApiType<
@@ -11,10 +11,7 @@ export type GetApiType<
   invoke: InvokeFromRenderer;
   on: {
     [K in keyof ListenFromMain]: (
-      listener: (
-        event: IpcRendererEvent,
-        ...args: Parameters<ListenFromMain[K]>
-      ) => void
+      listener: (event: IpcRendererEvent, ...args: Parameters<ListenFromMain[K]>) => void
     ) => void;
   };
 };
@@ -46,6 +43,8 @@ export type ElectronAPI = GetApiType<
   },
   {},
   {
+    startLoading: () => Promise<void>;
+    stopLoading: () => Promise<void>;
     aggregatorBalance: (address: string, balance: string) => Promise<void>;
     newReading: (address: string, reading: number) => Promise<void>;
     newAggregatedReading: (reading: number, hour: number) => Promise<void>;
@@ -54,7 +53,32 @@ export type ElectronAPI = GetApiType<
 
 declare global {
   interface Window {
-    Chart: typeof Chart;
     electronAPI: ElectronAPI;
+  }
+}
+
+type GetFirstArg<F> = F extends (x: infer F, ...args: any) => any ? F : never;
+type OmitFirstArg<F> = F extends (x: any, ...args: infer P) => any ? P : never;
+type ApiWebContents = Omit<WebContents, "send"> & {
+  send<T extends keyof ElectronAPI["on"]>(
+    channel: T,
+    ...args: OmitFirstArg<GetFirstArg<ElectronAPI["on"][T]>>
+  ): Promise<ReturnType<ElectronAPI["on"][T]>>;
+};
+
+declare module "electron" {
+  interface BrowserWindow {
+    webContents: ApiWebContents;
+  }
+  namespace Electron {
+    interface IpcMain {
+      on<T extends keyof ElectronAPI["send"]>(
+        channel: T,
+        listener: (
+          event: IpcRendererEvent,
+          ...args: ElectronAPI["send"][T] extends (...args: infer P) => any ? P : never
+        ) => void
+      ): IpcRenderer;
+    }
   }
 }
