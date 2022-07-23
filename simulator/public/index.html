@@ -128,47 +128,41 @@
           <!-- End Side Panel -->
           <!-- Main Panel -->
           <main class="pane padded">
-            <div class="flex-row justify-between gap-1">
-              <div>
-                <h2>Simulation</h2>
-                <h4 id="aggregatorInfo"></h4>
-                <canvas id="chart" width="400" height="400"></canvas>
-              </div>
-              <div>
-                <h3>Flexibility request</h3>
-                <button id="test" class="btn btn-primary" disabled>Simulate logs</button>
-                <!-- Log table -->
-                <table class="table-striped">
-                  <thead>
-                    <tr>
-                      <th>Prosumer</th>
-                      <th>Start</th>
-                      <th>Flexibility</th>
-                      <th>Reward</th>
-                      <th>Type</th>
-                    </tr>
-                  </thead>
-                  <tbody id="addAgreementLogTBody">
-                    <!-- Log row template -->
-                    <template id="addAgreementLogTemplate">
-                      <tr>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                      </tr>
-                    </template>
-                    <!-- End Log row template -->
-                  </tbody>
-                </table>
-                <!-- End Log table -->
-              </div>
-            </div>
+            <h2 style="grid-area: title">Simulation</h2>
+            <canvas style="grid-area: graph" id="chart" width="400" height="400"></canvas>
+            <h3 style="grid-area: flexibility">Flexibility request</h3>
+            <!-- <button id="test" class="btn btn-primary" disabled>Simulate logs</button> -->
             <!-- Log table -->
-            <table>
+            <table style="grid-area: flexibilityTable" class="table-striped">
               <thead>
                 <tr>
+                  <th>Prosumer</th>
+                  <th>Start</th>
+                  <th>Flexibility</th>
+                  <th>Reward</th>
+                  <th>Type</th>
+                </tr>
+              </thead>
+              <tbody id="addAgreementLogTBody">
+                <!-- Log row template -->
+                <template id="addAgreementLogTemplate">
+                  <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                </template>
+                <!-- End Log row template -->
+              </tbody>
+            </table>
+            <!-- End Log table -->
+            <!-- Log table -->
+            <table style="grid-area: agreementTable">
+              <thead>
+                <tr>
+                  <th>Block number</th>
                   <th>Prosumer</th>
                   <th>Value</th>
                   <th>Cost</th>
@@ -177,30 +171,10 @@
                 </tr>
               </thead>
               <tbody id="addAgreementLogTBody">
-                <tr class="positive-bg">
-                  <td>1</td>
-                  <td>2</td>
-                  <td>3</td>
-                  <td>4</td>
-                  <td>5</td>
-                </tr>
-                <tr class="neutral-bg">
-                  <td>1</td>
-                  <td>2</td>
-                  <td>3</td>
-                  <td>4</td>
-                  <td>5</td>
-                </tr>
-                <tr class="negative-bg">
-                  <td>1</td>
-                  <td>2</td>
-                  <td>3</td>
-                  <td>4</td>
-                  <td>5</td>
-                </tr>
                 <!-- Log row template -->
                 <template id="addAgreementLogTemplate">
                   <tr>
+                    <td></td>
                     <td></td>
                     <td></td>
                     <td></td>

@@ -11,9 +11,12 @@ export type SettingsForm = HTMLFormElement & {
 };
 
 export type AgreementLogRow = {
+  blockNumber: number;
   address: string;
   value: string;
   valuePrice: string;
   flexibility: string;
   flexibilityPrice: string;
 };
+
+export type EventType = "register" | "revise" | "cancel";

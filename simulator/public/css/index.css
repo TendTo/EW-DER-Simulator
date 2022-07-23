@@ -1,13 +1,14 @@
 main {
   display: grid;
+  width: 100%;
   min-height: 100vh;
   grid-template-areas:
     "title flexibility"
-    "graph  flexibilityTable"
-    "title  ."
+    "graph flexibilityTable"
     "agreementTable agreementTable";
-  grid-template-rows: 3fr 1fr;
-  grid-template-columns: 150px 1fr 150px 1fr;
+  grid-template-rows: 75px 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
 }
 
 .align-left {

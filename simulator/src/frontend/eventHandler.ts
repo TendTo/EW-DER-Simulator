@@ -1,5 +1,5 @@
 import type { IAggregatorContract } from "src/typechain-types";
-import type { SettingsForm } from "./types";
+import type { SettingsForm, EventType } from "./types";
 import ButtonWrapper from "./buttonsWrapper";
 import ChartWrapper from "./chartWrapper";
 import TableManager from "./tableManager";
@@ -30,33 +30,39 @@ export default class EventHandler {
 
   private onCancelAgreementEvent() {
     window.electronAPI.on.cancelAgreementEvent((_, prosumer, agreement, event) => {
-      this.addAgreementRow(prosumer, agreement);
+      this.addAgreementRow(event.blockNumber, prosumer, agreement, "cancel");
     });
   }
 
   private onReviseAgreementEvent() {
     window.electronAPI.on.reviseAgreementEvent((_, prosumer, oldAgreement, newAgreement, event) => {
-      this.addAgreementRow(prosumer, newAgreement);
+      this.addAgreementRow(event.blockNumber, prosumer, newAgreement, "revise");
     });
   }
 
   private onRegisterAgreementEvent() {
     window.electronAPI.on.registerAgreementEvent((_, prosumer, agreement, event) => {
-      this.addAgreementRow(prosumer, agreement);
+      this.addAgreementRow(event.blockNumber, prosumer, agreement, "register");
     });
   }
 
   private addAgreementRow(
+    blockNumber: number,
     prosumer: string,
-    { value, valuePrice, flexibility, flexibilityPrice }: IAggregatorContract.AgreementStructOutput
+    { value, valuePrice, flexibility, flexibilityPrice }: IAggregatorContract.AgreementStructOutput,
+    eventType: EventType
   ) {
-    this.tableManager.addAgreementLogRow({
-      address: prosumer,
-      value: value.toString(),
-      valuePrice: valuePrice.toString(),
-      flexibility: flexibility.toString(),
-      flexibilityPrice: flexibilityPrice.toString(),
-    });
+    this.tableManager.addAgreementLogRow(
+      {
+        blockNumber,
+        address: prosumer,
+        value: value.toString(),
+        valuePrice: valuePrice.toString(),
+        flexibility: flexibility.toString(),
+        flexibilityPrice: flexibilityPrice.toString(),
+      },
+      eventType
+    );
   }
 
   private onStartSimulation() {
