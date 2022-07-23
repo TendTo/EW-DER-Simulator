@@ -11,7 +11,8 @@
     "compile": "npm run compile --prefix contracts",
     "test": "npm test --prefix contracts",
     "watch": "npm run watch --prefix simulator",
-    "coverage": "npm run coverage --prefix contracts"
+    "coverage": "npm run coverage --prefix contracts",
+    "deploy:volta": "npm run deploy:volta --prefix contracts"
   },
   "author": "",
   "license": "ISC",
