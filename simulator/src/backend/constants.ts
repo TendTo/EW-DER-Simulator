@@ -7,8 +7,11 @@ export enum EnergySource {
   Nuclear,
   Other,
 }
-export enum Addresses {
-  AggregatorContract = "0x0000000000000000000000000000000000000000",
-  IoTBank = "0x0000000000000000000000000000000000000001",
+export enum Season {
+  Winter,
+  Spring,
+  Summer,
+  Autumn,
 }
-export const ETHPerIoT = 10000;
+
+export const ETHPerIoT = 100000;

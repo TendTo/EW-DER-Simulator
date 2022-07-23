@@ -1,6 +1,7 @@
 import { ipcMain, IpcMainEvent, BrowserWindow } from "electron";
-import { SimulationSetup } from "src/module";
+import { BlockchainOptions, ClockOptions } from "../module";
 import Aggregator from "./Aggregator";
+import Clock from "./clock";
 
 export default class IPCHandler {
   private static instance: IPCHandler;
@@ -17,14 +18,42 @@ export default class IPCHandler {
     ipcMain.on("stopSimulation", this.instance.stopSimulation);
   }
 
-  static onNewReading(reading: number) {
+  static onNewAggregatedReading(reading: number, hour: number) {
     if (this.instance.window === null) throw new Error("Window is null");
-    this.instance.window.webContents.send("newReading", reading);
+    this.instance.window.webContents.send(
+      "newAggregatedReading",
+      reading,
+      hour
+    );
   }
 
-  startSimulation = (event: IpcMainEvent, data: SimulationSetup) => {
-    this.aggregator = new Aggregator(data.seed, data.sk, data.numberOfDERs);
-    this.aggregator.startSimulation();
+  static onNewReading(address: string, reading: number, hour: number) {
+    if (this.instance.window === null) throw new Error("Window is null");
+    this.instance.window.webContents.send("newReading", address, reading);
+  }
+
+  static onAggregatorBalance(address: string, balance: string) {
+    if (this.instance.window === null) throw new Error("Window is null");
+    this.instance.window.webContents.send(
+      "aggregatorBalance",
+      address,
+      balance
+    );
+  }
+
+  startSimulation = (
+    _: IpcMainEvent,
+    blockchainOptions: BlockchainOptions,
+    clockOptions: ClockOptions,
+    initialFunds: boolean
+  ) => {
+    this.aggregator = new Aggregator(
+      blockchainOptions,
+      new Clock(clockOptions)
+    );
+    this.aggregator.setupSimulation(initialFunds).then(() => {
+      this.aggregator.startSimulation();
+    });
   };
 
   stopSimulation = (event: IpcMainEvent) => {

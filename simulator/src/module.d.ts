@@ -1,5 +1,6 @@
 import type { IpcRendererEvent } from "electron";
 import type { Chart } from "chart.js";
+import { Season } from "./backend/constants";
 
 export type GetApiType<
   SendFromRenderer extends Record<string, (...args: any[]) => any>,
@@ -18,20 +19,36 @@ export type GetApiType<
   };
 };
 
-export type SimulationSetup = {
+export type BlockchainOptions = {
+  rpcUrl: string;
+  contractAddress: string;
   seed: string;
   sk: string;
   numberOfDERs: number;
 };
 
+export type ClockOptions = {
+  season?: Season;
+  tickInterval?: number;
+  hour?: number;
+  day?: number;
+  hourIncrement?: number;
+};
+
 export type ElectronAPI = GetApiType<
   {
     stopSimulation: () => void;
-    startSimulation: (data: SimulationSetup) => void;
+    startSimulation: (
+      data: BlockchainOptions,
+      clockOptions: ClockOptions,
+      initialFunds: boolean
+    ) => void;
   },
   {},
   {
-    newReading: (reading: number) => Promise<void>;
+    aggregatorBalance: (address: string, balance: string) => Promise<void>;
+    newReading: (address: string, reading: number) => Promise<void>;
+    newAggregatedReading: (reading: number, hour: number) => Promise<void>;
   }
 >;
 

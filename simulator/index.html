@@ -21,58 +21,165 @@
   </head>
 
   <body>
-    <!-- Wrap your entire app inside .window -->
     <div class="window">
-      <!-- Your app's content goes inside .window-content -->
       <div class="window-content">
         <div class="pane-group">
-          <div class="pane-sm sidebar">
+          <!-- Side Panel -->
+          <div class="pane pane-sm sidebar">
             <div class="padded">
               <form id="settings">
+                <!-- Blockchain Info -->
+                <h4>BlockChain info</h4>
                 <div class="form-group">
-                  <label>Private key</label>
+                  <label for="rpcUrl">RPC url</label>
                   <input
+                    id="rpcUrl"
+                    name="rpcUrl"
+                    type="text"
+                    class="form-control"
+                    placeholder="http://134.209.139.226:8545"
+                    pattern="^https?://[a-zA-Z0-9.-]+(:[0-9]+)?$"
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="contractAddress">Contract address</label>
+                  <input
+                    id="contractAddress"
+                    name="contractAddress"
+                    type="text"
+                    class="form-control"
+                    placeholder="0x2594f79bd3c865CEb109CF2df97F5ee6E490A43D"
+                    pattern="^0x[0-9a-fA-F]{40}$"
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="sk">Private key</label>
+                  <input
+                    id="sk"
                     name="sk"
                     type="password"
                     class="form-control"
-                    placeholder="Seed"
                     required
                   />
                 </div>
                 <div class="form-group">
-                  <label>Initial seed</label>
+                  <label for="seed">Initial seed</label>
                   <input
+                    id="seed"
                     name="seed"
                     type="password"
                     class="form-control"
-                    placeholder="Seed"
-                    required
+                    placeholder="Private key"
                   />
                 </div>
                 <div class="form-group">
-                  <label>Number of DERs</label>
+                  <label for="numberOfDERs">Number of DERs</label>
                   <input
+                    id="numberOfDERs"
                     name="numberOfDERs"
                     type="number"
                     class="form-control"
-                    placeholder="Number of DERs"
+                    placeholder="1"
                   />
                 </div>
+                <div class="form-group">
+                  <div class="checkbox">
+                    <label>
+                      <input
+                        id="initialFunds"
+                        name="initialFunds"
+                        type="checkbox"
+                      />
+                      Send initial funds to the IoTs
+                    </label>
+                  </div>
+                </div>
+                <!-- End Blockchain Info -->
+                <hr />
+                <!-- Time Info -->
+                <h4>Time info</h4>
+                <div class="form-group">
+                  <label for="season">Season</label>
+                  <select id="season" name="season" class="form-control">
+                    <option value="0">Primavera</option>
+                    <option value="1">Estate</option>
+                    <option value="2">Autunno</option>
+                    <option value="3">Inverno</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="hourIncrement">Hour increment per tick</label>
+                  <input
+                    id="hourIncrement"
+                    name="hourIncrement"
+                    type="number"
+                    class="form-control"
+                    placeholder="1"
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="tickInterval">Tick interval (sec)</label>
+                  <input
+                    id="tickInterval"
+                    name="tickInterval"
+                    type="number"
+                    class="form-control"
+                    placeholder="1"
+                  />
+                </div>
+                <!-- End Time Info -->
+                <!-- Submit buttons -->
                 <div class="align-left gap-1">
-                  <button id="stop" role="button" type="button" class="btn btn-negative">
+                  <button
+                    id="stop"
+                    role="button"
+                    type="button"
+                    class="btn btn-negative"
+                  >
                     <span class="icon icon-stop"></span>
                   </button>
                   <button role="button" type="submit" class="btn btn-positive">
                     <span class="icon icon-play"></span>
                   </button>
                 </div>
+                <!-- End Submit buttons -->
               </form>
             </div>
           </div>
+          <!-- End Side Panel -->
+          <!-- Main Panel -->
           <div class="pane padded">
             <h2>Simulation</h2>
+            <h4 id="aggregatorInfo"></h4>
             <canvas id="chart" width="400" height="400"></canvas>
+            <!-- Log table -->
+            <table class="table-striped">
+              <thead>
+                <tr>
+                  <td>Address</td>
+                  <td>Value</td>
+                  <td>Cost</td>
+                  <td>Flexibility</td>
+                  <td>Flexibility cost</td>
+                </tr>
+              </thead>
+              <tbody id="logTable">
+                <!-- Log row template -->
+                <template id="logRow">
+                  <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                </template>
+                <!-- End Log row template -->
+              </tbody>
+            </table>
+            <!-- End Log table -->
           </div>
+          <!-- End Main Panel -->
         </div>
       </div>
     </div>

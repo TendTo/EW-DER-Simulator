@@ -6,12 +6,18 @@ const api: ElectronAPI = {
     stopSimulation() {
       ipcRenderer.send("stopSimulation");
     },
-    startSimulation(data) {
-      ipcRenderer.send("startSimulation", data);
+    startSimulation(data, clockOptions, initialFunds) {
+      ipcRenderer.send("startSimulation", data, clockOptions, initialFunds);
     },
   },
   invoke: {},
   on: {
+    aggregatorBalance(listener) {
+      ipcRenderer.on("aggregatorBalance", listener);
+    },
+    newAggregatedReading(listener) {
+      ipcRenderer.on("newAggregatedReading", listener);
+    },
     newReading(listener) {
       ipcRenderer.on("newReading", listener);
     },
