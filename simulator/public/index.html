@@ -127,8 +127,8 @@
           </div>
           <!-- End Side Panel -->
           <!-- Main Panel -->
-          <div class="pane padded">
-            <div class="flex-row gap-1">
+          <main class="pane padded">
+            <div class="flex-row justify-between gap-1">
               <div>
                 <h2>Simulation</h2>
                 <h4 id="aggregatorInfo"></h4>
@@ -137,13 +137,39 @@
               <div>
                 <h3>Flexibility request</h3>
                 <button id="test" class="btn btn-primary" disabled>Simulate logs</button>
+                <!-- Log table -->
+                <table class="table-striped">
+                  <thead>
+                    <tr>
+                      <th>Prosumer</th>
+                      <th>Start</th>
+                      <th>Flexibility</th>
+                      <th>Reward</th>
+                      <th>Type</th>
+                    </tr>
+                  </thead>
+                  <tbody id="addAgreementLogTBody">
+                    <!-- Log row template -->
+                    <template id="addAgreementLogTemplate">
+                      <tr>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                      </tr>
+                    </template>
+                    <!-- End Log row template -->
+                  </tbody>
+                </table>
+                <!-- End Log table -->
               </div>
             </div>
             <!-- Log table -->
-            <table class="table-striped">
+            <table>
               <thead>
                 <tr>
-                  <th>Address</th>
+                  <th>Prosumer</th>
                   <th>Value</th>
                   <th>Cost</th>
                   <th>Flexibility</th>
@@ -151,6 +177,27 @@
                 </tr>
               </thead>
               <tbody id="addAgreementLogTBody">
+                <tr class="positive-bg">
+                  <td>1</td>
+                  <td>2</td>
+                  <td>3</td>
+                  <td>4</td>
+                  <td>5</td>
+                </tr>
+                <tr class="neutral-bg">
+                  <td>1</td>
+                  <td>2</td>
+                  <td>3</td>
+                  <td>4</td>
+                  <td>5</td>
+                </tr>
+                <tr class="negative-bg">
+                  <td>1</td>
+                  <td>2</td>
+                  <td>3</td>
+                  <td>4</td>
+                  <td>5</td>
+                </tr>
                 <!-- Log row template -->
                 <template id="addAgreementLogTemplate">
                   <tr>
@@ -165,11 +212,11 @@
               </tbody>
             </table>
             <!-- End Log table -->
-          </div>
+          </main>
           <!-- End Main Panel -->
         </div>
         <!-- Spinner -->
-        <div id="spinner" class="spinner"></div>
+        <div id="spinner" class="spinner hidden"></div>
         <!-- End Spinner -->
       </div>
     </div>

@@ -1,3 +1,15 @@
+main {
+  display: grid;
+  min-height: 100vh;
+  grid-template-areas:
+    "title flexibility"
+    "graph  flexibilityTable"
+    "title  ."
+    "agreementTable agreementTable";
+  grid-template-rows: 3fr 1fr;
+  grid-template-columns: 150px 1fr 150px 1fr;
+}
+
 .align-left {
   display: flex;
   justify-content: flex-end;
@@ -19,6 +31,22 @@
 .flex-row {
   display: flex;
   flex-direction: row;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.positive-bg {
+  background-color: #00ff0060;
+}
+
+.neutral-bg {
+  background-color: #ffff0060;
+}
+
+.negative-bg {
+  background-color: #ff000060;
 }
 
 button:disabled {

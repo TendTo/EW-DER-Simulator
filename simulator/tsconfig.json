@@ -7,9 +7,13 @@
         "outDir": "dist/backend",
         "baseUrl": ".",
         "esModuleInterop": true,
-        "skipLibCheck": true /* Skip type checking of declaration files. */,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
     },
     "include": [
         "src/**/*"
+    ],
+    "exclude": [
+        "../node_modules"
     ]
 }
