@@ -1,7 +1,8 @@
+import type { IAggregatorContract } from "src/typechain-types";
+import type { SettingsForm } from "./types";
 import ButtonWrapper from "./buttonsWrapper";
 import ChartWrapper from "./chartWrapper";
 import TableManager from "./tableManager";
-import { SettingsForm } from "./types";
 
 export default class EventHandler {
   private readonly chart: ChartWrapper;
@@ -18,23 +19,43 @@ export default class EventHandler {
   private addHandlers() {
     this.onStartLoading();
     this.onStopLoading();
-    this.onAddAgreementLog();
+    this.onRegisterAgreementEvent();
+    this.onReviseAgreementEvent();
+    this.onCancelAgreementEvent();
     this.onStartSimulation();
     this.onStopSimulation();
     this.onNewAggregatedReading();
     this.onAggregatorBalance();
   }
 
-  private onAddAgreementLog() {
-    const button = document.getElementById("test") as HTMLButtonElement;
-    button.addEventListener("click", () => {
-      this.tableManager.addAgreementLogRow({
-        address: "0x123",
-        value: Math.random().toFixed(1),
-        valuePrice: "0.2",
-        flexibility: "0.3",
-        flexibilityPrice: "0.4",
-      });
+  private onCancelAgreementEvent() {
+    window.electronAPI.on.cancelAgreementEvent((_, prosumer, agreement, event) => {
+      this.addAgreementRow(prosumer, agreement);
+    });
+  }
+
+  private onReviseAgreementEvent() {
+    window.electronAPI.on.reviseAgreementEvent((_, prosumer, oldAgreement, newAgreement, event) => {
+      this.addAgreementRow(prosumer, newAgreement);
+    });
+  }
+
+  private onRegisterAgreementEvent() {
+    window.electronAPI.on.registerAgreementEvent((_, prosumer, agreement, event) => {
+      this.addAgreementRow(prosumer, agreement);
+    });
+  }
+
+  private addAgreementRow(
+    prosumer: string,
+    { value, valuePrice, flexibility, flexibilityPrice }: IAggregatorContract.AgreementStructOutput
+  ) {
+    this.tableManager.addAgreementLogRow({
+      address: prosumer,
+      value: value.toString(),
+      valuePrice: valuePrice.toString(),
+      flexibility: flexibility.toString(),
+      flexibilityPrice: flexibilityPrice.toString(),
     });
   }
 

@@ -18,6 +18,8 @@ export default class Aggregator implements ITickable {
   public readonly contract: AggregatorContract;
   public readonly provider: providers.JsonRpcProvider;
   private readonly logger: Logger;
+  private blockNumber: number;
+  private balance: BigNumber;
 
   constructor(
     { sk, seed, numberOfDERs, contractAddress, rpcUrl }: BlockchainOptions,
@@ -31,24 +33,18 @@ export default class Aggregator implements ITickable {
     this.numberOfDERs = numberOfDERs;
     this.contract = AggregatorContract__factory.connect(contractAddress, this.wallet);
     this.aggregatedValue = 0;
-    this.logger.log(`Aggregator ${this.wallet.address} - Created`);
-  }
-
-  private async sendBalance() {
-    const balance = await this.wallet.getBalance();
-    IPCHandler.onAggregatorBalance(this.wallet.address, utils.formatEther(balance));
-    this.logger.log(`Aggregator ${this.wallet.address} - Balance ${balance}`);
+    this.logger.log(`Created`);
   }
 
   private requestFlexibility(startTimestamp: number, endTimestamp: number, flexibility: number) {
     this.logger.log(
-      `Aggregator ${this.wallet.address} - Request flexibility from ${startTimestamp} to ${endTimestamp} of ${flexibility} Watts`
+      `Request flexibility from ${startTimestamp} to ${endTimestamp} of ${flexibility} Watts`
     );
     return this.contract.requestFlexibility(1, 1, 1);
   }
 
   private distributeFounds() {
-    this.logger.log(`Aggregator ${this.wallet.address} - Sending funds`);
+    this.logger.log(`Sending funds`);
     return this.contract.sendFunds(
       this.iots.map((iot) => iot.address),
       { value: BigNumber.from(1) }
@@ -56,9 +52,51 @@ export default class Aggregator implements ITickable {
   }
 
   private startProducing() {
-    this.logger.log(`Aggregator ${this.wallet.address} - Start production`);
+    this.logger.log(`Start production`);
     for (let i = 0; i < this.iots.length; i++) this.iots[i].startProducing();
     this.clock.start();
+  }
+
+  private async getNetworkInfo() {
+    this.logger.log(`Getting network info`);
+    try {
+      [this.blockNumber, this.balance] = await Promise.all([
+        this.provider.getBlockNumber(),
+        this.wallet.getBalance(),
+      ]);
+      this.logger.log(`Address ${this.wallet.address}`);
+      this.logger.log(`Balance ${this.balance}`);
+      this.logger.log(`BlockNumber ${this.blockNumber}`);
+    } catch (e) {
+      this.logger.error(`Error getting network info`);
+      this.logger.error(e);
+    }
+  }
+
+  private listenContractLogs() {
+    this.logger.log(`Setup listeners for contract logs`);
+
+    this.contract.on(this.contract.filters.RegisterAgreement(), (prosumer, agreement, event) => {
+      IPCHandler.onRegisterAgreementEvent(prosumer, agreement, event);
+      this.logger.log(
+        `RegisterAgreementEvent ${prosumer} ${agreement} - Block ${event.blockNumber}`
+      );
+    });
+
+    this.contract.on(
+      this.contract.filters.ReviseAgreement(),
+      (prosumer, oldAgreement, newAgreement, event) => {
+        IPCHandler.onReviseAgreementEvent(prosumer, oldAgreement, newAgreement, event);
+        this.logger.log(
+          `ReviseAgreementEvent ${prosumer} ${oldAgreement} -> ${newAgreement} - Block ${event.blockNumber}`
+        );
+      }
+    );
+
+    this.contract.on(this.contract.filters.CancelAgreement(), (prosumer, agreement, event) => {
+      IPCHandler.onCancelAgreementEvent(prosumer, agreement, event);
+      this.logger.log(`CancelAgreementEvent ${prosumer} ${agreement} - Block ${event.blockNumber}`);
+    });
   }
 
   private setupClock() {
@@ -73,12 +111,12 @@ export default class Aggregator implements ITickable {
   }
 
   public async setupSimulation(initialFunds: boolean) {
-    this.logger.log(`Aggregator ${this.wallet.address} - Setup production`);
+    this.logger.log(`Setup production`);
+    await this.getNetworkInfo();
     this.iots = await IoTFactory.createIoTs(this, this.mnemonic, this.numberOfDERs);
     if (initialFunds) await this.distributeFounds();
     // await this.registerAgreements();
     this.setupClock();
-    await this.sendBalance();
   }
 
   public async startSimulation() {

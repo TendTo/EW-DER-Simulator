@@ -1,6 +1,11 @@
-import { IpcProvider } from "@ethersproject/providers";
 import { ipcMain, IpcMainEvent, BrowserWindow } from "electron";
 import { getLogger, Logger } from "log4js";
+import {
+  CancelAgreementEvent,
+  IAggregatorContract,
+  RegisterAgreementEvent,
+  ReviseAgreementEvent,
+} from "src/typechain-types/AggregatorContract";
 import { BlockchainOptions, ClockOptions } from "../module";
 import Aggregator from "./Aggregator";
 import Clock from "./clock";
@@ -46,6 +51,36 @@ export default class IPCHandler {
   static onStopLoading() {
     if (this.instance.window === null) throw new Error("Window is null");
     this.instance.window.webContents.send("stopLoading");
+  }
+
+  static onRegisterAgreementEvent(
+    prosumer: string,
+    agreement: IAggregatorContract.AgreementStructOutput,
+    event: RegisterAgreementEvent
+  ) {
+    this.instance.window.webContents.send("registerAgreementEvent", prosumer, agreement, event);
+  }
+
+  static onCancelAgreementEvent(
+    prosumer: string,
+    agreement: IAggregatorContract.AgreementStructOutput,
+    event: CancelAgreementEvent
+  ) {
+    this.instance.window.webContents.send("cancelAgreementEvent", prosumer, agreement, event);
+  }
+  static onReviseAgreementEvent(
+    prosumer: string,
+    oldAgreement: IAggregatorContract.AgreementStructOutput,
+    newAgreement: IAggregatorContract.AgreementStructOutput,
+    event: ReviseAgreementEvent
+  ) {
+    this.instance.window.webContents.send(
+      "reviseAgreementEvent",
+      prosumer,
+      oldAgreement,
+      newAgreement,
+      event
+    );
   }
 
   startSimulation = (

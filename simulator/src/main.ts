@@ -19,6 +19,7 @@ class Main {
 
     this.mainWindow.loadFile(path.join(__dirname, "../frontend/index.html"));
     this.mainWindow.webContents.openDevTools();
+    this.mainWindow.once("ready-to-show", () => this.mainWindow.maximize());
     IPCHandler.init(this.mainWindow);
     IPCHandler.registerHandlers();
   }
@@ -77,9 +78,9 @@ class Main {
 
   public init() {
     this.configureLogger();
-    app.on("ready", this.createWindow);
-    app.on("window-all-closed", this.onWindowAllClosed);
-    app.on("activate", this.onActivate);
+    app.once("ready", this.createWindow);
+    app.once("window-all-closed", this.onWindowAllClosed);
+    app.once("activate", this.onActivate);
   }
 }
 

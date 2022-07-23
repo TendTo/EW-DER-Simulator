@@ -12,6 +12,15 @@ const api: ElectronAPI = {
   },
   invoke: {},
   on: {
+    registerAgreementEvent(listener) {
+      ipcRenderer.on("registerAgreementEvent", listener);
+    },
+    cancelAgreementEvent(listener) {
+      ipcRenderer.on("cancelAgreementEvent", listener);
+    },
+    reviseAgreementEvent(listener) {
+      ipcRenderer.on("reviseAgreementEvent", listener);
+    },
     startLoading(listener) {
       ipcRenderer.on("startLoading", listener);
     },

@@ -1,6 +1,11 @@
-import type { IpcRendererEvent } from "electron";
-import { WebContents } from "electron/main";
-import { Season } from "./backend/constants";
+import type { WebContents } from "electron/main";
+import type { Season } from "./backend/constants";
+import type { IAggregatorContract } from "./typechain-types";
+import type {
+  CancelAgreementEvent,
+  RegisterAgreementEvent,
+  ReviseAgreementEvent,
+} from "./typechain-types/AggregatorContract";
 
 export type GetApiType<
   SendFromRenderer extends Record<string, (...args: any[]) => any>,
@@ -43,6 +48,22 @@ export type ElectronAPI = GetApiType<
   },
   {},
   {
+    registerAgreementEvent: (
+      prosumer: string,
+      agreement: IAggregatorContract.AgreementStructOutput,
+      event: RegisterAgreementEvent
+    ) => Promise<void>;
+    reviseAgreementEvent: (
+      prosumer: string,
+      oldAgreement: IAggregatorContract.AgreementStructOutput,
+      newAgreement: IAggregatorContract.AgreementStructOutput,
+      event: ReviseAgreementEvent
+    ) => Promise<void>;
+    cancelAgreementEvent: (
+      prosumer: string,
+      agreement: IAggregatorContract.AgreementStructOutput,
+      event: CancelAgreementEvent
+    ) => Promise<void>;
     startLoading: () => Promise<void>;
     stopLoading: () => Promise<void>;
     aggregatorBalance: (address: string, balance: string) => Promise<void>;
@@ -82,3 +103,5 @@ declare module "electron" {
     }
   }
 }
+
+export const Electron: typeof ExtendsElectron & typeof OrigElectron;
