@@ -14,4 +14,5 @@ export enum ContractError {
   ZeroValueError = "ZeroValueError",
   UnauthorizedAggregatorError = "UnauthorizedAggregatorError",
   FlexibilityError = "FlexibilityError",
+  FlexibilityRequestNotFoundError = "FlexibilityRequestNotFoundError",
 }

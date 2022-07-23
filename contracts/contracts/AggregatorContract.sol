@@ -9,8 +9,8 @@ import "./IAggregatorContract.sol";
  * @notice Offers a real-time state of the balance of all the DER under this aggregator.
  */
 contract AggregatorContract is IAggregatorContract {
+    int256 public constant flexibilityMargin = 10;
     address public immutable aggregator;
-    int256 constant flexibilityMargin = 10;
 
     // Current state of the aggregator
     int256 public energyBalance;
@@ -23,7 +23,7 @@ contract AggregatorContract is IAggregatorContract {
 
     // Each time there is a flexibility request...
     FlexibilityRequest public flexibilityRequest;
-    PendingReward[] public pendingRewards;
+    mapping(address => FlexibilitRewardRequest) public pendingRewards;
 
     constructor() {
         aggregator = msg.sender;
@@ -93,62 +93,98 @@ contract AggregatorContract is IAggregatorContract {
         delete agreements[msg.sender];
     }
 
-    function requestFlexibility(int256 _flexibility, uint8 _duration)
+    function requestFlexibility(
+        uint256 _start,
+        uint256 _end,
+        int256 _gridFlexibility
+    ) external isAggregator {
+        emit RequestFlexibility(_start, _end, _gridFlexibility);
+        flexibilityRequest = FlexibilityRequest(_start, _end, _gridFlexibility);
+    }
+
+    function provideFlexibilityFair(uint256 _start, int256 _flexibility)
         external
-        isAggregator
+        agreementExists(msg.sender)
     {
-        emit RequestFlexibility(_flexibility, block.timestamp, _duration);
-        flexibilityRequest = FlexibilityRequest(
+        if (_flexibility == 0) revert ZeroValueError("flexibility");
+        if (flexibilityRequest.start != _start)
+            revert FlexibilityRequestNotFoundError(
+                flexibilityRequest.start,
+                _start
+            );
+        // Each prosumer is expected to provide a flexibility proportional
+        // to the value it normally provides.
+        int256 expectedValue = (flexibilityRequest.gridFlexibility *
+            agreements[msg.sender].value) / energyBalance;
+        // TODO: reputation based on accuracy?
+        // Margin of error is 10% of the flexibility requested.
+        if (!inErrorMargin(expectedValue, _flexibility, flexibilityMargin))
+            revert FlexibilityError(expectedValue, _flexibility);
+        int256 reward = _flexibility * agreements[msg.sender].flexibilityPrice;
+        emit StartFlexibilityProvisioning(
+            _start,
+            msg.sender,
             _flexibility,
-            block.timestamp,
-            _duration
+            reward
+        );
+        pendingRewards[msg.sender] = FlexibilitRewardRequest(
+            _start,
+            _flexibility,
+            reward
         );
     }
 
-    function provideFlexibility(int256 _flexibility) external {
-        if (_flexibility == 0) revert ZeroValueError("flexibility");
-        // TODO: should be .positiveFlexibility?
-        int256 expectedValue = (flexibilityRequest.flexibility *
-            agreements[msg.sender].value) /
-            energyBalance /
-            10;
-        int256 errorMargin = expectedValue / 10;
-        int256 diff = _flexibility > expectedValue
-            ? _flexibility - expectedValue
-            : expectedValue - _flexibility;
-        // Margin of error is 10% of the flexibility requested.
-        // TODO: reputation based on accuracy?
-        if (diff > errorMargin)
-            revert FlexibilityError(expectedValue, _flexibility);
-        emit ProvideFlexibility(msg.sender, _flexibility, block.timestamp);
-        int256 reward = _flexibility * agreements[msg.sender].flexibilityPrice;
-        for (uint256 i = 0; i < pendingRewards.length; i++) {
-            if (pendingRewards[i].prosumer == msg.sender) {
-                pendingRewards[i].reward = reward;
-                return;
+    function endFlexibilityRequest(FlexibilityResult[] calldata results)
+        external
+        isAggregator
+    {
+        // For all the results submitted by the aggregator...
+        for (uint256 i = 0; i < results.length; i++) {
+            int256 reward = 0;
+            if (results[i].flexibility == 0) {
+                // An error has occurred in the provisioning process.
+            } else if (
+                pendingRewards[results[i].prosumer].start !=
+                flexibilityRequest.start
+            ) {
+                // The prosumer didn't request a reward for this flexibility request
+            } else if (
+                inErrorMargin(
+                    results[i].flexibility,
+                    pendingRewards[results[i].prosumer].flexibility,
+                    flexibilityMargin
+                )
+            ) {
+                // The prosumer will receive the reward
+                reward =
+                    agreements[results[i].prosumer].flexibilityPrice *
+                    results[i].flexibility;
+            } else {
+                // The flexibility provided does not match the one requested
             }
-        }
-        pendingRewards.push(PendingReward(msg.sender, reward));
-    }
 
-    function rewardFlexibility() external {
-        for (uint256 i = 0; i < pendingRewards.length; i++) {
-            emit RewardFlexibility(
-                pendingRewards[i].prosumer,
-                pendingRewards[i].reward,
-                block.timestamp
+            // Assign the reward to the prosumer and emit the event
+            prosumers[results[i].prosumer].balance += reward;
+            emit ConfirmFlexibilityProvisioning(
+                flexibilityRequest.start,
+                results[i].prosumer,
+                results[i].flexibility,
+                reward
             );
-            prosumers[pendingRewards[i].prosumer].balance += pendingRewards[i]
-                .reward;
+            delete pendingRewards[results[i].prosumer];
         }
-        delete pendingRewards;
     }
 
     function rewardProduction() external {
         for (uint256 i = 0; i < prosumerList.length; i++) {
             int256 reward = agreements[prosumerList[i]].value *
                 agreements[prosumerList[i]].valuePrice;
-            emit RewardValue(prosumerList[i], reward, block.timestamp);
+            emit RewardProduction(
+                prosumerList[i],
+                block.timestamp,
+                agreements[prosumerList[i]].value,
+                reward
+            );
             prosumers[prosumerList[i]].balance += reward;
         }
     }
@@ -163,5 +199,39 @@ contract AggregatorContract is IAggregatorContract {
         for (uint256 i = 0; i < iotAddr.length; i++) {
             iotAddr[i].transfer(singleValue);
         }
+    }
+
+    /**
+     * @dev For the sake of the simulation,
+     * it will reset the status of the contract.
+     * All agreements will be deleted, as well as
+     * the list of prosumers and any current flexibility
+     * request.
+     */
+    function resetContract() external isAggregator {
+        energyBalance = 0;
+        for (uint256 i = 0; i < prosumerList.length; i++) {
+            delete agreements[prosumerList[i]];
+            delete prosumers[prosumerList[i]];
+            delete pendingRewards[prosumerList[i]];
+        }
+        delete prosumerList;
+        delete flexibilityRequest;
+    }
+
+    /**
+     * @notice Check whether the difference between two values is below a certain percentage
+     * @param value1 First value
+     * @param value2 Second value
+     * @param percentage The percentage of difference (0-100)
+     * @return True if the difference is below the percentage provided
+     */
+    function inErrorMargin(
+        int256 value1,
+        int256 value2,
+        int256 percentage
+    ) internal pure returns (bool) {
+        int256 diff = value1 > value2 ? value1 - value2 : value2 - value1;
+        return (diff * 100) / value1 <= percentage;
     }
 }

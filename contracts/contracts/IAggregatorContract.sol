@@ -17,6 +17,7 @@ interface IAggregatorContract {
     error ZeroValueError(string valueName);
     error UnauthorizedAggregatorError(address a);
     error FlexibilityError(int256 expected, int256 actual);
+    error FlexibilityRequestNotFoundError(uint256 expected, uint256 actual);
 
     struct Agreement {
         int256 value;
@@ -31,12 +32,17 @@ interface IAggregatorContract {
         uint256 idx;
     }
     struct FlexibilityRequest {
-        int256 flexibility;
-        uint256 timestamp;
-        uint256 duration;
+        uint256 start;
+        uint256 end;
+        int256 gridFlexibility;
     }
-    struct PendingReward {
+    struct FlexibilityResult {
         address prosumer;
+        int256 flexibility;
+    }
+    struct FlexibilitRewardRequest {
+        uint256 start;
+        int256 flexibility;
         int256 reward;
     }
 
@@ -49,25 +55,27 @@ interface IAggregatorContract {
     event CancelAgreement(address indexed prosumer, Agreement agreement);
 
     event RequestFlexibility(
+        uint256 indexed start,
+        uint256 indexed stop,
+        int256 gridFlexibility
+    );
+    event StartFlexibilityProvisioning(
+        uint256 indexed start,
+        address indexed prosumer,
         int256 flexibility,
+        int256 reward
+    );
+    event ConfirmFlexibilityProvisioning(
+        uint256 indexed start,
+        address indexed prosumer,
+        int256 flexibility,
+        int256 reward
+    );
+    event RewardProduction(
+        address indexed prosumer,
         uint256 indexed timestamp,
-        uint8 duration
-    );
-    event ProvideFlexibility(
-        address indexed prosumer,
-        int256 flexibility,
-        uint256 indexed timestamp
-    );
-    event RewardFlexibility(
-        address indexed prosumer,
-        int256 reward,
-        uint256 indexed timestamp
-    );
-
-    event RewardValue(
-        address indexed prosumer,
-        int256 reward,
-        uint256 indexed timestamp
+        int256 value,
+        int256 reward
     );
 
     function registerAgreement(Agreement calldata _agreement) external;
@@ -76,11 +84,17 @@ interface IAggregatorContract {
 
     function cancelAgreement() external;
 
-    function requestFlexibility(int256 _flexibility, uint8 _duration) external;
+    function requestFlexibility(
+        uint256 _start,
+        uint256 _end,
+        int256 _flexibility
+    ) external;
 
-    function provideFlexibility(int256 _flexibility) external;
+    function provideFlexibilityFair(uint256 _start, int256 _flexibility)
+        external;
 
-    function rewardFlexibility() external;
+    function endFlexibilityRequest(FlexibilityResult[] calldata results)
+        external;
 
     function rewardProduction() external;
 
