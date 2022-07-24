@@ -30,6 +30,9 @@ jobs:
         run: npm install
 
       - name: Compile the smart contracts
+        run: cp -r node_modules/ simulator/node_modules
+
+      - name: Compile the smart contracts
         run: npm run compile
 
       - name: Package electron
