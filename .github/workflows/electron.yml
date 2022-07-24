@@ -36,7 +36,9 @@ jobs:
         working-directory: contracts
 
       - name: Install dependencies - Simulator
-        run: npm install
+        run: |
+          npm install
+          npm i -D @nomicfoundation/hardhat-toolbox @nomiclabs/hardhat-ethers
         working-directory: simulator
 
       - name: Compile the smart contracts
