@@ -12,10 +12,6 @@ jobs:
   release:
     runs-on: ${{ matrix.os }}
 
-    defaults:
-      run:
-        working-directory: simulator
-
     strategy:
       matrix:
         node-version: [16.x]
@@ -37,7 +33,7 @@ jobs:
         run: npm run package
 
       - name: Upload the artifact
-        run: ls
+        run: ls simulator
 
       # - name: Upload the artifact
       #   uses: actions/upload-artifact@v2
