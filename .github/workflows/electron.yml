@@ -1,0 +1,46 @@
+name: Electron app release
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - simulator/**
+
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ${{ matrix.os }}
+
+    defaults:
+      run:
+        working-directory: simulator
+
+    strategy:
+      matrix:
+        node-version: [16.x]
+        os: [macos-latest, ubuntu-latest, windows-latest]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@master
+
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@master
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Package electron
+        run: npm run package
+
+      - name: Upload the artifact
+        run: ls
+
+      # - name: Upload the artifact
+      #   uses: actions/upload-artifact@v2
+      #   with:
+      #     name: EW-IoT-Simulator
+      #     path: path-to
