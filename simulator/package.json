@@ -10,6 +10,7 @@
     "watch": "parcel watch ./public/index.html --dist-dir dist/frontend --public-url ./",
     "prestart": "npm run build",
     "start": "electron .",
+    "prepackage": "npm run build",
     "package": "npm exec electron-packager --overwrite --icon=public/icons/icon.ico ."
   },
   "author": {
