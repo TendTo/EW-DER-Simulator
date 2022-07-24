@@ -35,12 +35,23 @@ jobs:
       - name: Package electron
         run: npm run package
 
-      - name: Upload the artifact
-        run: ls simulator
-
-      - name: Upload the artifact
+      - name: Upload the artifact - Linux
         if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v3
         with:
-          name: EW-IoT-Simulator
+          name: EW-IoT-Simulator-linux-x64
           path: simulator/EW IoT Simulator-linux-x64/
+
+      - name: Upload the artifact - MacOs
+        if: matrix.os == 'macos-latest'
+        uses: actions/upload-artifact@v3
+        with:
+          name: EW-IoT-Simulator-darwin-x64
+          path: simulator/EW IoT Simulator-darwin-x64/
+
+      - name: Upload the artifact - Windows
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v3
+        with:
+          name: EW-IoT-Simulator-win32-x64
+          path: simulator/EW IoT Simulator-win32-x64/
