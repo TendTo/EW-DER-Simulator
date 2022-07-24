@@ -11,7 +11,7 @@
     "prestart": "npm run build",
     "start": "electron .",
     "prepackage": "npm run build",
-    "package": "npm exec electron-packager --overwrite --icon=public/icons/icon.ico ."
+    "package": "npm exec electron-packager . --asar --icon=public/icons/icon.ico "
   },
   "author": {
     "name": "TendTo",
@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "@ethersproject/abi": "^5.6.4",
+    "@ethersproject/experimental": "^5.6.3",
     "@ethersproject/providers": "^5.6.8",
     "bip39": "^3.0.4",
     "chart.js": "^3.8.0",

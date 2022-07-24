@@ -1,10 +1,10 @@
-import { ContractTransaction } from "ethers";
+import { TransactionReceipt } from "@ethersproject/providers";
 import { Season } from "../constants";
 
 export default interface IIoT {
   address: string;
 
-  registerAgreement(): Promise<ContractTransaction>;
+  registerAgreement(): Promise<TransactionReceipt>;
 
   startProducing(): Promise<void>;
 

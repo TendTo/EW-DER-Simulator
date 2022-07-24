@@ -2,11 +2,10 @@ import { ipcMain, IpcMainEvent, BrowserWindow } from "electron";
 import { getLogger, Logger } from "log4js";
 import {
   CancelAgreementEvent,
-  IAggregatorContract,
   RegisterAgreementEvent,
   ReviseAgreementEvent,
 } from "src/typechain-types/AggregatorContract";
-import { BlockchainOptions, ClockOptions } from "../module";
+import { AgreementStructFrontend, BlockchainOptions, ClockOptions } from "../module";
 import Aggregator from "./Aggregator";
 import Clock from "./clock";
 
@@ -55,31 +54,36 @@ export default class IPCHandler {
 
   static onRegisterAgreementEvent(
     prosumer: string,
-    agreement: IAggregatorContract.AgreementStructOutput,
-    event: RegisterAgreementEvent
+    agreement: AgreementStructFrontend,
+    blockNumber: number
   ) {
-    this.instance.window.webContents.send("registerAgreementEvent", prosumer, agreement, event);
+    this.instance.window.webContents.send(
+      "registerAgreementEvent",
+      prosumer,
+      agreement,
+      blockNumber
+    );
   }
 
   static onCancelAgreementEvent(
     prosumer: string,
-    agreement: IAggregatorContract.AgreementStructOutput,
-    event: CancelAgreementEvent
+    agreement: AgreementStructFrontend,
+    blockNumber: number
   ) {
-    this.instance.window.webContents.send("cancelAgreementEvent", prosumer, agreement, event);
+    this.instance.window.webContents.send("cancelAgreementEvent", prosumer, agreement, blockNumber);
   }
   static onReviseAgreementEvent(
     prosumer: string,
-    oldAgreement: IAggregatorContract.AgreementStructOutput,
-    newAgreement: IAggregatorContract.AgreementStructOutput,
-    event: ReviseAgreementEvent
+    oldAgreement: AgreementStructFrontend,
+    newAgreement: AgreementStructFrontend,
+    blockNumber: number
   ) {
     this.instance.window.webContents.send(
       "reviseAgreementEvent",
       prosumer,
       oldAgreement,
       newAgreement,
-      event
+      blockNumber
     );
   }
 
@@ -99,10 +103,11 @@ export default class IPCHandler {
       .catch((err) => {
         this.logger.error(err);
       })
-      .finally(() => IPCHandler.onStopLoading);
+      .finally(() => IPCHandler.onStopLoading());
   };
 
   stopSimulation = (_: IpcMainEvent) => {
     this.aggregator.stopSimulation();
+    delete this.aggregator;
   };
 }

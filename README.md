@@ -32,22 +32,36 @@ npm start
 
 ## 🧪 Test
 
+```bash
+npm test
+```
+
 ## Flow
 
 ![flow](./docs/flow.jpg)
 
 ### Todo
 
-- [ ] Interazione con la blockchain Volta
+- [x] Interazione con la blockchain Volta
+- [x] Registrazione di un agreement all'avvio
 - [ ] Aggiungere funzionalità di flessibilità
 - [ ] Aggiungere possibilità di imprevisti
 - [ ] Rimanere in attesa di Log di flessibilità
-- [ ] Aggiungere la possibilità di visualizzare i Log
+- [x] Aggiungere la visualizzazione dei Log degli agreement
 - [ ] Aggiungere scala temporale
-- [ ] Aggiungere misura aggregata
+- [x] Aggiungere misura aggregata
 - [ ] Aggiungere label del singolo DER
+
+## ⛏ Tools
+
+- [NodeJs 16.x](https://nodejs.org/)
+- [electron](https://www.electronjs.org/)
+- [hardhat](https://hardhat.org/)
+- [Nethermind](https://nethermind.io/)
+- [etherjs](https://docs.ethers.io/v5/single-page/)
 
 ## 📚 Reference
 
+- [Run local RPC node](https://energy-web-foundation.gitbook.io/energy-web/how-tos-and-tutorials/running-a-local-node)
 - [What is a Blockchain Node Provider? Why Do I Need One?](https://www.alchemy.com/blog/what-is-a-node-provider)
 - [Hierarchical key generation](https://alexey-shepelev.medium.com/hierarchical-key-generation-fc27560f786)

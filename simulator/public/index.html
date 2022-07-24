@@ -45,7 +45,7 @@
                     name="contractAddress"
                     type="text"
                     class="form-control"
-                    placeholder="0x2594f79bd3c865CEb109CF2df97F5ee6E490A43D"
+                    placeholder="0xCE3b21daF429B705d5f8eA3d409c047641a4496B"
                     pattern="^0x[0-9a-fA-F]{40}$"
                   />
                 </div>
@@ -68,6 +68,23 @@
                   <input
                     id="numberOfDERs"
                     name="numberOfDERs"
+                    type="number"
+                    class="form-control"
+                    placeholder="1"
+                  />
+                </div>
+                <div class="form-group">
+                  <label>DERs per source type</label>
+                  <input
+                    id="numberOfSolarDERs"
+                    name="numberOfSolarDERs"
+                    type="number"
+                    class="form-control"
+                    placeholder="1"
+                  />
+                  <input
+                    id="numberOfSolarDERs"
+                    name="numberOfSolarDERs"
                     type="number"
                     class="form-control"
                     placeholder="1"
@@ -117,10 +134,10 @@
                 <!-- End Time Info -->
                 <!-- Submit buttons -->
                 <div class="align-left gap-1">
-                  <button id="stop" role="button" type="button" class="btn btn-negative">
+                  <button id="stop" role="button" type="button" class="btn btn-negative" disabled>
                     <span class="icon icon-stop"></span>
                   </button>
-                  <button role="button" type="submit" class="btn btn-positive">
+                  <button id="start" role="button" type="submit" class="btn btn-positive">
                     <span class="icon icon-play"></span>
                   </button>
                 </div>
@@ -139,11 +156,11 @@
             <table style="grid-area: flexibilityTable">
               <thead>
                 <tr>
+                  <th>Block number</th>
                   <th>Prosumer</th>
                   <th>Start</th>
                   <th>Flexibility</th>
                   <th>Reward</th>
-                  <th>Type</th>
                 </tr>
               </thead>
               <tbody id="flexibilityLogTBody">

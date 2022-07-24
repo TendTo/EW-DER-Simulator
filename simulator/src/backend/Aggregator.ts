@@ -1,5 +1,6 @@
-import { Wallet, providers, utils, BigNumber } from "ethers";
-import { Season } from "./constants";
+import { Wallet, providers, BigNumber } from "ethers";
+import { NonceManager } from "@ethersproject/experimental";
+import { ETHPerIoT, Season } from "./constants";
 import IPCHandler from "./IPCHandler";
 import Clock from "./clock";
 import { BlockchainOptions } from "../module";
@@ -8,6 +9,7 @@ import { IIoT } from "./iot";
 import ITickable from "./ITickable";
 import { AggregatorContract, AggregatorContract__factory } from "../typechain-types";
 import { getLogger, Logger } from "log4js";
+import { parseAgreementLog } from "./utils";
 
 export default class Aggregator implements ITickable {
   private wallet: Wallet;
@@ -43,12 +45,13 @@ export default class Aggregator implements ITickable {
     return this.contract.requestFlexibility(1, 1, 1);
   }
 
-  private distributeFounds() {
+  private async distributeFounds() {
     this.logger.log(`Sending funds`);
-    return this.contract.sendFunds(
+    const tx = await this.contract.sendFunds(
       this.iots.map((iot) => iot.address),
-      { value: BigNumber.from(1) }
+      { value: BigNumber.from(ETHPerIoT).mul(this.iots.length) }
     );
+    return await tx.wait();
   }
 
   private startProducing() {
@@ -77,7 +80,12 @@ export default class Aggregator implements ITickable {
     this.logger.log(`Setup listeners for contract logs`);
 
     this.contract.on(this.contract.filters.RegisterAgreement(), (prosumer, agreement, event) => {
-      IPCHandler.onRegisterAgreementEvent(prosumer, agreement, event);
+      if (event.blockNumber < this.blockNumber) return;
+      IPCHandler.onRegisterAgreementEvent(
+        prosumer,
+        parseAgreementLog(agreement),
+        event.blockNumber
+      );
       this.logger.log(
         `RegisterAgreementEvent ${prosumer} ${agreement} - Block ${event.blockNumber}`
       );
@@ -86,7 +94,13 @@ export default class Aggregator implements ITickable {
     this.contract.on(
       this.contract.filters.ReviseAgreement(),
       (prosumer, oldAgreement, newAgreement, event) => {
-        IPCHandler.onReviseAgreementEvent(prosumer, oldAgreement, newAgreement, event);
+        if (event.blockNumber < this.blockNumber) return;
+        IPCHandler.onReviseAgreementEvent(
+          prosumer,
+          parseAgreementLog(oldAgreement),
+          parseAgreementLog(newAgreement),
+          event.blockNumber
+        );
         this.logger.log(
           `ReviseAgreementEvent ${prosumer} ${oldAgreement} -> ${newAgreement} - Block ${event.blockNumber}`
         );
@@ -94,7 +108,8 @@ export default class Aggregator implements ITickable {
     );
 
     this.contract.on(this.contract.filters.CancelAgreement(), (prosumer, agreement, event) => {
-      IPCHandler.onCancelAgreementEvent(prosumer, agreement, event);
+      if (event.blockNumber < this.blockNumber) return;
+      IPCHandler.onCancelAgreementEvent(prosumer, parseAgreementLog(agreement), event.blockNumber);
       this.logger.log(`CancelAgreementEvent ${prosumer} ${agreement} - Block ${event.blockNumber}`);
     });
   }
@@ -107,15 +122,16 @@ export default class Aggregator implements ITickable {
   }
 
   private registerAgreements() {
-    return Promise.all(this.iots.map((iot) => iot.registerAgreement()));
+    return Promise.allSettled(this.iots.map((iot) => iot.registerAgreement()));
   }
 
   public async setupSimulation(initialFunds: boolean) {
     this.logger.log(`Setup production`);
     await this.getNetworkInfo();
+    this.listenContractLogs();
     this.iots = await IoTFactory.createIoTs(this, this.mnemonic, this.numberOfDERs);
     if (initialFunds) await this.distributeFounds();
-    // await this.registerAgreements();
+    this.registerAgreements();
     this.setupClock();
   }
 
@@ -124,6 +140,7 @@ export default class Aggregator implements ITickable {
   }
 
   stopSimulation() {
+    this.contract.removeAllListeners();
     this.clock.stop();
     this.iots.forEach((iot) => iot.stopProducing());
     delete this.iots;

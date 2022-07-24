@@ -1,15 +1,17 @@
-import type { IAggregatorContract } from "src/typechain-types";
 import type { SettingsForm, AgreementEventType } from "./types";
 import ButtonWrapper from "./buttonsWrapper";
 import ChartWrapper from "./chartWrapper";
 import TableManager from "./tableManager";
+import { AgreementStructFrontend } from "src/module";
 
 export default class EventHandler {
   private readonly chart: ChartWrapper;
   private readonly tableManager: TableManager;
   private readonly buttonsWrapper: ButtonWrapper;
+  private isPlaying: boolean;
 
   constructor() {
+    this.isPlaying = false;
     this.chart = new ChartWrapper();
     this.tableManager = new TableManager();
     this.buttonsWrapper = new ButtonWrapper();
@@ -29,37 +31,39 @@ export default class EventHandler {
   }
 
   private onCancelAgreementEvent() {
-    window.electronAPI.on.cancelAgreementEvent((_, prosumer, agreement, event) => {
-      this.addAgreementRow(event.blockNumber, prosumer, agreement, "cancel");
+    window.electronAPI.on.cancelAgreementEvent((_, prosumer, agreement, blockNumber) => {
+      this.addAgreementRow(blockNumber, prosumer, agreement, "cancel");
     });
   }
 
   private onReviseAgreementEvent() {
-    window.electronAPI.on.reviseAgreementEvent((_, prosumer, oldAgreement, newAgreement, event) => {
-      this.addAgreementRow(event.blockNumber, prosumer, newAgreement, "revise");
-    });
+    window.electronAPI.on.reviseAgreementEvent(
+      (_, prosumer, oldAgreement, newAgreement, blockNumber) => {
+        this.addAgreementRow(blockNumber, prosumer, newAgreement, "revise");
+      }
+    );
   }
 
   private onRegisterAgreementEvent() {
-    window.electronAPI.on.registerAgreementEvent((_, prosumer, agreement, event) => {
-      this.addAgreementRow(event.blockNumber, prosumer, agreement, "register");
+    window.electronAPI.on.registerAgreementEvent((_, prosumer, agreement, blockNumber) => {
+      this.addAgreementRow(blockNumber, prosumer, agreement, "register");
     });
   }
 
   private addAgreementRow(
     blockNumber: number,
     prosumer: string,
-    { value, valuePrice, flexibility, flexibilityPrice }: IAggregatorContract.AgreementStructOutput,
+    { value, valuePrice, flexibility, flexibilityPrice }: AgreementStructFrontend,
     eventType: AgreementEventType
   ) {
     this.tableManager.addAgreementLogRow(
       {
         blockNumber,
         address: prosumer,
-        value: value.toString(),
-        valuePrice: valuePrice.toString(),
-        flexibility: flexibility.toString(),
-        flexibilityPrice: flexibilityPrice.toString(),
+        value: value,
+        valuePrice: valuePrice,
+        flexibility: flexibility,
+        flexibilityPrice: flexibilityPrice,
       },
       eventType
     );
@@ -69,12 +73,14 @@ export default class EventHandler {
     const form = document.getElementById("settings") as SettingsForm;
     form.addEventListener("submit", (e) => {
       e.preventDefault();
+      if (this.isPlaying) return;
+      this.isPlaying = true;
       const blockchainData = {
         rpcUrl: form.rpcUrl.value || "http://134.209.139.226:8545",
         seed: form.seed.value || form.sk.value,
         sk: form.sk.value,
         numberOfDERs: parseInt(form.numberOfDERs.value) || 1,
-        contractAddress: form.contractAddress.value || "0x2594f79bd3c865CEb109CF2df97F5ee6E490A43D",
+        contractAddress: form.contractAddress.value || "0xCE3b21daF429B705d5f8eA3d409c047641a4496B",
       };
       const clockData = {
         season: parseInt(form.season.value) || 0,
@@ -90,7 +96,10 @@ export default class EventHandler {
     const stopButton = document.getElementById("stop") as HTMLButtonElement;
     stopButton.addEventListener("click", () => {
       window.electronAPI.send.stopSimulation();
+      this.isPlaying = false;
       this.chart.reset();
+      this.tableManager.reset();
+      this.buttonsWrapper.playing(false);
       console.log("Simulation stopped");
     });
   }
@@ -118,7 +127,7 @@ export default class EventHandler {
   }
 
   private onStopLoading() {
-    window.electronAPI.on.startLoading((_) => {
+    window.electronAPI.on.stopLoading((_) => {
       console.log("Loading stopped");
       this.buttonsWrapper.loading(false);
     });

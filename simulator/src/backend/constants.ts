@@ -14,4 +14,4 @@ export enum Season {
   Autumn,
 }
 
-export const ETHPerIoT = 100000;
+export const ETHPerIoT = "1000000000000000";

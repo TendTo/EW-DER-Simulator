@@ -1,4 +1,4 @@
-import { Wallet } from "ethers";
+import { BigNumber, Wallet } from "ethers";
 import { AggregatorContract } from "../../typechain-types";
 import Agreement from "../Agreement";
 import Aggregator from "../Aggregator";
@@ -23,20 +23,32 @@ abstract class IoT implements IIoT, ITickable {
     this.logger.debug(`IoT ${this.wallet.address} - Created`);
   }
 
-  public registerAgreement() {
-    return this.contract.registerAgreement(this.agreement.struct);
+  public async registerAgreement() {
+    if (this.running) return;
+    try {
+      if ((await this.wallet.getBalance()).lt(BigNumber.from(1000)))
+        this.logger.warn(`IoT ${this.address} - Low Balance`);
+      const tx = await this.contract.registerAgreement(this.agreement.struct);
+      const receipt = await tx.wait();
+      this.running = true;
+      this.logger.log(`IoT ${this.address} - Agreement registered`);
+      return receipt;
+    } catch (e) {
+      this.logger.error(`IoT ${this.address} - Error registering agreement`);
+      this.logger.error(`IoT ${this.address} - ${e}`);
+    }
   }
 
   public async startProducing() {
     this.logger.debug(`IoT ${this.address} - Start producing`);
-    this.running = true;
   }
 
   public async onTick(season: Season, day: number, hour: number) {
     if (!this.running || this.wait()) return;
-    this.logger.debug(`IoT ${this.address} - Producing...`);
-    const value = this.produce(season, day, hour);
+    let value = this.produce(season, day, hour);
+
     this.aggregator.onIoTReading(this.address, value);
+    this.logger.debug(`IoT ${this.address} - Produced ${value}`);
   }
 
   public stopProducing() {
@@ -64,14 +76,3 @@ abstract class IoT implements IIoT, ITickable {
 }
 
 export default IoT;
-
-/**
- * Check if the difference between two values is below a certain percentage
- * @param value1 first value
- * @param value2 second value
- * @param percentage the percentage of difference
- * @returns true if the difference is below the percentage
- */
-function checkErrorMargin(value1: number, value2: number, margin: number) {
-  return Math.abs(value1 - value2) / value1 < margin;
-}

@@ -19,4 +19,12 @@ export type AgreementLogRow = {
   flexibilityPrice: string;
 };
 
+export type FlexibilityLogRow = {
+  blockNumber: number;
+  address: string;
+  flexibility: number;
+  reward: number;
+  start: number;
+};
+
 export type AgreementEventType = "register" | "revise" | "cancel";
