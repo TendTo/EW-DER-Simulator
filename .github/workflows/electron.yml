@@ -26,17 +26,24 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
-      - name: Install dependencies
-        run: npm install
+      - name: Remove workspaces
+        run: rm package.json package-lock.json
 
-      - name: Compile the smart contracts
-        run: cp -r node_modules/ simulator/node_modules
+      - name: Install dependencies - Contracts
+        run: npm install
+        working-directory: contracts
+
+      - name: Install dependencies - Simulator
+        run: npm install
+        working-directory: simulator
 
       - name: Compile the smart contracts
         run: npm run compile
+        working-directory: contracts
 
       - name: Package electron
         run: npm run package
+        working-directory: simulator
 
       - name: Upload the artifact - Linux
         if: matrix.os == 'ubuntu-latest'
