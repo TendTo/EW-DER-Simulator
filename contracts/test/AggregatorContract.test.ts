@@ -321,5 +321,14 @@ describe("AggregatorContract", function () {
         flexibility.toNumber(),
       ]).to.have.ordered.members([0, 0, 0, 0, 0, 0]);
     });
+    it("selfDestruct: Contract is deleted", async function () {
+      await contract.selfDestruct();
+      await expect(contract.aggregator()).to.be.revertedWithoutReason();
+    });
+    it("selfDestruct: Only the aggregator can use this function", async function () {
+      await expect(iot1Contract.selfDestruct())
+        .to.be.revertedWithCustomError(contract, ContractError.UnauthorizedAggregatorError)
+        .withArgs(iot1Addr);
+    });
   });
 });

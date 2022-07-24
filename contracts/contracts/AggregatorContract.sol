@@ -30,14 +30,12 @@ contract AggregatorContract is IAggregatorContract {
     }
 
     modifier isAggregator() {
-        if (msg.sender != aggregator)
-            revert UnauthorizedAggregatorError(msg.sender);
+        if (msg.sender != aggregator) revert UnauthorizedAggregatorError(msg.sender);
         _;
     }
 
     modifier agreementExists(address _address) {
-        if (agreements[_address].value == 0)
-            revert AgreementDoesNotExistsError();
+        if (agreements[_address].value == 0) revert AgreementDoesNotExistsError();
         _;
     }
 
@@ -66,10 +64,7 @@ contract AggregatorContract is IAggregatorContract {
         emit RegisterAgreement(msg.sender, _agreement);
     }
 
-    function reviseAgreement(Agreement calldata _agreement)
-        external
-        agreementExists(msg.sender)
-    {
+    function reviseAgreement(Agreement calldata _agreement) external agreementExists(msg.sender) {
         if (_agreement.value == 0) revert ZeroValueError("value");
 
         emit ReviseAgreement(msg.sender, agreements[msg.sender], _agreement);
@@ -108,45 +103,27 @@ contract AggregatorContract is IAggregatorContract {
     {
         if (_flexibility == 0) revert ZeroValueError("flexibility");
         if (flexibilityRequest.start != _start)
-            revert FlexibilityRequestNotFoundError(
-                flexibilityRequest.start,
-                _start
-            );
+            revert FlexibilityRequestNotFoundError(flexibilityRequest.start, _start);
         // Each prosumer is expected to provide a flexibility proportional
         // to the value it normally provides.
-        int256 expectedValue = (flexibilityRequest.gridFlexibility *
-            agreements[msg.sender].value) / energyBalance;
+        int256 expectedValue = (flexibilityRequest.gridFlexibility * agreements[msg.sender].value) /
+            energyBalance;
         // TODO: reputation based on accuracy?
         // Margin of error is 10% of the flexibility requested.
         if (!inErrorMargin(expectedValue, _flexibility, flexibilityMargin))
             revert FlexibilityError(expectedValue, _flexibility);
         int256 reward = _flexibility * agreements[msg.sender].flexibilityPrice;
-        emit StartFlexibilityProvisioning(
-            _start,
-            msg.sender,
-            _flexibility,
-            reward
-        );
-        pendingRewards[msg.sender] = FlexibilitRewardRequest(
-            _start,
-            _flexibility,
-            reward
-        );
+        emit StartFlexibilityProvisioning(_start, msg.sender, _flexibility, reward);
+        pendingRewards[msg.sender] = FlexibilitRewardRequest(_start, _flexibility, reward);
     }
 
-    function endFlexibilityRequest(FlexibilityResult[] calldata results)
-        external
-        isAggregator
-    {
+    function endFlexibilityRequest(FlexibilityResult[] calldata results) external isAggregator {
         // For all the results submitted by the aggregator...
         for (uint256 i = 0; i < results.length; i++) {
             int256 reward = 0;
             if (results[i].flexibility == 0) {
                 // An error has occurred in the provisioning process.
-            } else if (
-                pendingRewards[results[i].prosumer].start !=
-                flexibilityRequest.start
-            ) {
+            } else if (pendingRewards[results[i].prosumer].start != flexibilityRequest.start) {
                 // The prosumer didn't request a reward for this flexibility request
             } else if (
                 inErrorMargin(
@@ -156,9 +133,7 @@ contract AggregatorContract is IAggregatorContract {
                 )
             ) {
                 // The prosumer will receive the reward
-                reward =
-                    agreements[results[i].prosumer].flexibilityPrice *
-                    results[i].flexibility;
+                reward = agreements[results[i].prosumer].flexibilityPrice * results[i].flexibility;
             } else {
                 // The flexibility provided does not match the one requested
             }
@@ -233,5 +208,14 @@ contract AggregatorContract is IAggregatorContract {
     ) internal pure returns (bool) {
         int256 diff = value1 > value2 ? value1 - value2 : value2 - value1;
         return (diff * 100) / value1 <= percentage;
+    }
+
+    /**
+     * @dev For the sake of the simulation,
+     * the aggregator can destro the current implementation
+     * of the contract, and replace it with a new one.
+     */
+    function selfDestruct() external isAggregator {
+        selfdestruct(payable(aggregator));
     }
 }
