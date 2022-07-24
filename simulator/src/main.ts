@@ -15,6 +15,7 @@ class Main {
       webPreferences: {
         preload: path.join(__dirname, "preload.js"),
       },
+      icon: path.join(__dirname, "../../public/icons/icon.ico"),
     });
 
     this.mainWindow.loadFile(path.join(__dirname, "../frontend/index.html"));

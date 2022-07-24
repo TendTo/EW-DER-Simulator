@@ -19,4 +19,4 @@ export type AgreementLogRow = {
   flexibilityPrice: string;
 };
 
-export type EventType = "register" | "revise" | "cancel";
+export type AgreementEventType = "register" | "revise" | "cancel";

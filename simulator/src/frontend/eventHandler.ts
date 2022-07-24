@@ -1,5 +1,5 @@
 import type { IAggregatorContract } from "src/typechain-types";
-import type { SettingsForm, EventType } from "./types";
+import type { SettingsForm, AgreementEventType } from "./types";
 import ButtonWrapper from "./buttonsWrapper";
 import ChartWrapper from "./chartWrapper";
 import TableManager from "./tableManager";
@@ -50,7 +50,7 @@ export default class EventHandler {
     blockNumber: number,
     prosumer: string,
     { value, valuePrice, flexibility, flexibilityPrice }: IAggregatorContract.AgreementStructOutput,
-    eventType: EventType
+    eventType: AgreementEventType
   ) {
     this.tableManager.addAgreementLogRow(
       {
@@ -69,7 +69,6 @@ export default class EventHandler {
     const form = document.getElementById("settings") as SettingsForm;
     form.addEventListener("submit", (e) => {
       e.preventDefault();
-      // TODO: REMOVE THIS DEFAULT VALUE
       const blockchainData = {
         rpcUrl: form.rpcUrl.value || "http://134.209.139.226:8545",
         seed: form.seed.value || form.sk.value,

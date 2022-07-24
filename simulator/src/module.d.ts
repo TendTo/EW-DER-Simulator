@@ -1,3 +1,4 @@
+import { IpcRenderer, IpcRendererEvent } from "electron";
 import type { WebContents } from "electron/main";
 import type { Season } from "./backend/constants";
 import type { IAggregatorContract } from "./typechain-types";
@@ -91,17 +92,16 @@ declare module "electron" {
   interface BrowserWindow {
     webContents: ApiWebContents;
   }
-  namespace Electron {
-    interface IpcMain {
-      on<T extends keyof ElectronAPI["send"]>(
-        channel: T,
-        listener: (
-          event: IpcRendererEvent,
-          ...args: ElectronAPI["send"][T] extends (...args: infer P) => any ? P : never
-        ) => void
-      ): IpcRenderer;
-    }
-  }
 }
 
-export const Electron: typeof ExtendsElectron & typeof OrigElectron;
+declare namespace Electron {
+  interface IpcMain {
+    on<T extends keyof ElectronAPI["send"]>(
+      channel: T,
+      listener: (
+        event: IpcRendererEvent,
+        ...args: ElectronAPI["send"][T] extends (...args: infer P) => any ? P : never
+      ) => void
+    ): IpcRenderer;
+  }
+}
