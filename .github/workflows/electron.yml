@@ -35,8 +35,9 @@ jobs:
       - name: Upload the artifact
         run: ls simulator
 
-      # - name: Upload the artifact
-      #   uses: actions/upload-artifact@v2
-      #   with:
-      #     name: EW-IoT-Simulator
-      #     path: path-to
+      - name: Upload the artifact
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v3
+        with:
+          name: EW-IoT-Simulator
+          path: simulator/EW IoT Simulator-linux-x64/
