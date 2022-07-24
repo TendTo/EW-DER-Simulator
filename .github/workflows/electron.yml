@@ -26,6 +26,11 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
+      - name: Remove dependencies
+        run: |
+          rm package.json
+          rm package-lock.json
+
       - name: Install dependencies - Contracts
         run: npm install
         working-directory: contracts
