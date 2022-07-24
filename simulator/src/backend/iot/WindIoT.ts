@@ -7,6 +7,7 @@ import IoT from "./IoT";
 export default class WindIoT extends IoT {
   public constructor(aggregator: Aggregator, sk: string) {
     super(aggregator, sk);
+    this.logger.debug(`IoT ${this.wallet.address} - Created WindIoT`);
   }
 
   protected provideFlexibility(event: any): void {
@@ -34,13 +35,7 @@ export default class WindIoT extends IoT {
     const flexibility = Math.floor(value * 0.25);
     const valueCost = Math.floor(Math.random() * this.maxCost + this.minCost);
     const flexibilityCost = Math.floor(valueCost * 1.1);
-    return new Agreement(
-      value,
-      flexibility,
-      valueCost,
-      flexibilityCost,
-      EnergySource.Solar
-    );
+    return new Agreement(value, flexibility, valueCost, flexibilityCost, EnergySource.Solar);
   }
 
   protected get maxValue(): number {

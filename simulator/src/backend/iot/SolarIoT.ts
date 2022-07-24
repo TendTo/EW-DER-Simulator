@@ -7,6 +7,7 @@ import IoT from "./IoT";
 export default class SolarIoT extends IoT {
   public constructor(aggregator: Aggregator, sk: string) {
     super(aggregator, sk);
+    this.logger.debug(`IoT ${this.wallet.address} - Created SolarIoT`);
   }
 
   protected provideFlexibility(event: any): void {
@@ -23,9 +24,7 @@ export default class SolarIoT extends IoT {
    */
   protected produce(season: Season, _: number, hour: number): number {
     return (
-      this.agreement.value *
-        0.01 *
-        Math.sin(2 * Math.PI * (hour / 24) - Math.PI / 2) +
+      this.agreement.value * 0.01 * Math.sin(2 * Math.PI * (hour / 24) - Math.PI / 2) +
       this.agreement.value
     );
   }
@@ -39,13 +38,7 @@ export default class SolarIoT extends IoT {
     const flexibility = Math.floor(value * 0.25);
     const valueCost = Math.floor(Math.random() * this.maxCost + this.minCost);
     const flexibilityCost = Math.floor(valueCost * 1.1);
-    return new Agreement(
-      value,
-      flexibility,
-      valueCost,
-      flexibilityCost,
-      EnergySource.Solar
-    );
+    return new Agreement(value, flexibility, valueCost, flexibilityCost, EnergySource.Solar);
   }
 
   protected get maxValue(): number {

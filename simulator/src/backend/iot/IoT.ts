@@ -20,10 +20,9 @@ abstract class IoT implements IIoT, ITickable {
     this.wallet = new Wallet(sk, this.aggregator.provider);
     this.agreement = this.createAgreement();
     this.contract = aggregator.contract.connect(this.wallet);
-    this.logger.debug(`IoT ${this.wallet.address} - Created`);
   }
 
-  public async registerAgreement() {
+  private async registerAgreement() {
     if (this.running) return;
     try {
       if ((await this.wallet.getBalance()).lt(BigNumber.from(1000)))
@@ -41,6 +40,7 @@ abstract class IoT implements IIoT, ITickable {
 
   public async startProducing() {
     this.logger.debug(`IoT ${this.address} - Start producing`);
+    this.registerAgreement();
   }
 
   public async onTick(season: Season, day: number, hour: number) {

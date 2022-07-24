@@ -2,11 +2,12 @@ export type SettingsForm = HTMLFormElement & {
   rpcUrl: HTMLInputElement;
   sk: HTMLInputElement;
   seed: HTMLInputElement;
-  numberOfDERs: HTMLInputElement;
+  numberOfSolarDERs: HTMLInputElement;
+  numberOfWindDERs: HTMLInputElement;
   contractAddress: HTMLInputElement;
   season: HTMLInputElement;
   tickInterval: HTMLInputElement;
-  hourIncrement: HTMLInputElement;
+  tickIncrement: HTMLInputElement;
   initialFunds: HTMLInputElement;
 };
 

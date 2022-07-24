@@ -5,6 +5,7 @@ import Aggregator from "../Aggregator";
 import { EnergySource } from "../constants";
 import IIoT from "./IIoT";
 import SolarIoT from "./SolarIoT";
+import { NumberOfDERs } from "src/module";
 
 type IoTRequestOptions = {
   source: EnergySource;
@@ -22,20 +23,16 @@ export default class IoTFactory {
   static async createIoTs(
     aggregator: Aggregator,
     mnemonic: string,
-    number: number | IoTRequestOptions[]
+    ders: NumberOfDERs
   ): Promise<IIoT[]> {
     const masterKey = hdkey.fromMasterSeed(await mnemonicToSeed(mnemonic));
-    const output = [];
-    if (typeof number === "number") {
+    let counter = 0;
+    return Object.entries(ders).map(([source, number]) => {
       for (let i = 0; i < number; i++) {
-        const wal = masterKey.derivePath(`m/44'/60'/0'/0/${i}`).getWallet();
-        if (i < number / 2)
-          output.push(new SolarIoT(aggregator, wal.getPrivateKeyString()));
-        else output.push(new WindIoT(aggregator, wal.getPrivateKeyString()));
+        const wallet = masterKey.derivePath(`m/44'/60'/0'/0/${counter++}`).getWallet();
+        const sk = wallet.getPrivateKeyString();
+        return source === "Wind" ? new WindIoT(aggregator, sk) : new SolarIoT(aggregator, sk);
       }
-    } else {
-      throw new Error("parameter: IoTRequestOptions[] Not implemented");
-    }
-    return output;
+    });
   }
 }

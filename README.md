@@ -1,5 +1,6 @@
 # EW DER Simulator
 
+[![Electron app release](https://github.com/TendTo/EW-DER-Simulator/actions/workflows/electron.yml/badge.svg)](https://github.com/TendTo/EW-DER-Simulator/actions/workflows/electron.yml)
 [![Contract tests](https://github.com/TendTo/EW-DER-Simulator/actions/workflows/contract-tests.yml/badge.svg)](https://github.com/TendTo/EW-DER-Simulator/actions/workflows/contract-tests.yml)
 [![codecov](https://codecov.io/gh/TendTo/EW-DER-Simulator/branch/master/graph/badge.svg?token=QBCXSTET23)](https://codecov.io/gh/TendTo/EW-DER-Simulator)
 
@@ -44,6 +45,7 @@ npm test
 
 - [x] Interazione con la blockchain Volta
 - [x] Registrazione di un agreement all'avvio
+- [ ] Differenziare il numero di DER per tipologia
 - [ ] Aggiungere funzionalità di flessibilità
 - [ ] Aggiungere possibilità di imprevisti
 - [ ] Rimanere in attesa di Log di flessibilità

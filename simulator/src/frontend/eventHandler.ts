@@ -2,7 +2,7 @@ import type { SettingsForm, AgreementEventType } from "./types";
 import ButtonWrapper from "./buttonsWrapper";
 import ChartWrapper from "./chartWrapper";
 import TableManager from "./tableManager";
-import { AgreementStructFrontend } from "src/module";
+import { AgreementStructFrontend, BlockchainOptions } from "../module";
 
 export default class EventHandler {
   private readonly chart: ChartWrapper;
@@ -75,16 +75,19 @@ export default class EventHandler {
       e.preventDefault();
       if (this.isPlaying) return;
       this.isPlaying = true;
-      const blockchainData = {
+      const blockchainData: BlockchainOptions = {
         rpcUrl: form.rpcUrl.value || "http://134.209.139.226:8545",
         seed: form.seed.value || form.sk.value,
         sk: form.sk.value,
-        numberOfDERs: parseInt(form.numberOfDERs.value) || 1,
+        numberOfDERs: {
+          Solar: parseInt(form.numberOfSolarDERs.value) || 1,
+          Wind: parseInt(form.numberOfWindDERs.value) || 1,
+        },
         contractAddress: form.contractAddress.value || "0xCE3b21daF429B705d5f8eA3d409c047641a4496B",
       };
       const clockData = {
         season: parseInt(form.season.value) || 0,
-        hourIncrement: parseInt(form.hourIncrement.value) || 1,
+        tickIncrement: parseInt(form.tickIncrement.value) || 1,
         tickInterval: parseInt(form.tickInterval.value) * 1000 || 1000,
       };
       window.electronAPI.send.startSimulation(blockchainData, clockData, form.initialFunds.checked);

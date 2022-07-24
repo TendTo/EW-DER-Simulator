@@ -1,6 +1,6 @@
 import type { IpcRenderer, IpcRendererEvent } from "electron";
 import type { WebContents } from "electron/main";
-import type { Season } from "./backend/constants";
+import type { EnergySource, Season } from "./backend/constants";
 
 export type GetApiType<
   SendFromRenderer extends Record<string, (...args: any[]) => any>,
@@ -16,12 +16,14 @@ export type GetApiType<
   };
 };
 
+export type NumberOfDERs = Partial<Record<keyof typeof EnergySource, number>>;
+
 export type BlockchainOptions = {
   rpcUrl: string;
   contractAddress: string;
   seed: string;
   sk: string;
-  numberOfDERs: number;
+  numberOfDERs: NumberOfDERs;
 };
 
 export type ClockOptions = {
@@ -29,7 +31,7 @@ export type ClockOptions = {
   tickInterval?: number;
   hour?: number;
   day?: number;
-  hourIncrement?: number;
+  tickIncrement?: number;
 };
 
 export type AgreementStructFrontend = {
@@ -93,6 +95,17 @@ type ApiWebContents = Omit<WebContents, "send"> & {
 declare module "electron" {
   interface BrowserWindow {
     webContents: ApiWebContents;
+  }
+  namespace Electron {
+    interface IpcMain {
+      on<T extends keyof ElectronAPI["send"]>(
+        channel: T,
+        listener: (
+          event: IpcRendererEvent,
+          ...args: ElectronAPI["send"][T] extends (...args: infer P) => any ? P : never
+        ) => void
+      ): IpcRenderer;
+    }
   }
 }
 

@@ -15,7 +15,7 @@ export default class Clock {
   private season: Season;
   private day: number;
   private hour: number;
-  private hourIncrement: number;
+  private tickIncrement: number;
   private tickInterval: number;
   /**
    * Creates a new clock.
@@ -25,13 +25,13 @@ export default class Clock {
       season = Season.Winter,
       day = 0,
       hour = 0,
-      hourIncrement = 1,
+      tickIncrement = 1,
       tickInterval = 1000,
     }: ClockOptions = {
       season: Season.Winter,
       day: 0,
       hour: 0,
-      hourIncrement: 1,
+      tickIncrement: 1,
       tickInterval: 1000,
     }
   ) {
@@ -40,7 +40,7 @@ export default class Clock {
     this.season = season;
     this.day = day;
     this.hour = hour;
-    this.hourIncrement = hourIncrement;
+    this.tickIncrement = tickIncrement;
     this.tickInterval = tickInterval;
   }
   /**
@@ -89,7 +89,7 @@ export default class Clock {
   }
 
   private incrementTime() {
-    this.hour += this.hourIncrement;
+    this.hour += this.tickIncrement;
     while (this.hour >= 24) {
       this.hour -= 24;
       this.day++;

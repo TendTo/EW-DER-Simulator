@@ -1,9 +1,8 @@
 import { Wallet, providers, BigNumber } from "ethers";
-import { NonceManager } from "@ethersproject/experimental";
 import { ETHPerIoT, Season } from "./constants";
 import IPCHandler from "./IPCHandler";
 import Clock from "./clock";
-import { BlockchainOptions } from "../module";
+import { BlockchainOptions, NumberOfDERs } from "../module";
 import IoTFactory from "./iot/IoTFactory";
 import { IIoT } from "./iot";
 import ITickable from "./ITickable";
@@ -15,7 +14,7 @@ export default class Aggregator implements ITickable {
   private wallet: Wallet;
   private iots: IIoT[];
   private mnemonic: string;
-  private numberOfDERs: number;
+  private numberOfDERs: NumberOfDERs;
   private aggregatedValue: number;
   public readonly contract: AggregatorContract;
   public readonly provider: providers.JsonRpcProvider;
@@ -121,17 +120,12 @@ export default class Aggregator implements ITickable {
     this.clock.addFunction(this.onTick.bind(this));
   }
 
-  private registerAgreements() {
-    return Promise.allSettled(this.iots.map((iot) => iot.registerAgreement()));
-  }
-
   public async setupSimulation(initialFunds: boolean) {
     this.logger.log(`Setup production`);
     await this.getNetworkInfo();
     this.listenContractLogs();
     this.iots = await IoTFactory.createIoTs(this, this.mnemonic, this.numberOfDERs);
     if (initialFunds) await this.distributeFounds();
-    this.registerAgreements();
     this.setupClock();
   }
 

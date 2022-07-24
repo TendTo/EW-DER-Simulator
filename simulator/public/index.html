@@ -63,32 +63,32 @@
                     placeholder="Private key"
                   />
                 </div>
-                <div class="form-group">
-                  <label for="numberOfDERs">Number of DERs</label>
-                  <input
-                    id="numberOfDERs"
-                    name="numberOfDERs"
-                    type="number"
-                    class="form-control"
-                    placeholder="1"
-                  />
-                </div>
-                <div class="form-group">
-                  <label>DERs per source type</label>
-                  <input
-                    id="numberOfSolarDERs"
-                    name="numberOfSolarDERs"
-                    type="number"
-                    class="form-control"
-                    placeholder="1"
-                  />
-                  <input
-                    id="numberOfSolarDERs"
-                    name="numberOfSolarDERs"
-                    type="number"
-                    class="form-control"
-                    placeholder="1"
-                  />
+                <label>DERs per source type</label>
+                <div class="flex-row">
+                  <div>
+                    <div for="numberOfSolarDERs">Solar</div>
+                    <input
+                      id="numberOfSolarDERs"
+                      name="numberOfSolarDERs"
+                      type="number"
+                      class="form-control"
+                      placeholder="1"
+                      min="0"
+                      max="200"
+                    />
+                  </div>
+                  <div>
+                    <div for="numberOfWindDERs">Wind</div>
+                    <input
+                      id="numberOfWindDERs"
+                      name="numberOfWindDERs"
+                      type="number"
+                      class="form-control"
+                      placeholder="1"
+                      min="0"
+                      max="200"
+                    />
+                  </div>
                 </div>
                 <div class="form-group">
                   <div class="checkbox">
@@ -112,13 +112,15 @@
                   </select>
                 </div>
                 <div class="form-group">
-                  <label for="hourIncrement">Hour increment per tick</label>
+                  <label for="tickIncrement">Time increment per tick (sec)</label>
                   <input
-                    id="hourIncrement"
-                    name="hourIncrement"
+                    id="tickIncrement"
+                    name="tickIncrement"
                     type="number"
                     class="form-control"
                     placeholder="1"
+                    min="1"
+                    min="6000"
                   />
                 </div>
                 <div class="form-group">
@@ -129,6 +131,8 @@
                     type="number"
                     class="form-control"
                     placeholder="1"
+                    min="1"
+                    min="60"
                   />
                 </div>
                 <!-- End Time Info -->
