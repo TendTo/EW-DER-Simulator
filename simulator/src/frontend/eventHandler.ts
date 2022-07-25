@@ -25,6 +25,7 @@ export default class EventHandler {
   }
 
   private addHandlers() {
+    this.avoidNumberScroll();
     this.onStartLoading();
     this.onStopLoading();
     this.onRegisterAgreementEvent();
@@ -34,6 +35,13 @@ export default class EventHandler {
     this.onStopSimulation();
     this.onNewAggregatedReading();
     this.onAggregatorBalance();
+  }
+
+  private avoidNumberScroll() {
+    document.addEventListener("wheel", (event) => {
+      if (document?.activeElement?.matches("[type='number']"))
+        (event.target as HTMLInputElement).blur();
+    });
   }
 
   private onCancelAgreementEvent() {
