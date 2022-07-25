@@ -15,3 +15,5 @@ export enum Season {
 }
 
 export const ETHPerIoT = "1000000000000000";
+export const PersonalEventProbability = 0.01;
+export const MeteoEventProbability = 0.01;

@@ -1,5 +1,5 @@
-import { AgreementStructFrontend } from "src/module";
-import { IAggregatorContract } from "src/typechain-types";
+import { AgreementStructFrontend } from "../module";
+import { IAggregatorContract } from "../typechain-types";
 
 /**
  * Generate a random number with a Poisson distribution.

@@ -5,7 +5,7 @@ export type SettingsForm = HTMLFormElement & {
   numberOfSolarDERs: HTMLInputElement;
   numberOfWindDERs: HTMLInputElement;
   contractAddress: HTMLInputElement;
-  season: HTMLInputElement;
+  startTimestamp: HTMLInputElement;
   tickInterval: HTMLInputElement;
   tickIncrement: HTMLInputElement;
   initialFunds: HTMLInputElement;
@@ -29,3 +29,5 @@ export type FlexibilityLogRow = {
 };
 
 export type AgreementEventType = "register" | "revise" | "cancel";
+
+export type ToastType = "success" | "error" | "info" | "warning";

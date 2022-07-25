@@ -1,13 +1,21 @@
-import { Wallet, providers, BigNumber } from "ethers";
-import { ETHPerIoT, Season } from "./constants";
-import IPCHandler from "./IPCHandler";
-import Clock from "./clock";
-import { BlockchainOptions, NumberOfDERs } from "../module";
-import IoTFactory from "./iot/IoTFactory";
-import { IIoT } from "./iot";
-import ITickable from "./ITickable";
-import { AggregatorContract, AggregatorContract__factory } from "../typechain-types";
+import { BigNumber, providers, Wallet } from "ethers";
 import { getLogger, Logger } from "log4js";
+import {
+  AggregatorContract,
+  AggregatorContract__factory,
+  IAggregatorContract,
+} from "../typechain-types";
+import {
+  CancelAgreementEvent,
+  RegisterAgreementEvent,
+  ReviseAgreementEvent,
+} from "../typechain-types/AggregatorContract";
+import { BlockchainOptions, NumberOfDERs } from "../module";
+import Clock from "./clock";
+import { ETHPerIoT } from "./constants";
+import { IIoT, IoTFactory } from "./iot";
+import IPCHandler from "./IPCHandler";
+import ITickable from "./ITickable";
 import { parseAgreementLog } from "./utils";
 
 export default class Aggregator implements ITickable {
@@ -75,42 +83,51 @@ export default class Aggregator implements ITickable {
     }
   }
 
+  private onRegisterAgreement(
+    prosumer: string,
+    agreement: IAggregatorContract.AgreementStructOutput,
+    event: RegisterAgreementEvent
+  ) {
+    if (event.blockNumber < this.blockNumber) return;
+    IPCHandler.onRegisterAgreementEvent(prosumer, parseAgreementLog(agreement), event.blockNumber);
+    this.logger.log(`RegisterAgreementEvent ${prosumer} ${agreement} - Block ${event.blockNumber}`);
+  }
+  private onReviseAgreement(
+    prosumer: string,
+    oldAgreement: IAggregatorContract.AgreementStructOutput,
+    newAgreement: IAggregatorContract.AgreementStructOutput,
+    event: ReviseAgreementEvent
+  ) {
+    if (event.blockNumber < this.blockNumber) return;
+    IPCHandler.onReviseAgreementEvent(
+      prosumer,
+      parseAgreementLog(oldAgreement),
+      parseAgreementLog(newAgreement),
+      event.blockNumber
+    );
+    this.logger.log(
+      `ReviseAgreementEvent ${prosumer} ${oldAgreement} -> ${newAgreement} - Block ${event.blockNumber}`
+    );
+  }
+  private onCancelAgreement(
+    prosumer: string,
+    agreement: IAggregatorContract.AgreementStructOutput,
+    event: CancelAgreementEvent
+  ) {
+    if (event.blockNumber < this.blockNumber) return;
+    IPCHandler.onCancelAgreementEvent(prosumer, parseAgreementLog(agreement), event.blockNumber);
+    this.logger.log(`CancelAgreementEvent ${prosumer} ${agreement} - Block ${event.blockNumber}`);
+  }
+
   private listenContractLogs() {
     this.logger.log(`Setup listeners for contract logs`);
 
-    this.contract.on(this.contract.filters.RegisterAgreement(), (prosumer, agreement, event) => {
-      if (event.blockNumber < this.blockNumber) return;
-      IPCHandler.onRegisterAgreementEvent(
-        prosumer,
-        parseAgreementLog(agreement),
-        event.blockNumber
-      );
-      this.logger.log(
-        `RegisterAgreementEvent ${prosumer} ${agreement} - Block ${event.blockNumber}`
-      );
-    });
-
+    this.contract.on(this.contract.filters.ReviseAgreement(), this.onReviseAgreement.bind(this));
+    this.contract.on(this.contract.filters.CancelAgreement(), this.onCancelAgreement.bind(this));
     this.contract.on(
-      this.contract.filters.ReviseAgreement(),
-      (prosumer, oldAgreement, newAgreement, event) => {
-        if (event.blockNumber < this.blockNumber) return;
-        IPCHandler.onReviseAgreementEvent(
-          prosumer,
-          parseAgreementLog(oldAgreement),
-          parseAgreementLog(newAgreement),
-          event.blockNumber
-        );
-        this.logger.log(
-          `ReviseAgreementEvent ${prosumer} ${oldAgreement} -> ${newAgreement} - Block ${event.blockNumber}`
-        );
-      }
+      this.contract.filters.RegisterAgreement(),
+      this.onRegisterAgreement.bind(this)
     );
-
-    this.contract.on(this.contract.filters.CancelAgreement(), (prosumer, agreement, event) => {
-      if (event.blockNumber < this.blockNumber) return;
-      IPCHandler.onCancelAgreementEvent(prosumer, parseAgreementLog(agreement), event.blockNumber);
-      this.logger.log(`CancelAgreementEvent ${prosumer} ${agreement} - Block ${event.blockNumber}`);
-    });
   }
 
   private setupClock() {
@@ -145,8 +162,8 @@ export default class Aggregator implements ITickable {
     this.aggregatedValue += value;
   }
 
-  onTick(_: Season, __: number, hour: number) {
-    IPCHandler.onNewAggregatedReading(this.aggregatedValue, hour);
+  onTick(clock: Clock, timestamp: number) {
+    IPCHandler.onNewAggregatedReading(this.aggregatedValue, clock.ISO);
     this.aggregatedValue = 0;
   }
 }

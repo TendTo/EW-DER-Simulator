@@ -1,12 +1,9 @@
-import { TransactionReceipt } from "@ethersproject/providers";
-import { Season } from "../constants";
+import ITickable from "../ITickable";
 
-export default interface IIoT {
+export default interface IIoT extends ITickable {
   address: string;
 
   startProducing(): Promise<void>;
-
-  onTick(season: Season, day: number, hour: number): Promise<void>;
 
   stopProducing(): void;
 

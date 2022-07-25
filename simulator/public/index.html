@@ -51,7 +51,14 @@
                 </div>
                 <div class="form-group">
                   <label for="sk">Private key</label>
-                  <input id="sk" name="sk" type="password" class="form-control" required />
+                  <input
+                    id="sk"
+                    name="sk"
+                    type="password"
+                    class="form-control"
+                    pattern="[0-9A-Fa-f]{64}"
+                    required
+                  />
                 </div>
                 <div class="form-group">
                   <label for="seed">Initial seed</label>
@@ -103,13 +110,13 @@
                 <!-- Time Info -->
                 <h4>Time info</h4>
                 <div class="form-group">
-                  <label for="season">Season</label>
-                  <select id="season" name="season" class="form-control">
-                    <option value="0">Primavera</option>
-                    <option value="1">Estate</option>
-                    <option value="2">Autunno</option>
-                    <option value="3">Inverno</option>
-                  </select>
+                  <label for="startTimestamp">Starting timestamp</label>
+                  <input
+                    id="startTimestamp"
+                    name="startTimestamp"
+                    type="datetime-local"
+                    class="form-control"
+                  />
                 </div>
                 <div class="form-group">
                   <label for="tickIncrement">Time increment per tick (sec)</label>
@@ -120,7 +127,7 @@
                     class="form-control"
                     placeholder="1"
                     min="1"
-                    min="6000"
+                    max="3600"
                   />
                 </div>
                 <div class="form-group">
@@ -132,7 +139,7 @@
                     class="form-control"
                     placeholder="1"
                     min="1"
-                    min="60"
+                    max="60"
                   />
                 </div>
                 <!-- End Time Info -->
@@ -216,6 +223,7 @@
         <!-- Spinner -->
         <div id="spinner" class="spinner hidden"></div>
         <!-- End Spinner -->
+        <div id="toast">Some text some message..</div>
       </div>
     </div>
   </body>

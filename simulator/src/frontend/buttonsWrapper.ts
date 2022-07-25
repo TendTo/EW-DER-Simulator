@@ -5,9 +5,9 @@ export default class ButtonWrapper {
   private readonly stopButton: HTMLButtonElement;
 
   constructor() {
+    this.buttons = Array.from(document.querySelectorAll("button"));
     this.startButton = document.getElementById("start") as HTMLButtonElement;
     this.stopButton = document.getElementById("stop") as HTMLButtonElement;
-    this.buttons = Array.from(document.querySelectorAll("button"));
     this.spinner = document.getElementById("spinner") as HTMLDivElement;
   }
 
@@ -19,12 +19,7 @@ export default class ButtonWrapper {
   }
 
   public playing(playing: boolean) {
-    if (playing) {
-      this.stopButton.disabled = true;
-      this.startButton.disabled = false;
-    } else {
-      this.stopButton.disabled = false;
-      this.startButton.disabled = true;
-    }
+    this.stopButton.disabled = !playing;
+    this.startButton.disabled = playing;
   }
 }

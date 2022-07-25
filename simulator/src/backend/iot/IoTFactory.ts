@@ -5,12 +5,7 @@ import Aggregator from "../Aggregator";
 import { EnergySource } from "../constants";
 import IIoT from "./IIoT";
 import SolarIoT from "./SolarIoT";
-import { NumberOfDERs } from "src/module";
-
-type IoTRequestOptions = {
-  source: EnergySource;
-  number: number;
-};
+import { NumberOfDERs } from "../../module";
 
 export default class IoTFactory {
   private _instance: IoTFactory;
@@ -27,12 +22,16 @@ export default class IoTFactory {
   ): Promise<IIoT[]> {
     const masterKey = hdkey.fromMasterSeed(await mnemonicToSeed(mnemonic));
     let counter = 0;
-    return Object.entries(ders).map(([source, number]) => {
+    const iots: IIoT[] = [];
+    Object.entries(ders).forEach(([source, number]: [keyof typeof EnergySource, number]) => {
       for (let i = 0; i < number; i++) {
         const wallet = masterKey.derivePath(`m/44'/60'/0'/0/${counter++}`).getWallet();
         const sk = wallet.getPrivateKeyString();
-        return source === "Wind" ? new WindIoT(aggregator, sk) : new SolarIoT(aggregator, sk);
+        if (source === "Wind") return iots.push(new WindIoT(aggregator, sk));
+        if (source === "Solar") return iots.push(new SolarIoT(aggregator, sk));
+        throw new Error(`Unknown energy source: ${source}`);
       }
     });
+    return iots;
   }
 }

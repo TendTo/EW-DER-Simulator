@@ -2,12 +2,16 @@ import type { SettingsForm, AgreementEventType } from "./types";
 import ButtonWrapper from "./buttonsWrapper";
 import ChartWrapper from "./chartWrapper";
 import TableManager from "./tableManager";
-import { AgreementStructFrontend, BlockchainOptions } from "../module";
+import { AgreementStructFrontend, BlockchainOptions, ClockOptions } from "../module";
+import FromWrapper from "./formWrapper";
+import ToastWrapper from "./toastWrapper";
 
 export default class EventHandler {
   private readonly chart: ChartWrapper;
   private readonly tableManager: TableManager;
   private readonly buttonsWrapper: ButtonWrapper;
+  private readonly formWrapper: FromWrapper;
+  private readonly toastWrapper: ToastWrapper;
   private isPlaying: boolean;
 
   constructor() {
@@ -15,6 +19,8 @@ export default class EventHandler {
     this.chart = new ChartWrapper();
     this.tableManager = new TableManager();
     this.buttonsWrapper = new ButtonWrapper();
+    this.formWrapper = new FromWrapper();
+    this.toastWrapper = new ToastWrapper();
     this.addHandlers();
   }
 
@@ -73,23 +79,13 @@ export default class EventHandler {
     const form = document.getElementById("settings") as SettingsForm;
     form.addEventListener("submit", (e) => {
       e.preventDefault();
-      if (this.isPlaying) return;
+      if (this.isPlaying) {
+        this.toastWrapper.show("Simulation already running", "error");
+        return;
+      }
       this.isPlaying = true;
-      const blockchainData: BlockchainOptions = {
-        rpcUrl: form.rpcUrl.value || "http://134.209.139.226:8545",
-        seed: form.seed.value || form.sk.value,
-        sk: form.sk.value,
-        numberOfDERs: {
-          Solar: parseInt(form.numberOfSolarDERs.value) || 1,
-          Wind: parseInt(form.numberOfWindDERs.value) || 1,
-        },
-        contractAddress: form.contractAddress.value || "0xCE3b21daF429B705d5f8eA3d409c047641a4496B",
-      };
-      const clockData = {
-        season: parseInt(form.season.value) || 0,
-        tickIncrement: parseInt(form.tickIncrement.value) || 1,
-        tickInterval: parseInt(form.tickInterval.value) * 1000 || 1000,
-      };
+      const blockchainData = this.formWrapper.blockchainData;
+      const clockData = this.formWrapper.clockData;
       window.electronAPI.send.startSimulation(blockchainData, clockData, form.initialFunds.checked);
       console.log("Simulation started", blockchainData, clockData);
     });
@@ -98,6 +94,10 @@ export default class EventHandler {
   private onStopSimulation() {
     const stopButton = document.getElementById("stop") as HTMLButtonElement;
     stopButton.addEventListener("click", () => {
+      if (!this.isPlaying) {
+        this.toastWrapper.show("Simulation not running", "warning");
+        return;
+      }
       window.electronAPI.send.stopSimulation();
       this.isPlaying = false;
       this.chart.reset();
@@ -109,10 +109,8 @@ export default class EventHandler {
 
   private onNewAggregatedReading() {
     // Receive new aggregated reading
-    window.electronAPI.on.newAggregatedReading((_, reading, hours) => {
-      console.log(reading);
-      const date = new Date(0, 0, 0, hours);
-      this.chart.shiftData(reading, date.toISOString().substring(11, 16));
+    window.electronAPI.on.newAggregatedReading((_, reading, ISOString) => {
+      this.chart.shiftData(reading, ISOString);
     });
   }
 

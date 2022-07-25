@@ -1,5 +1,6 @@
 import type { IpcRenderer, IpcRendererEvent } from "electron";
 import type { WebContents } from "electron/main";
+import type Clock from "./backend/clock";
 import type { EnergySource, Season } from "./backend/constants";
 
 export type GetApiType<
@@ -26,11 +27,11 @@ export type BlockchainOptions = {
   numberOfDERs: NumberOfDERs;
 };
 
+export type ClockTickCallback = (clock: Clock, timestamp: number) => void;
+
 export type ClockOptions = {
-  season?: Season;
+  startingTimestamp?: number;
   tickInterval?: number;
-  hour?: number;
-  day?: number;
   tickIncrement?: number;
 };
 
@@ -72,8 +73,8 @@ export type ElectronAPI = GetApiType<
     startLoading: () => Promise<void>;
     stopLoading: () => Promise<void>;
     aggregatorBalance: (address: string, balance: string) => Promise<void>;
-    newReading: (address: string, reading: number) => Promise<void>;
-    newAggregatedReading: (reading: number, hour: number) => Promise<void>;
+    newReading: (address: string, reading: number, isoString: string) => Promise<void>;
+    newAggregatedReading: (reading: number, isoString: string) => Promise<void>;
   }
 >;
 
@@ -95,17 +96,6 @@ type ApiWebContents = Omit<WebContents, "send"> & {
 declare module "electron" {
   interface BrowserWindow {
     webContents: ApiWebContents;
-  }
-  namespace Electron {
-    interface IpcMain {
-      on<T extends keyof ElectronAPI["send"]>(
-        channel: T,
-        listener: (
-          event: IpcRendererEvent,
-          ...args: ElectronAPI["send"][T] extends (...args: infer P) => any ? P : never
-        ) => void
-      ): IpcRenderer;
-    }
   }
 }
 

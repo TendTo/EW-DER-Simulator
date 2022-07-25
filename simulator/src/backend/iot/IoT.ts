@@ -2,17 +2,18 @@ import { BigNumber, Wallet } from "ethers";
 import { AggregatorContract } from "../../typechain-types";
 import Agreement from "../Agreement";
 import Aggregator from "../Aggregator";
-import { Season } from "../constants";
 import IIoT from "./IIoT";
-import ITickable from "../ITickable";
 import { getLogger, Logger } from "log4js";
+import Clock from "../clock";
+import { PersonalEvent } from "./events";
 
-abstract class IoT implements IIoT, ITickable {
+abstract class IoT implements IIoT {
   protected agreement: Agreement;
   protected contract: AggregatorContract;
   protected wallet: Wallet;
   protected running: boolean;
   protected readonly logger: Logger;
+  protected personalEvent: PersonalEvent;
 
   protected constructor(protected aggregator: Aggregator, sk: string) {
     this.logger = getLogger("iot");
@@ -43,12 +44,15 @@ abstract class IoT implements IIoT, ITickable {
     this.registerAgreement();
   }
 
-  public async onTick(season: Season, day: number, hour: number) {
-    if (!this.running || this.wait()) return;
-    let value = this.produce(season, day, hour);
+  public async onTick(clock: Clock, timestamp: number) {
+    if (!this.running || this.skipTick()) return;
+
+    this.rollForEvents(timestamp);
+    let value = this.produce(timestamp);
+    value = this.applyEvents(value, timestamp);
 
     this.aggregator.onIoTReading(this.address, value);
-    this.logger.debug(`IoT ${this.address} - Produced ${value}`);
+    this.logger.debug(`IoT ${this.address} - Produced ${value} - Time ${clock.ISO}`);
   }
 
   public stopProducing() {
@@ -62,9 +66,11 @@ abstract class IoT implements IIoT, ITickable {
   }
 
   protected abstract provideFlexibility(event: any): void;
-  protected abstract produce(season: Season, day: number, hour: number): number;
-  protected abstract wait(): boolean;
+  protected abstract produce(timestamp: number): number;
+  protected abstract skipTick(): boolean;
   protected abstract createAgreement(): Agreement;
+  protected abstract applyEvents(value: number, timestamp: number): number;
+  protected abstract rollForEvents(timestamp: number): void;
 
   protected abstract get maxValue(): number;
   protected abstract get minCost(): number;

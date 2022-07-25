@@ -1,5 +1,5 @@
-import { Season } from "./constants";
+import { ClockTickCallback } from "../module";
 
 export default interface ITickable {
-  onTick(season: Season, day: number, hour: number): void;
+  onTick: ClockTickCallback;
 }

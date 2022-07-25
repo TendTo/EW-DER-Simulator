@@ -40,7 +40,7 @@ export default class ChartWrapper {
     this.chart.options.plugins.title.text = title;
   }
 
-  constructor(canvasId: string = "chart", private maxDataPoints: number = 50) {
+  constructor(canvasId: string = "chart", private maxDataPoints: number = 20) {
     const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
     this.chart = new Chart(canvas, {
       type: "line",

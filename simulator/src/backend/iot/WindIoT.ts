@@ -2,9 +2,11 @@ import { Agreement } from "..";
 import Aggregator from "../Aggregator";
 import { EnergySource, Season } from "../constants";
 import { generatePoisson } from "../utils";
+import { MeteoEvent, PersonalEvent } from "./events";
 import IoT from "./IoT";
 
 export default class WindIoT extends IoT {
+  static meteoEvent: MeteoEvent;
   public constructor(aggregator: Aggregator, sk: string) {
     super(aggregator, sk);
     this.logger.debug(`IoT ${this.wallet.address} - Created WindIoT`);
@@ -15,18 +17,15 @@ export default class WindIoT extends IoT {
   }
 
   /**
-   * Simulate the production of energy of a solar panel in the given season,
-   * day and hour with a sinusoidal function
-   * @param season season of the year
-   * @param _ day of the season
-   * @param hour hour of the day
+   * Simulate the production of energy of a solar panel in the given timestamp
+   * @param timestamp time in seconds since the epoch
    * @returns energy produced in watt
    */
-  protected produce(season: Season, _: number, hour: number): number {
-    return Math.random() * this.maxValue;
+  protected produce(timestamp: number): number {
+    return Math.random() * this.maxValue + this.maxValue / 2;
   }
 
-  protected wait(): boolean {
+  protected skipTick(): boolean {
     return false;
   }
 
@@ -36,6 +35,27 @@ export default class WindIoT extends IoT {
     const valueCost = Math.floor(Math.random() * this.maxCost + this.minCost);
     const flexibilityCost = Math.floor(valueCost * 1.1);
     return new Agreement(value, flexibility, valueCost, flexibilityCost, EnergySource.Solar);
+  }
+
+  protected applyEvents(value: number, timestamp: number): number {
+    if (this.personalEvent) {
+      const newValue = value + this.personalEvent.intensity;
+      this.logger.log(`IoT ${this.wallet.address} - Personal event: ${value} -> ${newValue}`);
+      if (this.personalEvent.hasEnded(timestamp)) this.personalEvent = null;
+      return newValue;
+    }
+    if (WindIoT.meteoEvent) {
+      const newValue = value + WindIoT.meteoEvent.intensity;
+      this.logger.log(`IoT ${this.wallet.address} - Wind event: ${value} -> ${newValue}`);
+      if (WindIoT.meteoEvent.hasEnded(timestamp)) WindIoT.meteoEvent = null;
+      return newValue;
+    }
+    return value;
+  }
+
+  protected rollForEvents(timestamp: number): void {
+    if (!this.personalEvent) this.personalEvent = PersonalEvent.rollForEvent(timestamp);
+    if (!WindIoT.meteoEvent) WindIoT.meteoEvent = MeteoEvent.rollForEvent(timestamp);
   }
 
   protected get maxValue(): number {

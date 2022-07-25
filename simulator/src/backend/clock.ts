@@ -1,7 +1,7 @@
 import { ClockOptions } from "../module";
 import { Season } from "./constants";
 
-type TickCallback = (month: number, day: number, hour: number) => void;
+type TickCallback = (clock: Clock, timestamp: number) => void;
 
 /**
  * Class that simulates a clock.
@@ -9,39 +9,28 @@ type TickCallback = (month: number, day: number, hour: number) => void;
  * passing the time as argument.
  */
 export default class Clock {
-  private callbacks: Function[];
+  private readonly startingTimestamp: number;
+  private callbacks: TickCallback[];
   private isRunning: boolean;
   private timer: NodeJS.Timer;
-  private season: Season;
-  private day: number;
-  private hour: number;
   private tickIncrement: number;
   private tickInterval: number;
+  private _timestamp: number;
+
   /**
    * Creates a new clock.
    */
-  constructor(
-    {
-      season = Season.Winter,
-      day = 0,
-      hour = 0,
-      tickIncrement = 1,
-      tickInterval = 1000,
-    }: ClockOptions = {
-      season: Season.Winter,
-      day: 0,
-      hour: 0,
-      tickIncrement: 1,
-      tickInterval: 1000,
-    }
-  ) {
+  constructor({
+    startingTimestamp = Math.floor(Date.now() / 1000),
+    tickIncrement = 1,
+    tickInterval = 1000,
+  }: ClockOptions = {}) {
     this.isRunning = false;
     this.callbacks = [];
-    this.season = season;
-    this.day = day;
-    this.hour = hour;
     this.tickIncrement = tickIncrement;
     this.tickInterval = tickInterval;
+    this.startingTimestamp = startingTimestamp;
+    this._timestamp = startingTimestamp;
   }
   /**
    * Starts the clock.
@@ -83,23 +72,44 @@ export default class Clock {
   tick() {
     if (!this.isRunning) return;
     for (let i = 0; i < this.callbacks.length; i++) {
-      this.callbacks[i](this.season, this.day, this.hour);
+      this.callbacks[i](this, this._timestamp);
     }
-    this.incrementTime();
+    this._timestamp += this.tickIncrement;
   }
 
-  private incrementTime() {
-    this.hour += this.tickIncrement;
-    while (this.hour >= 24) {
-      this.hour -= 24;
-      this.day++;
-    }
-    while (this.day >= 91) {
-      this.day -= 91;
-      this.season++;
-    }
-    while (this.season >= Season.Autumn) {
-      this.season -= 4;
-    }
+  get timestamp() {
+    return this._timestamp;
+  }
+
+  get season() {
+    const moth = new Date(this._timestamp * 1000).getUTCMonth();
+    if (moth >= 3 && moth <= 5) return Season.Spring;
+    if (moth >= 6 && moth <= 8) return Season.Summer;
+    if (moth >= 9 && moth <= 11) return Season.Autumn;
+    return Season.Winter;
+  }
+
+  get month() {
+    return new Date(this._timestamp * 1000).getUTCMonth();
+  }
+
+  get day() {
+    return new Date(this._timestamp * 1000).getUTCDate();
+  }
+
+  get hour() {
+    return new Date(this._timestamp * 1000).getUTCHours();
+  }
+
+  get minute() {
+    return new Date(this._timestamp * 1000).getUTCMinutes();
+  }
+
+  get second() {
+    return new Date(this._timestamp * 1000).getUTCSeconds();
+  }
+
+  get ISO() {
+    return new Date(this._timestamp * 1000).toISOString();
   }
 }

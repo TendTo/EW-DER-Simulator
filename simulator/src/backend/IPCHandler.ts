@@ -4,7 +4,7 @@ import {
   CancelAgreementEvent,
   RegisterAgreementEvent,
   ReviseAgreementEvent,
-} from "src/typechain-types/AggregatorContract";
+} from "../typechain-types/AggregatorContract";
 import { AgreementStructFrontend, BlockchainOptions, ClockOptions } from "../module";
 import Aggregator from "./Aggregator";
 import Clock from "./clock";
@@ -27,14 +27,14 @@ export default class IPCHandler {
     ipcMain.on("stopSimulation", this.instance.stopSimulation);
   }
 
-  static onNewAggregatedReading(reading: number, hour: number) {
+  static onNewAggregatedReading(reading: number, isoString: string) {
     if (this.instance.window === null) throw new Error("Window is null");
-    this.instance.window.webContents.send("newAggregatedReading", reading, hour);
+    this.instance.window.webContents.send("newAggregatedReading", reading, isoString);
   }
 
-  static onNewReading(address: string, reading: number, hour: number) {
+  static onNewReading(address: string, reading: number, isoString: string) {
     if (this.instance.window === null) throw new Error("Window is null");
-    this.instance.window.webContents.send("newReading", address, reading);
+    this.instance.window.webContents.send("newReading", address, reading, isoString);
   }
 
   static onAggregatorBalance(address: string, balance: string) {
@@ -94,7 +94,13 @@ export default class IPCHandler {
     initialFunds: boolean
   ) => {
     IPCHandler.onStartLoading();
-    this.aggregator = new Aggregator(blockchainOptions, new Clock(clockOptions));
+    try {
+      this.aggregator = new Aggregator(blockchainOptions, new Clock(clockOptions));
+    } catch (error) {
+      this.logger.error(error);
+      IPCHandler.onStopLoading();
+      return;
+    }
     this.aggregator
       .setupSimulation(initialFunds)
       .then(() => {
