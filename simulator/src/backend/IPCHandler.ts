@@ -93,6 +93,7 @@ export default class IPCHandler {
     clockOptions: ClockOptions,
     initialFunds: boolean
   ) => {
+    this.logger.debug(`Starting simulation ${{ blockchainOptions, clockOptions }}`);
     IPCHandler.onStartLoading();
     try {
       this.aggregator = new Aggregator(blockchainOptions, new Clock(clockOptions));

@@ -27,9 +27,9 @@ export default class IoTFactory {
       for (let i = 0; i < number; i++) {
         const wallet = masterKey.derivePath(`m/44'/60'/0'/0/${counter++}`).getWallet();
         const sk = wallet.getPrivateKeyString();
-        if (source === "Wind") return iots.push(new WindIoT(aggregator, sk));
-        if (source === "Solar") return iots.push(new SolarIoT(aggregator, sk));
-        throw new Error(`Unknown energy source: ${source}`);
+        if (source === "Wind") iots.push(new WindIoT(aggregator, sk));
+        else if (source === "Solar") iots.push(new SolarIoT(aggregator, sk));
+        else throw new Error("Unknown energy source");
       }
     });
     return iots;
