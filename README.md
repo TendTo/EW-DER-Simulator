@@ -45,14 +45,17 @@ npm test
 
 - [x] Interazione con la blockchain Volta
 - [x] Registrazione di un agreement all'avvio
-- [ ] Differenziare il numero di DER per tipologia
+- [x] Differenziare il numero di DER per tipologia
 - [ ] Aggiungere funzionalità di flessibilità
-- [ ] Aggiungere possibilità di imprevisti
+- [x] Aggiungere possibilità di imprevisti
 - [ ] Rimanere in attesa di Log di flessibilità
 - [x] Aggiungere la visualizzazione dei Log degli agreement
-- [ ] Aggiungere scala temporale
+- [x] Aggiungere scala temporale
 - [x] Aggiungere misura aggregata
 - [ ] Aggiungere label del singolo DER
+- [ ] Aggiungere i pulsanti di chiusura della finestra
+- [ ] Verificare il fallimento di registrazioni degli agreement
+- [x] Aggiungere un sistema di notifiche frontend
 
 ## ⛏ Tools
 

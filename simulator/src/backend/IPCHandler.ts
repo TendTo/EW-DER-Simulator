@@ -1,13 +1,9 @@
 import { ipcMain, IpcMainEvent, BrowserWindow } from "electron";
 import { getLogger, Logger } from "log4js";
-import {
-  CancelAgreementEvent,
-  RegisterAgreementEvent,
-  ReviseAgreementEvent,
-} from "../typechain-types/AggregatorContract";
 import { AgreementStructFrontend, BlockchainOptions, ClockOptions } from "../module";
 import Aggregator from "./Aggregator";
 import Clock from "./clock";
+import { ToastType } from "../frontend/types";
 
 export default class IPCHandler {
   private static instance: IPCHandler;
@@ -25,6 +21,11 @@ export default class IPCHandler {
   static registerHandlers() {
     ipcMain.on("startSimulation", this.instance.startSimulation);
     ipcMain.on("stopSimulation", this.instance.stopSimulation);
+  }
+
+  static sendToast(message: string, type?: ToastType, duration?: number) {
+    if (this.instance.window === null) throw new Error("Window is null");
+    this.instance.window.webContents.send("toast", message, type, duration);
   }
 
   static onNewAggregatedReading(reading: number, isoString: string) {

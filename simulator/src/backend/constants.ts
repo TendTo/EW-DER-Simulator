@@ -1,3 +1,5 @@
+import { BigNumber } from "ethers";
+
 export enum EnergySource {
   Battery,
   Solar,
@@ -14,6 +16,6 @@ export enum Season {
   Autumn,
 }
 
-export const ETHPerIoT = "1000000000000000";
+export const ETHPerIoT = BigNumber.from("10000000000000000");
 export const PersonalEventProbability = 0.01;
 export const MeteoEventProbability = 0.01;

@@ -162,6 +162,13 @@
             <h2 style="grid-area: title">Simulation</h2>
             <canvas style="grid-area: graph" id="chart" width="400" height="400"></canvas>
             <h3 style="grid-area: flexibility">Flexibility request</h3>
+            <button
+              id="flexibilityButton"
+              style="grid-area: flexibilityButton"
+              class="btn btn-primary"
+            >
+              Click
+            </button>
             <!-- <button id="test" class="btn btn-primary" disabled>Simulate logs</button> -->
             <!-- Log table -->
             <table style="grid-area: flexibilityTable">
@@ -223,8 +230,12 @@
         <!-- Spinner -->
         <div id="spinner" class="spinner hidden"></div>
         <!-- End Spinner -->
-        <div id="toast">Some text some message..</div>
       </div>
+    </div>
+    <div id="toastContainer">
+      <template id="toastTemplate">
+        <div class="toast"></div>
+      </template>
     </div>
   </body>
 </html>

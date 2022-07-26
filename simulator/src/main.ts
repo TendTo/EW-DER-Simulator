@@ -10,7 +10,6 @@ class Main {
     this.mainWindow = new BrowserWindow({
       height: 600,
       width: 800,
-      titleBarStyle: "hidden",
       autoHideMenuBar: true,
       webPreferences: {
         preload: path.join(__dirname, "preload.js"),

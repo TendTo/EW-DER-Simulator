@@ -6,6 +6,7 @@ import IIoT from "./IIoT";
 import { getLogger, Logger } from "log4js";
 import Clock from "../clock";
 import { PersonalEvent } from "./events";
+import IPCHandler from "../IPCHandler";
 
 abstract class IoT implements IIoT {
   protected agreement: Agreement;
@@ -34,6 +35,7 @@ abstract class IoT implements IIoT {
       this.logger.log(`IoT ${this.address} - Agreement registered`);
       return receipt;
     } catch (e) {
+      IPCHandler.sendToast(`IoT ${this.address} - Error registering agreement`, "error");
       this.logger.error(`IoT ${this.address} - Error registering agreement`);
       this.logger.error(`IoT ${this.address} - ${e}`);
     }

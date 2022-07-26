@@ -2,7 +2,7 @@ import type { SettingsForm, AgreementEventType } from "./types";
 import ButtonWrapper from "./buttonsWrapper";
 import ChartWrapper from "./chartWrapper";
 import TableManager from "./tableManager";
-import { AgreementStructFrontend, BlockchainOptions, ClockOptions } from "../module";
+import { AgreementStructFrontend } from "../module";
 import FromWrapper from "./formWrapper";
 import ToastWrapper from "./toastWrapper";
 
@@ -35,12 +35,29 @@ export default class EventHandler {
     this.onStopSimulation();
     this.onNewAggregatedReading();
     this.onAggregatorBalance();
+    this.onToast();
+  }
+
+  private onToast() {
+    window.electronAPI.on.toast((_, message, type, duration) => {
+      this.toastWrapper.show(message, type, duration);
+    });
   }
 
   private avoidNumberScroll() {
     document.addEventListener("wheel", (event) => {
       if (document?.activeElement?.matches("[type='number']"))
-        (event.target as HTMLInputElement).blur();
+        if (event.target) (event.target as HTMLInputElement).blur();
+    });
+  }
+
+  private onFlexibilityRequest() {
+    const flexibilityRequest = document.getElementById("flexibilityButton") as HTMLButtonElement;
+    flexibilityRequest.addEventListener("click", () => {
+      this.toastWrapper.show("Flexibility request sent", "error");
+      this.toastWrapper.show("Warning", "warning");
+      this.toastWrapper.show("Infor", "info");
+      this.toastWrapper.show("Succerr", "success");
     });
   }
 

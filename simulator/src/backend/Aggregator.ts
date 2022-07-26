@@ -1,4 +1,4 @@
-import { BigNumber, providers, Wallet } from "ethers";
+import { BigNumber, providers, utils, Wallet } from "ethers";
 import { getLogger, Logger } from "log4js";
 import {
   AggregatorContract,
@@ -53,12 +53,21 @@ export default class Aggregator implements ITickable {
   }
 
   private async distributeFounds() {
-    this.logger.log(`Sending funds`);
-    const tx = await this.contract.sendFunds(
-      this.iots.map((iot) => iot.address),
-      { value: BigNumber.from(ETHPerIoT).mul(this.iots.length) }
-    );
-    return await tx.wait();
+    const totalCost = ETHPerIoT.mul(this.iots.length);
+    const strTotalCost = utils.formatEther(totalCost);
+    IPCHandler.sendToast(`Aggregator - Sending ${strTotalCost} VT to IoTs`, "info");
+    this.logger.log(`Sending ${strTotalCost} VT to ${this.iots.length} IoTs`);
+    try {
+      const tx = await this.contract.sendFunds(
+        this.iots.map((iot) => iot.address),
+        { value: totalCost }
+      );
+      return await tx.wait();
+    } catch (e) {
+      this.logger.error(`Error sending funds`);
+      this.logger.error(e);
+      IPCHandler.sendToast("Aggregator - Error sending funds", "error");
+    }
   }
 
   private startProducing() {
@@ -80,6 +89,7 @@ export default class Aggregator implements ITickable {
     } catch (e) {
       this.logger.error(`Error getting network info`);
       this.logger.error(e);
+      IPCHandler.sendToast("Can't connect to the network", "error");
     }
   }
 

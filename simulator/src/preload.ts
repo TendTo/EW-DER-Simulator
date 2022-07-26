@@ -12,6 +12,9 @@ const api: ElectronAPI = {
   },
   invoke: {},
   on: {
+    toast(listener) {
+      ipcRenderer.on("toast", listener);
+    },
     registerAgreementEvent(listener) {
       ipcRenderer.on("registerAgreementEvent", listener);
     },

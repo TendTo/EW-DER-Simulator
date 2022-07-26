@@ -4,6 +4,7 @@
   --success: #5bd46d;
   --error: #fd918d;
   --warning: #fece72;
+  --text-primary: #333;
 }
 
 main {
@@ -12,9 +13,10 @@ main {
   min-height: 100vh;
   grid-template-areas:
     "title flexibility"
+    "graph flexibilityButton"
     "graph flexibilityTable"
     "agreementTable agreementTable";
-  grid-template-rows: 75px 1fr 1fr;
+  grid-template-rows: 65px 30px 1fr 1fr;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
 }
@@ -111,45 +113,51 @@ button:disabled:active {
   }
 }
 
-#toast {
+#toastContainer {
+  position: absolute;
+  bottom: 1rem;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  flex-flow: column nowrap;
+  gap: 0.5rem;
+}
+
+.toast {
   visibility: hidden; /* Hidden by default. Visible on click */
-  min-width: 250px; /* Set a default minimum width */
-  margin-left: -125px; /* Divide value of min-width by 2 */
   background-color: #333; /* Black background color */
   color: #fff; /* White text color */
   text-align: center; /* Centered text */
   border-radius: 2px; /* Rounded borders */
-  padding: 16px; /* Padding */
-  position: fixed; /* Sit on top of the screen */
+  padding: 1rem; /* Padding */
   z-index: 1; /* Add a z-index if needed */
-  left: 50%; /* Center the snackbar */
-  bottom: 30px; /* 30px from the bottom */
+  min-width: 200px;
+  color: var(--text-primary);
 }
 
 /* Show the snackbar when clicking on a button (class added with JavaScript) */
-#toast.show {
+.toast.show {
   visibility: visible; /* Show the snackbar */
-  animation: fadein 0.5s, fadeout 0.5s 2.5s;
+  animation: fadein-fadeout 4s;
 }
 
-@keyframes fadein {
-  from {
-    bottom: 0;
+@keyframes fadein-fadeout {
+  0% {
+    margin-bottom: -100px;
     opacity: 0;
   }
-  to {
-    bottom: 30px;
+  20% {
+    margin-bottom: 0;
     opacity: 1;
   }
-}
-
-@keyframes fadeout {
-  from {
-    bottom: 30px;
+  80% {
+    margin-bottom: 0;
     opacity: 1;
   }
-  to {
-    bottom: 0;
+  100% {
+    margin-bottom: -100px;
     opacity: 0;
   }
 }
