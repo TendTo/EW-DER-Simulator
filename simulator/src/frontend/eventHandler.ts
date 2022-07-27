@@ -1,4 +1,4 @@
-import type { SettingsForm, AgreementEventType } from "./types";
+import type { AgreementEventType } from "./types";
 import ButtonWrapper from "./buttonsWrapper";
 import ChartWrapper from "./chartWrapper";
 import TableManager from "./tableManager";
@@ -26,6 +26,8 @@ export default class EventHandler {
 
   private addHandlers() {
     this.avoidNumberScroll();
+    this.onDerVariation();
+    this.onFlexibilityRequest();
     this.onStartLoading();
     this.onStopLoading();
     this.onRegisterAgreementEvent();
@@ -51,13 +53,15 @@ export default class EventHandler {
     });
   }
 
+  private onDerVariation() {
+    this.formWrapper.addDerFormOnSubmit((derData) => {
+      console.log("Der variation", derData);
+    });
+  }
+
   private onFlexibilityRequest() {
-    const flexibilityRequest = document.getElementById("flexibilityButton") as HTMLButtonElement;
-    flexibilityRequest.addEventListener("click", () => {
-      this.toastWrapper.show("Flexibility request sent", "error");
-      this.toastWrapper.show("Warning", "warning");
-      this.toastWrapper.show("Infor", "info");
-      this.toastWrapper.show("Succerr", "success");
+    this.formWrapper.addFlexibilityFormOnSubmit((flexibilityForm) => {
+      console.log("Flexibility form submitted", flexibilityForm);
     });
   }
 
@@ -101,17 +105,15 @@ export default class EventHandler {
   }
 
   private onStartSimulation() {
-    const form = document.getElementById("settings") as SettingsForm;
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
+    this.formWrapper.addSettingsFormOnSubmit((blockchainData, clockData, initialFunds) => {
+      console.log("Simulation started", blockchainData, clockData, initialFunds);
+      return;
       if (this.isPlaying) {
         this.toastWrapper.show("Simulation already running", "error");
         return;
       }
       this.isPlaying = true;
-      const blockchainData = this.formWrapper.blockchainData;
-      const clockData = this.formWrapper.clockData;
-      window.electronAPI.send.startSimulation(blockchainData, clockData, form.initialFunds.checked);
+      window.electronAPI.send.startSimulation(blockchainData, clockData, initialFunds);
       console.log("Simulation started", blockchainData, clockData);
     });
   }

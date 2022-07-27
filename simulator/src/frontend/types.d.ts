@@ -1,3 +1,5 @@
+import { EnergySource } from "src/backend/constants";
+
 export type SettingsForm = HTMLFormElement & {
   rpcUrl: HTMLInputElement;
   sk: HTMLInputElement;
@@ -9,6 +11,17 @@ export type SettingsForm = HTMLFormElement & {
   tickInterval: HTMLInputElement;
   tickIncrement: HTMLInputElement;
   initialFunds: HTMLInputElement;
+};
+
+export type FlexibilityForm = HTMLFormElement & {
+  flexibilityStart: HTMLInputElement;
+  flexibilityStop: HTMLInputElement;
+  flexibilityValue: HTMLInputElement;
+};
+
+export type DerForm = HTMLFormElement & {
+  derType: HTMLInputElement;
+  derVariation: HTMLInputElement;
 };
 
 export type AgreementLogRow = {

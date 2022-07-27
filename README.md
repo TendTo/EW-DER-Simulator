@@ -56,6 +56,7 @@ npm test
 - [ ] Aggiungere i pulsanti di chiusura della finestra
 - [ ] Verificare il fallimento di registrazioni degli agreement
 - [x] Aggiungere un sistema di notifiche frontend
+- [ ] Possibilità di modificare il numero di DER durante la simulazione
 
 ## ⛏ Tools
 

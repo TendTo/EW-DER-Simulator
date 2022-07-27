@@ -36,6 +36,17 @@ export type ClockOptions = {
   tickIncrement?: number;
 };
 
+export type FlexibilityOptions = {
+  flexibilityStart?: number;
+  flexibilityStop?: number;
+  flexibilityValue: number;
+};
+
+export type DerVariationOptions = {
+  derType: keyof typeof EnergySource;
+  derVariation: number;
+};
+
 export type AgreementStructFrontend = {
   value: string;
   flexibility: string;
