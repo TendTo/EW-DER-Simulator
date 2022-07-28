@@ -9,6 +9,12 @@ const api: ElectronAPI = {
     startSimulation(data, clockOptions, initialFunds) {
       ipcRenderer.send("startSimulation", data, clockOptions, initialFunds);
     },
+    derVariation(derVariationData) {
+      ipcRenderer.send("derVariation", derVariationData);
+    },
+    flexibilityRequest(flexibilityData) {
+      ipcRenderer.send("flexibilityRequest", flexibilityData);
+    },
   },
   invoke: {},
   on: {

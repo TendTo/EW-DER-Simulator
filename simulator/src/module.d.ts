@@ -63,6 +63,8 @@ export type ElectronAPI = GetApiType<
       clockOptions: ClockOptions,
       initialFunds: boolean
     ) => void;
+    flexibilityRequest: (flexibilityData: FlexibilityOptions) => void;
+    derVariation: (derVariationData: DerVariationOptions) => void;
   },
   {},
   {

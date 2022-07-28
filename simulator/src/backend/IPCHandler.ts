@@ -1,6 +1,12 @@
 import { ipcMain, IpcMainEvent, BrowserWindow } from "electron";
 import { getLogger, Logger } from "log4js";
-import { AgreementStructFrontend, BlockchainOptions, ClockOptions } from "../module";
+import {
+  AgreementStructFrontend,
+  BlockchainOptions,
+  ClockOptions,
+  DerVariationOptions,
+  FlexibilityOptions,
+} from "../module";
 import Aggregator from "./Aggregator";
 import Clock from "./clock";
 import { ToastType } from "../frontend/types";
@@ -21,6 +27,8 @@ export default class IPCHandler {
   static registerHandlers() {
     ipcMain.on("startSimulation", this.instance.startSimulation);
     ipcMain.on("stopSimulation", this.instance.stopSimulation);
+    ipcMain.on("derVariation", this.instance.derVariation);
+    ipcMain.on("flexibilityRequest", this.instance.flexibilityRequest);
   }
 
   static sendToast(message: string, type?: ToastType, duration?: number) {
@@ -117,5 +125,13 @@ export default class IPCHandler {
   stopSimulation = (_: IpcMainEvent) => {
     this.aggregator.stopSimulation();
     delete this.aggregator;
+  };
+
+  derVariation = (_: IpcMainEvent, derVariationData: DerVariationOptions) => {
+    IPCHandler.sendToast(JSON.stringify(derVariationData), "info");
+  };
+
+  flexibilityRequest = (_: IpcMainEvent, flexibilityData: FlexibilityOptions) => {
+    IPCHandler.sendToast(JSON.stringify(flexibilityData), "info");
   };
 }

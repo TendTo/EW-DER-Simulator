@@ -55,13 +55,13 @@ export default class EventHandler {
 
   private onDerVariation() {
     this.formWrapper.addDerFormOnSubmit((derData) => {
-      console.log("Der variation", derData);
+      window.electronAPI.send.derVariation(derData);
     });
   }
 
   private onFlexibilityRequest() {
     this.formWrapper.addFlexibilityFormOnSubmit((flexibilityForm) => {
-      console.log("Flexibility form submitted", flexibilityForm);
+      window.electronAPI.send.flexibilityRequest(flexibilityForm);
     });
   }
 
