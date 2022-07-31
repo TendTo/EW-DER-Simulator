@@ -186,19 +186,19 @@ button:disabled:active {
 
 @keyframes fadein-fadeout {
   0% {
-    margin-bottom: -100px;
+    transform: translateY(100px);
     opacity: 0;
   }
   20% {
-    margin-bottom: 0;
+    transform: translateY(0);
     opacity: 1;
   }
   80% {
-    margin-bottom: 0;
+    transform: translateY(0);
     opacity: 1;
   }
   100% {
-    margin-bottom: -100px;
+    transform: translateY(100px);
     opacity: 0;
   }
 }
