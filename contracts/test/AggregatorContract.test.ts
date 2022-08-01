@@ -48,15 +48,26 @@ describe("AggregatorContract", function () {
         expect(res.value.toNumber()).to.equal(agreement.value);
         expect(res.valuePrice.toNumber()).to.equal(agreement.valuePrice);
       });
-      it("the 'prosumerList' is correctly updated", async function () {
+      it("the 'prosumerList' is correctly updated (same prosumer)", async function () {
         await iot1Contract.registerAgreement(agreement);
-        await iot2Contract.registerAgreement(agreement);
+        await iot1Contract.registerAgreement({ ...agreement, value: 10 });
+        expect(await contract.prosumerList(0)).to.equal(iot1Addr);
+        expect(await contract.prosumerListLength()).to.equal(1);
+      });
+      it("the 'prosumerList' is correctly updated (different prosumers)", async function () {
+        await iot1Contract.registerAgreement(agreement);
+        await iot2Contract.registerAgreement({ ...agreement, value: 10 });
         expect(await contract.prosumerList(0)).to.equal(iot1Addr);
         expect(await contract.prosumerList(1)).to.equal(iot2Addr);
+        expect(await contract.prosumerListLength()).to.equal(2);
       });
-      it("the 'energyBalance' is correctly updated", async function () {
+      it("the 'energyBalance' is correctly updated (same prosumer)", async function () {
         await iot1Contract.registerAgreement(agreement);
-        expect(await contract.energyBalance()).to.equal(agreement.value);
+        await iot1Contract.registerAgreement({ ...agreement, value: 10 });
+        expect(await contract.energyBalance()).to.equal(10);
+      });
+      it("the 'energyBalance' is correctly updated (different prosumers)", async function () {
+        await iot1Contract.registerAgreement(agreement);
         await iot2Contract.registerAgreement({ ...agreement, value: 10 });
         expect(await contract.energyBalance()).to.equal(agreement.value + 10);
       });

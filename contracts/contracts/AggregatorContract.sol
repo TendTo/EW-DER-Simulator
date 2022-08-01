@@ -60,9 +60,15 @@ contract AggregatorContract is IAggregatorContract {
         agreementDoesNotExist(msg.sender)
     {
         if (_agreement.value == 0) revert ZeroValueError("value");
+        // Just to make sure not to add the same address twice. This would be prevented by the modifier
+        if (agreements[msg.sender].value == 0) {
+            prosumers[msg.sender].idx = prosumerList.length;
+            prosumerList.push(msg.sender);
+        } else {
+            energyBalance -= agreements[msg.sender].value;
+        }
+
         agreements[msg.sender] = _agreement;
-        prosumers[msg.sender].idx = prosumerList.length;
-        prosumerList.push(msg.sender);
         energyBalance += _agreement.value;
 
         emit RegisterAgreement(msg.sender, _agreement);
@@ -79,15 +85,7 @@ contract AggregatorContract is IAggregatorContract {
     function cancelAgreement() external agreementExists(msg.sender) {
         emit CancelAgreement(msg.sender, agreements[msg.sender]);
 
-        uint256 idx = prosumers[msg.sender].idx;
-        uint256 len = prosumerList.length;
-        if (len > 1) {
-            prosumerList[idx] = prosumerList[len - 1];
-            prosumers[prosumerList[idx]].idx = idx;
-            prosumerList.pop();
-        } else {
-            prosumerList.pop();
-        }
+        removeProsumerFromList(msg.sender);
         energyBalance -= agreements[msg.sender].value;
         delete agreements[msg.sender];
     }
@@ -212,6 +210,19 @@ contract AggregatorContract is IAggregatorContract {
     ) internal pure returns (bool) {
         int256 diff = value1 > value2 ? value1 - value2 : value2 - value1;
         return (diff * 100) / value1 <= percentage;
+    }
+
+    function removeProsumerFromList(address _addr) internal {
+        uint256 idx = prosumers[_addr].idx;
+        uint256 len = prosumerList.length;
+        if (idx >= len) return;
+        if (len > 1) {
+            prosumerList[idx] = prosumerList[len - 1];
+            prosumers[prosumerList[idx]].idx = idx;
+            prosumerList.pop();
+        } else {
+            prosumerList.pop();
+        }
     }
 
     /**
