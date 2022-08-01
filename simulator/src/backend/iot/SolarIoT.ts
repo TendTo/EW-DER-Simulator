@@ -1,3 +1,5 @@
+import { BigNumber } from "ethers";
+import { RequestFlexibilityEvent } from "src/typechain-types/AggregatorContract";
 import { Agreement } from "..";
 import Aggregator from "../Aggregator";
 import { EnergySource, Season } from "../constants";
@@ -11,10 +13,6 @@ export default class SolarIoT extends IoT {
   public constructor(aggregator: Aggregator, sk: string) {
     super(aggregator, sk);
     this.logger.debug(`IoT ${this.wallet.address} - Created SolarIoT`);
-  }
-
-  protected provideFlexibility(event: any): void {
-    throw new Error("Method not implemented.");
   }
 
   /**
@@ -34,11 +32,20 @@ export default class SolarIoT extends IoT {
   }
 
   protected createAgreement(): Agreement {
-    const value = Math.floor(generatePoisson(2) * this.maxValue);
+    const value = Math.floor(generatePoisson(2) * (this.maxValue - this.minValue) + this.minValue);
     const flexibility = Math.floor(value * 0.25);
     const valueCost = Math.floor(Math.random() * this.maxCost + this.minCost);
     const flexibilityCost = Math.floor(valueCost * 1.1);
     return new Agreement(value, flexibility, valueCost, flexibilityCost, EnergySource.Solar);
+  }
+
+  protected applyFlexibilityEvent(value: number, timestamp: number): number {
+    const averageEnergy = this.agreement.value + this.flexibilityEvent.gridFlexibility;
+    const newValue =
+      averageEnergy * 0.1 * Math.sin((Math.PI * (timestamp - 21600)) / 43200) + averageEnergy;
+
+    this.logger.log(`IoT ${this.wallet.address} - Flexibility: ${value} -> ${newValue}`);
+    return newValue;
   }
 
   protected applyEvents(value: number, timestamp: number): number {
@@ -62,6 +69,9 @@ export default class SolarIoT extends IoT {
     if (!SolarIoT.meteoEvent) SolarIoT.meteoEvent = MeteoEvent.rollForEvent(timestamp);
   }
 
+  protected get minValue(): number {
+    return 10;
+  }
   protected get maxValue(): number {
     return 100;
   }

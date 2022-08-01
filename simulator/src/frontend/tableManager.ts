@@ -1,4 +1,5 @@
-import { AgreementLogRow, AgreementEventType, FlexibilityLogRow } from "./types";
+import { FlexibilityLogRow } from "src/module";
+import { AgreementLogRow, AgreementEventType } from "./types";
 
 export default class TableManager {
   private readonly agreementLogTBody: HTMLElement;
@@ -21,7 +22,6 @@ export default class TableManager {
     { blockNumber, address, value, valuePrice, flexibility, flexibilityPrice }: AgreementLogRow,
     eventType: AgreementEventType
   ) {
-    console.log("new agreement", blockNumber);
     const clone = this.agreementLogTemplate.content.cloneNode(true) as Element;
     const cols = clone.querySelectorAll("td");
     if (eventType === "register") cols[0].classList.add("positive-bg");
@@ -38,20 +38,22 @@ export default class TableManager {
   }
 
   public addFlexibilityLogRow({
-    blockNumber,
-    address,
     flexibility,
-    reward,
+    blockNumber,
     start,
+    color,
+    prosumer,
+    stop,
   }: FlexibilityLogRow) {
     const clone = this.flexibilityLogTemplate.content.cloneNode(true) as Element;
     const cols = clone.querySelectorAll("td");
     if (cols.length !== 5) throw new Error("Invalid template");
+    cols[0].classList.add(color);
     cols[0].innerHTML = blockNumber.toString();
-    cols[1].innerHTML = address;
-    cols[2].innerHTML = start.toString();
-    cols[3].innerHTML = flexibility.toString();
-    cols[4].innerHTML = reward.toString();
+    cols[1].innerHTML = prosumer;
+    cols[2].innerHTML = start;
+    cols[3].innerHTML = stop ?? "";
+    cols[4].innerHTML = flexibility;
     this.flexibilityLogTBody.prepend(clone);
   }
 

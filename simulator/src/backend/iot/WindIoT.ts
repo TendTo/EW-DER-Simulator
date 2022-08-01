@@ -1,6 +1,8 @@
+import { BigNumber } from "ethers";
+import { RequestFlexibilityEvent } from "src/typechain-types/AggregatorContract";
 import { Agreement } from "..";
 import Aggregator from "../Aggregator";
-import { EnergySource, Season } from "../constants";
+import { EnergySource } from "../constants";
 import { generatePoisson } from "../utils";
 import { MeteoEvent, PersonalEvent } from "./events";
 import IoT from "./IoT";
@@ -12,17 +14,13 @@ export default class WindIoT extends IoT {
     this.logger.debug(`IoT ${this.wallet.address} - Created WindIoT`);
   }
 
-  protected provideFlexibility(event: any): void {
-    throw new Error("Method not implemented.");
-  }
-
   /**
    * Simulate the production of energy of a solar panel in the given timestamp
    * @param timestamp time in seconds since the epoch
    * @returns energy produced in watt
    */
   protected produce(timestamp: number): number {
-    return Math.random() * this.maxValue + this.maxValue / 2;
+    return Math.random() * this.agreement.value + this.agreement.value / 2;
   }
 
   protected skipTick(): boolean {
@@ -34,7 +32,15 @@ export default class WindIoT extends IoT {
     const flexibility = Math.floor(value * 0.25);
     const valueCost = Math.floor(Math.random() * this.maxCost + this.minCost);
     const flexibilityCost = Math.floor(valueCost * 1.1);
-    return new Agreement(value, flexibility, valueCost, flexibilityCost, EnergySource.Solar);
+    return new Agreement(value, flexibility, valueCost, flexibilityCost, EnergySource.Wind);
+  }
+
+  protected applyFlexibilityEvent(value: number, timestamp: number): number {
+    const averageEnergy = this.agreement.value + this.flexibilityEvent.gridFlexibility;
+    const newValue = Math.random() * averageEnergy + averageEnergy / 2;
+
+    this.logger.log(`IoT ${this.wallet.address} - Flexibility: ${value} -> ${newValue}`);
+    return newValue;
   }
 
   protected applyEvents(value: number, timestamp: number): number {
@@ -58,6 +64,9 @@ export default class WindIoT extends IoT {
     if (!WindIoT.meteoEvent) WindIoT.meteoEvent = MeteoEvent.rollForEvent(timestamp);
   }
 
+  protected get minValue(): number {
+    return 10;
+  }
   protected get maxValue(): number {
     return 100;
   }

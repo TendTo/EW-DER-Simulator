@@ -38,6 +38,7 @@ export default class EventHandler {
     this.onNewAggregatedReading();
     this.onAggregatorBalance();
     this.onToast();
+    this.onFlexibilityEvent();
   }
 
   private onToast() {
@@ -60,8 +61,12 @@ export default class EventHandler {
   }
 
   private onFlexibilityRequest() {
-    this.formWrapper.addFlexibilityFormOnSubmit((flexibilityForm) => {
-      window.electronAPI.send.flexibilityRequest(flexibilityForm);
+    this.formWrapper.addFlexibilityFormOnSubmit((flexibilityData) => {
+      if (flexibilityData.flexibilityStart > flexibilityData.flexibilityStop) {
+        this.toastWrapper.show("Flexibility start must be before flexibility stop", "error");
+        return;
+      }
+      window.electronAPI.send.flexibilityRequest(flexibilityData);
     });
   }
 
@@ -106,15 +111,13 @@ export default class EventHandler {
 
   private onStartSimulation() {
     this.formWrapper.addSettingsFormOnSubmit((blockchainData, clockData, initialFunds) => {
-      console.log("Simulation started", blockchainData, clockData, initialFunds);
-      return;
       if (this.isPlaying) {
         this.toastWrapper.show("Simulation already running", "error");
         return;
       }
       this.isPlaying = true;
       window.electronAPI.send.startSimulation(blockchainData, clockData, initialFunds);
-      console.log("Simulation started", blockchainData, clockData);
+      console.log("Simulation started", blockchainData, clockData, initialFunds);
     });
   }
 
@@ -159,5 +162,11 @@ export default class EventHandler {
       console.log("Loading stopped");
       this.buttonsWrapper.loading(false);
     });
+  }
+
+  private onFlexibilityEvent() {
+    window.electronAPI.on.flexibilityEvent((_, flexibilityLogRow) =>
+      this.tableManager.addFlexibilityLogRow(flexibilityLogRow)
+    );
   }
 }

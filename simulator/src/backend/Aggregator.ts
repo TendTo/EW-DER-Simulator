@@ -7,73 +7,92 @@ import {
 } from "../typechain-types";
 import {
   CancelAgreementEvent,
+  ConfirmFlexibilityProvisioningEvent,
   RegisterAgreementEvent,
+  RequestFlexibilityEvent,
   ReviseAgreementEvent,
+  StartFlexibilityProvisioningEvent,
 } from "../typechain-types/AggregatorContract";
-import { BlockchainOptions, NumberOfDERs } from "../module";
+import {
+  BlockchainOptions,
+  DerVariationOptions,
+  FlexibilityOptions,
+  NumberOfDERs,
+} from "../module";
 import Clock from "./clock";
-import { ETHPerIoT } from "./constants";
+import { EnergySource, ETHPerIoT } from "./constants";
 import { IIoT, IoTFactory } from "./iot";
 import IPCHandler from "./IPCHandler";
 import ITickable from "./ITickable";
 import { parseAgreementLog } from "./utils";
+import FairFlexibilityTracker from "./FairFlexibilityTracker";
 
 export default class Aggregator implements ITickable {
-  private wallet: Wallet;
-  private iots: IIoT[];
-  private mnemonic: string;
-  private numberOfDERs: NumberOfDERs;
-  private aggregatedValue: number;
+  private readonly logger: Logger = getLogger("aggregator");
+  private readonly tracker: FairFlexibilityTracker = new FairFlexibilityTracker();
   public readonly contract: AggregatorContract;
   public readonly provider: providers.JsonRpcProvider;
-  private readonly logger: Logger;
+  private aggregatedValue: number = 0;
+  private iots: IIoT[] = [];
+  private wallet: Wallet;
+  private mnemonic: string;
+  private numberOfDERs: NumberOfDERs;
   private blockNumber: number;
   private balance: BigNumber;
 
   constructor(
     { sk, seed, numberOfDERs, contractAddress, rpcUrl }: BlockchainOptions,
-    private readonly clock: Clock
+    public readonly clock: Clock,
+    private readonly initialFunds: boolean
   ) {
-    this.logger = getLogger("aggregator");
     this.provider = new providers.JsonRpcProvider(rpcUrl);
     this.wallet = new Wallet(sk, this.provider);
-    this.iots = [];
     this.mnemonic = seed;
     this.numberOfDERs = numberOfDERs;
     this.contract = AggregatorContract__factory.connect(contractAddress, this.wallet);
-    this.aggregatedValue = 0;
     this.logger.log(`Created`);
   }
 
-  private requestFlexibility(startTimestamp: number, endTimestamp: number, flexibility: number) {
+  public async requestFlexibility({
+    flexibilityValue,
+    flexibilityStart = Date.now() / 1000,
+    flexibilityStop = flexibilityStart + 60 * 60 * 24,
+  }: FlexibilityOptions) {
     this.logger.log(
-      `Request flexibility from ${startTimestamp} to ${endTimestamp} of ${flexibility} Watts`
+      `Request flexibility from ${flexibilityStart} to ${flexibilityStop} of ${flexibilityValue} Watts`
     );
-    return this.contract.requestFlexibility(1, 1, 1);
+    try {
+      this.tracker.activate({ flexibilityValue, flexibilityStart, flexibilityStop });
+      const tx = await this.contract.requestFlexibility(
+        flexibilityStart,
+        flexibilityStop,
+        flexibilityValue
+      );
+      IPCHandler.sendToast("Aggregator - Flexibility request sent", "success");
+      this.logger.log("Aggregator - Flexibility request sent");
+      return tx.wait();
+    } catch (e) {
+      this.logger.error("Error requesting flexibility", e);
+      IPCHandler.sendToast("Aggregator - Error requesting flexibility", "error");
+    }
   }
 
-  private async distributeFounds() {
+  private async distributeFounds(iots?: IIoT[]) {
     const totalCost = ETHPerIoT.mul(this.iots.length);
     const strTotalCost = utils.formatEther(totalCost);
+    const iotList = iots ?? this.iots;
     IPCHandler.sendToast(`Aggregator - Sending ${strTotalCost} VT to IoTs`, "info");
-    this.logger.log(`Sending ${strTotalCost} VT to ${this.iots.length} IoTs`);
+    this.logger.log(`Sending ${strTotalCost} VT to ${iotList.length} IoTs`);
     try {
       const tx = await this.contract.sendFunds(
-        this.iots.map((iot) => iot.address),
+        iotList.map((iot) => iot.address),
         { value: totalCost }
       );
       return await tx.wait();
     } catch (e) {
-      this.logger.error(`Error sending funds`);
-      this.logger.error(e);
+      this.logger.error("Error sending funds", e);
       IPCHandler.sendToast("Aggregator - Error sending funds", "error");
     }
-  }
-
-  private startProducing() {
-    this.logger.log(`Start production`);
-    for (let i = 0; i < this.iots.length; i++) this.iots[i].startProducing();
-    this.clock.start();
   }
 
   private async getNetworkInfo() {
@@ -86,6 +105,10 @@ export default class Aggregator implements ITickable {
       this.logger.log(`Address ${this.wallet.address}`);
       this.logger.log(`Balance ${this.balance}`);
       this.logger.log(`BlockNumber ${this.blockNumber}`);
+
+      const tx = await this.contract.resetContract();
+      await tx.wait();
+      this.logger.log(`Contract resetted`);
     } catch (e) {
       this.logger.error(`Error getting network info`);
       this.logger.error(e);
@@ -93,6 +116,7 @@ export default class Aggregator implements ITickable {
     }
   }
 
+  //#region Log listeners
   private onRegisterAgreement(
     prosumer: string,
     agreement: IAggregatorContract.AgreementStructOutput,
@@ -128,6 +152,64 @@ export default class Aggregator implements ITickable {
     IPCHandler.onCancelAgreementEvent(prosumer, parseAgreementLog(agreement), event.blockNumber);
     this.logger.log(`CancelAgreementEvent ${prosumer} ${agreement} - Block ${event.blockNumber}`);
   }
+  private onRequestFlexibility(
+    start: BigNumber,
+    end: BigNumber,
+    gridFlexibility: BigNumber,
+    event: RequestFlexibilityEvent
+  ) {
+    if (event.blockNumber < this.blockNumber) return;
+    this.logger.log(
+      `RequestFlexibilityEvent ${start} ${end} ${gridFlexibility} - Block ${event.blockNumber}`
+    );
+    IPCHandler.onFlexibilityEvent({
+      start: start.toString(),
+      prosumer: "Aggregator",
+      color: "positive-bg",
+      blockNumber: event.blockNumber,
+      flexibility: gridFlexibility.toString(),
+    });
+  }
+  private onStartFlexibilityProvisioning(
+    start: BigNumber,
+    prosumer: string,
+    flexibility: BigNumber,
+    reward: BigNumber,
+    event: StartFlexibilityProvisioningEvent
+  ) {
+    if (event.blockNumber < this.blockNumber) return;
+    this.logger.log(
+      `StartFlexibilityProvisioningEvent ${start} ${prosumer} ${flexibility} ${reward} - Block ${event.blockNumber}`
+    );
+    IPCHandler.onFlexibilityEvent({
+      start: start.toString(),
+      prosumer: prosumer,
+      color: "neutral-bg",
+      blockNumber: event.blockNumber,
+      flexibility: flexibility.toString(),
+    });
+  }
+  private onConfirmFlexibilityProvisioning(
+    start: BigNumber,
+    prosumer: string,
+    flexibility: BigNumber,
+    reward: BigNumber,
+    event: ConfirmFlexibilityProvisioningEvent
+  ) {
+    if (event.blockNumber < this.blockNumber) return;
+    this.logger.log(
+      `ConfirmFlexibilityProvisioningEvent ${start} ${prosumer} ${flexibility} ${reward} - Block ${event.blockNumber}`
+    );
+    IPCHandler.onFlexibilityEvent({
+      start: start.toString(),
+      prosumer: prosumer,
+      color: "negative-bg",
+      blockNumber: event.blockNumber,
+      flexibility: flexibility.toString(),
+    });
+  }
+
+  //#endregion
 
   private listenContractLogs() {
     this.logger.log(`Setup listeners for contract logs`);
@@ -138,42 +220,78 @@ export default class Aggregator implements ITickable {
       this.contract.filters.RegisterAgreement(),
       this.onRegisterAgreement.bind(this)
     );
+    this.contract.on(
+      this.contract.filters.RequestFlexibility(),
+      this.onRequestFlexibility.bind(this)
+    );
+    this.contract.on(
+      this.contract.filters.StartFlexibilityProvisioning(),
+      this.onStartFlexibilityProvisioning.bind(this)
+    );
+    this.contract.on(
+      this.contract.filters.ConfirmFlexibilityProvisioning(),
+      this.onConfirmFlexibilityProvisioning.bind(this)
+    );
   }
 
-  private setupClock() {
-    for (let i = 0; i < this.iots.length; i++) {
-      this.clock.addFunction(this.iots[i].onTick.bind(this.iots[i]));
-    }
-    this.clock.addFunction(this.onTick.bind(this));
-  }
-
-  public async setupSimulation(initialFunds: boolean) {
+  public async setupSimulation() {
     this.logger.log(`Setup production`);
     await this.getNetworkInfo();
     this.listenContractLogs();
     this.iots = await IoTFactory.createIoTs(this, this.mnemonic, this.numberOfDERs);
-    if (initialFunds) await this.distributeFounds();
-    this.setupClock();
+    if (this.initialFunds) await this.distributeFounds();
+    this.clock.addFunction(this.onTick.bind(this));
   }
 
   public async startSimulation() {
-    this.startProducing();
+    this.logger.log(`Start production`);
+    for (let i = 0; i < this.iots.length; i++) this.iots[i].startProducing();
+    this.clock.start();
   }
 
-  stopSimulation() {
+  public stopSimulation() {
     this.contract.removeAllListeners();
     this.clock.stop();
-    this.iots.forEach((iot) => iot.stopProducing());
-    delete this.iots;
+    for (let i = 0; i < this.iots.length; i++) this.iots[i].stopProducing(false);
     this.iots = [];
   }
 
-  onIoTReading(address: string, value: number) {
+  public onIoTReading(address: string, value: number) {
     this.aggregatedValue += value;
+    if (this.tracker.isActive) this.tracker.parseReading(address, this.aggregatedValue);
   }
 
-  onTick(clock: Clock, timestamp: number) {
+  public onTick(clock: Clock, timestamp: number) {
+    this.logger.debug(`Aggregated value: ${this.aggregatedValue} - Tick ${timestamp}`);
     IPCHandler.onNewAggregatedReading(this.aggregatedValue, clock.ISO);
+    if (this.tracker.isActive && this.tracker.hasEnded(timestamp)) {
+      this.logger.info(`Sending 'endFlexibilityRequest' command - Tick ${timestamp}`);
+      this.tracker.deactivate();
+      this.contract
+        .endFlexibilityRequest(this.tracker.results)
+        .then(() => this.logger.info(`Sending 'endFlexibilityRequest' command - Tick ${timestamp}`))
+        .catch((e) => this.logger.error("`Sending 'endFlexibilityRequest' command", e));
+    }
     this.aggregatedValue = 0;
+  }
+
+  public async variateIoTs({ derType, derVariation }: DerVariationOptions) {
+    if (derVariation > 0) {
+      const newIoTs = await IoTFactory.createIoTs(this, this.mnemonic, { [derType]: derVariation });
+      if (this.initialFunds) await this.distributeFounds(newIoTs);
+      this.iots = this.iots.concat(newIoTs);
+      for (let i = 0; i < newIoTs.length; i++) newIoTs[i].startProducing();
+    } else {
+      let counter = 0;
+      const iotsToRemove = this.iots.filter(
+        (iot) => iot.agreement.energySource === EnergySource[derType] && counter++ < -derVariation
+      );
+      iotsToRemove.forEach((iot) => iot.stopProducing(true));
+      this.iots = this.iots.filter((iot) => !iotsToRemove.includes(iot));
+    }
+  }
+
+  public get iotLength() {
+    return this.iots.length;
   }
 }

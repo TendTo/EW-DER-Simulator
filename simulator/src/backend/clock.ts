@@ -59,7 +59,8 @@ export default class Clock {
    * @param callback The function to be removed.
    */
   removeFunction(callback: TickCallback) {
-    this.callbacks.splice(this.callbacks.indexOf(callback), 1);
+    const idx = this.callbacks.indexOf(callback);
+    if (idx !== -1) this.callbacks.splice(idx, 1);
   }
   reset() {
     this.callbacks = [];

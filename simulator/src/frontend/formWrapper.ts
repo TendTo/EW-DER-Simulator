@@ -45,6 +45,10 @@ export default class FromWrapper {
     });
   }
 
+  private parseLocalDate(date: string): number {
+    return date ? Math.floor(new Date(date).getTime() / 1000) : undefined;
+  }
+
   get blockchainData(): BlockchainOptions {
     const nSolar = parseInt(this.settingsForm.numberOfSolarDERs.value);
     const nWind = parseInt(this.settingsForm.numberOfWindDERs.value);
@@ -62,8 +66,7 @@ export default class FromWrapper {
   }
 
   get clockData(): ClockOptions {
-    const startingTimestamp =
-      new Date(`${this.settingsForm.startTimestamp.value}Z`).getTime() / 1000;
+    const startingTimestamp = this.parseLocalDate(this.settingsForm.startTimestamp.value);
     return {
       ...(startingTimestamp && { startingTimestamp }),
       tickIncrement: parseInt(this.settingsForm.tickIncrement.value) || 1,
@@ -73,12 +76,13 @@ export default class FromWrapper {
 
   get flexibilityData(): FlexibilityOptions {
     const flexibilityStart =
-      new Date(`${this.flexibilityForm.flexibilityStart.value}Z`).getTime() / 1000;
+      this.parseLocalDate(this.flexibilityForm.flexibilityStart.value) || Math.floor(Date.now() / 1000);
     const flexibilityStop =
-      new Date(`${this.flexibilityForm.flexibilityStop.value}Z`).getTime() / 1000;
+      this.parseLocalDate(this.flexibilityForm.flexibilityStop.value) ||
+      flexibilityStart + 3600 * 24;
     return {
-      ...(flexibilityStart && { flexibilityStart }),
-      ...(flexibilityStop && { flexibilityStop }),
+      flexibilityStart,
+      flexibilityStop,
       flexibilityValue: parseInt(this.flexibilityForm.flexibilityValue.value),
     };
   }

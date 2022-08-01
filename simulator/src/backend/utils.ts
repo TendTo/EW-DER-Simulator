@@ -49,3 +49,14 @@ export function parseAgreementLog({
     value: value.toString(),
   };
 }
+
+/**
+ * Check if the difference between two numbers is less than a given threshold (in %)
+ * @param value1 first value to compare
+ * @param value2 second value to compare
+ * @param percentage allowed difference between the two values in percent
+ * @returns whether the two values are close enough
+ */
+export function inErrorMargin(value1: number, value2: number, percentage: number): boolean {
+  return (Math.abs(value1 - value2) * 100) / value1 <= percentage;
+}

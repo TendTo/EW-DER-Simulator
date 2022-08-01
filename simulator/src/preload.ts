@@ -45,6 +45,9 @@ const api: ElectronAPI = {
     newReading(listener) {
       ipcRenderer.on("newReading", listener);
     },
+    flexibilityEvent(listener) {
+      ipcRenderer.on("flexibilityEvent", listener);
+    },
   },
 };
 contextBridge.exposeInMainWorld("electronAPI", api);

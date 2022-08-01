@@ -55,6 +55,15 @@ export type AgreementStructFrontend = {
   energySource: string;
 };
 
+export type FlexibilityLogRow = {
+  start: string;
+  prosumer: string;
+  flexibility: string;
+  blockNumber: number;
+  stop?: string;
+  color: "positive-bg" | "neutral-bg" | "negative-bg";
+};
+
 export type ElectronAPI = GetApiType<
   {
     stopSimulation: () => void;
@@ -84,6 +93,7 @@ export type ElectronAPI = GetApiType<
       agreement: AgreementStructFrontend,
       blockNumber: number
     ) => Promise<void>;
+    flexibilityEvent: (flexibilityRow: FlexibilityLogRow) => Promise<void>;
     startLoading: () => Promise<void>;
     stopLoading: () => Promise<void>;
     aggregatorBalance: (address: string, balance: string) => Promise<void>;

@@ -5,6 +5,7 @@ import {
   BlockchainOptions,
   ClockOptions,
   DerVariationOptions,
+  FlexibilityLogRow,
   FlexibilityOptions,
 } from "../module";
 import Aggregator from "./Aggregator";
@@ -96,6 +97,10 @@ export default class IPCHandler {
     );
   }
 
+  static onFlexibilityEvent(FlexibilityLogRow: FlexibilityLogRow) {
+    this.instance.window.webContents.send("flexibilityEvent", FlexibilityLogRow);
+  }
+
   startSimulation = (
     _: IpcMainEvent,
     blockchainOptions: BlockchainOptions,
@@ -105,14 +110,14 @@ export default class IPCHandler {
     this.logger.debug(`Starting simulation ${{ blockchainOptions, clockOptions }}`);
     IPCHandler.onStartLoading();
     try {
-      this.aggregator = new Aggregator(blockchainOptions, new Clock(clockOptions));
+      this.aggregator = new Aggregator(blockchainOptions, new Clock(clockOptions), initialFunds);
     } catch (error) {
       this.logger.error(error);
       IPCHandler.onStopLoading();
       return;
     }
     this.aggregator
-      .setupSimulation(initialFunds)
+      .setupSimulation()
       .then(() => {
         this.aggregator.startSimulation();
       })
@@ -128,10 +133,18 @@ export default class IPCHandler {
   };
 
   derVariation = (_: IpcMainEvent, derVariationData: DerVariationOptions) => {
-    IPCHandler.sendToast(JSON.stringify(derVariationData), "info");
+    IPCHandler.sendToast(
+      derVariationData.derVariation > 0
+        ? `Creating ${derVariationData.derVariation} new DERs of type ${derVariationData.derType}`
+        : `Removing at most ${derVariationData.derVariation} DERs of type ${derVariationData.derType}`,
+      "info"
+    );
+    this.aggregator.variateIoTs(derVariationData);
   };
 
   flexibilityRequest = (_: IpcMainEvent, flexibilityData: FlexibilityOptions) => {
-    IPCHandler.sendToast(JSON.stringify(flexibilityData), "info");
+    IPCHandler.onStartLoading();
+    IPCHandler.sendToast("Sending the flexibility request", "info");
+    this.aggregator.requestFlexibility(flexibilityData).then(() => IPCHandler.onStopLoading());
   };
 }
