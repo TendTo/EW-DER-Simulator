@@ -51,6 +51,10 @@ contract AggregatorContract is IAggregatorContract {
         _;
     }
 
+    function prosumerListLength() external view returns (uint256) {
+        return prosumerList.length;
+    }
+
     function registerAgreement(Agreement calldata _agreement)
         external
         agreementDoesNotExist(msg.sender)
