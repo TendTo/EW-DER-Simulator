@@ -100,15 +100,17 @@ abstract class IoT implements IIoT {
   }
 
   protected shouldApplyFlexibility(timestamp: number) {
-    this.logger.warn(`IoT ${this.address} - timestamp: ${timestamp} - ${JSON.stringify(this.flexibilityEvent)}`);
     if (!this.flexibilityEvent || this.flexibilityEvent.hasEnded(timestamp)) return false;
     if (this.flexibilityEvent.shouldProvideFlexibility(timestamp)) {
       this.contract
         .provideFlexibilityFair(this.flexibilityEvent.start, this.flexibilityEvent.gridFlexibility)
         .then(() => (this.flexibilityEvent.isActive = true))
-        .catch(e => this.logger.error(`IoT ${this.address} - Error providing flexibility`, e));
+        .catch((e) => this.logger.error(`IoT ${this.address} - Error providing flexibility`, e));
       this.flexibilityEvent.provideMessageSent = true;
     }
+    this.logger.log(
+      `IoT ${this.address} - Current timestamp: ${timestamp} - Flexibility starts at ${this.flexibilityEvent.start}`
+    );
     if (!this.flexibilityEvent.isActive) return false;
     return true;
   }

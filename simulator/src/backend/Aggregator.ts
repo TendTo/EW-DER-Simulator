@@ -188,6 +188,7 @@ export default class Aggregator implements ITickable {
       blockNumber: event.blockNumber,
       flexibility: flexibility.toString(),
     });
+    this.tracker.addIoT(prosumer, flexibility.toNumber());
   }
   private onConfirmFlexibilityProvisioning(
     start: BigNumber,
