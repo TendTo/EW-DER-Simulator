@@ -21,14 +21,8 @@ const api: ElectronAPI = {
     toast(listener) {
       ipcRenderer.on("toast", listener);
     },
-    registerAgreementEvent(listener) {
-      ipcRenderer.on("registerAgreementEvent", listener);
-    },
-    cancelAgreementEvent(listener) {
-      ipcRenderer.on("cancelAgreementEvent", listener);
-    },
-    reviseAgreementEvent(listener) {
-      ipcRenderer.on("reviseAgreementEvent", listener);
+    agreementEvent(listener) {
+      ipcRenderer.on("agreementEvent", listener);
     },
     startLoading(listener) {
       ipcRenderer.on("startLoading", listener);

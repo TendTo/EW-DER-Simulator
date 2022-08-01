@@ -1,16 +1,14 @@
 import { ipcMain, IpcMainEvent, BrowserWindow } from "electron";
 import { getLogger, Logger } from "log4js";
 import {
-  AgreementStructFrontend,
   BlockchainOptions,
   ClockOptions,
   DerVariationOptions,
-  FlexibilityLogRow,
   FlexibilityOptions,
 } from "../module";
 import Aggregator from "./Aggregator";
 import Clock from "./clock";
-import { ToastType } from "../frontend/types";
+import { AgreementLogRow, ToastType, FlexibilityLogRow } from "../frontend/types";
 
 export default class IPCHandler {
   private static instance: IPCHandler;
@@ -62,43 +60,12 @@ export default class IPCHandler {
     this.instance.window.webContents.send("stopLoading");
   }
 
-  static onRegisterAgreementEvent(
-    prosumer: string,
-    agreement: AgreementStructFrontend,
-    blockNumber: number
-  ) {
-    this.instance.window.webContents.send(
-      "registerAgreementEvent",
-      prosumer,
-      agreement,
-      blockNumber
-    );
+  static onAgreementEvent(agreementLogRow: AgreementLogRow) {
+    this.instance.window.webContents.send("agreementEvent", agreementLogRow);
   }
 
-  static onCancelAgreementEvent(
-    prosumer: string,
-    agreement: AgreementStructFrontend,
-    blockNumber: number
-  ) {
-    this.instance.window.webContents.send("cancelAgreementEvent", prosumer, agreement, blockNumber);
-  }
-  static onReviseAgreementEvent(
-    prosumer: string,
-    oldAgreement: AgreementStructFrontend,
-    newAgreement: AgreementStructFrontend,
-    blockNumber: number
-  ) {
-    this.instance.window.webContents.send(
-      "reviseAgreementEvent",
-      prosumer,
-      oldAgreement,
-      newAgreement,
-      blockNumber
-    );
-  }
-
-  static onFlexibilityEvent(FlexibilityLogRow: FlexibilityLogRow) {
-    this.instance.window.webContents.send("flexibilityEvent", FlexibilityLogRow);
+  static onFlexibilityEvent(flexibilityLogRow: FlexibilityLogRow) {
+    this.instance.window.webContents.send("flexibilityEvent", flexibilityLogRow);
   }
 
   startSimulation = (

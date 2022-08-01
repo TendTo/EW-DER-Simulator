@@ -1,8 +1,6 @@
-import type { AgreementEventType } from "./types";
 import ButtonWrapper from "./buttonsWrapper";
 import ChartWrapper from "./chartWrapper";
 import TableManager from "./tableManager";
-import { AgreementStructFrontend } from "../module";
 import FromWrapper from "./formWrapper";
 import ToastWrapper from "./toastWrapper";
 
@@ -30,15 +28,13 @@ export default class EventHandler {
     this.onFlexibilityRequest();
     this.onStartLoading();
     this.onStopLoading();
-    this.onRegisterAgreementEvent();
-    this.onReviseAgreementEvent();
-    this.onCancelAgreementEvent();
     this.onStartSimulation();
     this.onStopSimulation();
     this.onNewAggregatedReading();
     this.onAggregatorBalance();
     this.onToast();
     this.onFlexibilityEvent();
+    this.onAgreementEvent();
   }
 
   private onToast() {
@@ -68,45 +64,6 @@ export default class EventHandler {
       }
       window.electronAPI.send.flexibilityRequest(flexibilityData);
     });
-  }
-
-  private onCancelAgreementEvent() {
-    window.electronAPI.on.cancelAgreementEvent((_, prosumer, agreement, blockNumber) => {
-      this.addAgreementRow(blockNumber, prosumer, agreement, "cancel");
-    });
-  }
-
-  private onReviseAgreementEvent() {
-    window.electronAPI.on.reviseAgreementEvent(
-      (_, prosumer, oldAgreement, newAgreement, blockNumber) => {
-        this.addAgreementRow(blockNumber, prosumer, newAgreement, "revise");
-      }
-    );
-  }
-
-  private onRegisterAgreementEvent() {
-    window.electronAPI.on.registerAgreementEvent((_, prosumer, agreement, blockNumber) => {
-      this.addAgreementRow(blockNumber, prosumer, agreement, "register");
-    });
-  }
-
-  private addAgreementRow(
-    blockNumber: number,
-    prosumer: string,
-    { value, valuePrice, flexibility, flexibilityPrice }: AgreementStructFrontend,
-    eventType: AgreementEventType
-  ) {
-    this.tableManager.addAgreementLogRow(
-      {
-        blockNumber,
-        address: prosumer,
-        value: value,
-        valuePrice: valuePrice,
-        flexibility: flexibility,
-        flexibilityPrice: flexibilityPrice,
-      },
-      eventType
-    );
   }
 
   private onStartSimulation() {
@@ -168,5 +125,11 @@ export default class EventHandler {
     window.electronAPI.on.flexibilityEvent((_, flexibilityLogRow) =>
       this.tableManager.addFlexibilityLogRow(flexibilityLogRow)
     );
+  }
+
+  private onAgreementEvent() {
+    window.electronAPI.on.agreementEvent((_, agreementRow) => {
+      this.tableManager.addAgreementLogRow(agreementRow);
+    });
   }
 }

@@ -31,14 +31,17 @@ export type AgreementLogRow = {
   valuePrice: string;
   flexibility: string;
   flexibilityPrice: string;
+  energySource: EnergySource;
+  className: "positive-bg" | "neutral-bg" | "negative-bg";
 };
 
 export type FlexibilityLogRow = {
+  start: string;
+  prosumer: string;
+  flexibility: string;
   blockNumber: number;
-  address: string;
-  flexibility: number;
-  reward: number;
-  start: number;
+  stop?: string;
+  className: "positive-bg" | "neutral-bg" | "negative-bg";
 };
 
 export type AgreementEventType = "register" | "revise" | "cancel";

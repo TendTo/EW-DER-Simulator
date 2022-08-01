@@ -2,7 +2,7 @@ import type { IpcRenderer, IpcRendererEvent } from "electron";
 import type { WebContents } from "electron/main";
 import type Clock from "./backend/clock";
 import type { EnergySource, Season } from "./backend/constants";
-import { ToastType } from "./frontend/types";
+import { AgreementLogRow, FlexibilityLogRow, ToastType } from "./frontend/types";
 
 export type GetApiType<
   SendFromRenderer extends Record<string, (...args: any[]) => any>,
@@ -47,23 +47,6 @@ export type DerVariationOptions = {
   derVariation: number;
 };
 
-export type AgreementStructFrontend = {
-  value: string;
-  flexibility: string;
-  valuePrice: string;
-  flexibilityPrice: string;
-  energySource: string;
-};
-
-export type FlexibilityLogRow = {
-  start: string;
-  prosumer: string;
-  flexibility: string;
-  blockNumber: number;
-  stop?: string;
-  color: "positive-bg" | "neutral-bg" | "negative-bg";
-};
-
 export type ElectronAPI = GetApiType<
   {
     stopSimulation: () => void;
@@ -77,22 +60,7 @@ export type ElectronAPI = GetApiType<
   },
   {},
   {
-    registerAgreementEvent: (
-      prosumer: string,
-      agreement: AgreementStructFrontend,
-      blockNumber: number
-    ) => Promise<void>;
-    reviseAgreementEvent: (
-      prosumer: string,
-      oldAgreement: AgreementStructFrontend,
-      newAgreement: AgreementStructFrontend,
-      blockNumber: number
-    ) => Promise<void>;
-    cancelAgreementEvent: (
-      prosumer: string,
-      agreement: AgreementStructFrontend,
-      blockNumber: number
-    ) => Promise<void>;
+    agreementEvent: (agreementRow: AgreementLogRow) => Promise<void>;
     flexibilityEvent: (flexibilityRow: FlexibilityLogRow) => Promise<void>;
     startLoading: () => Promise<void>;
     stopLoading: () => Promise<void>;

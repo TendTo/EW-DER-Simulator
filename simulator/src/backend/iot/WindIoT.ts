@@ -1,5 +1,3 @@
-import { BigNumber } from "ethers";
-import { RequestFlexibilityEvent } from "src/typechain-types/AggregatorContract";
 import { Agreement } from "..";
 import Aggregator from "../Aggregator";
 import { EnergySource } from "../constants";

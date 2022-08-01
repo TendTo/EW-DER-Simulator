@@ -24,8 +24,8 @@ import { EnergySource, ETHPerIoT } from "./constants";
 import { IIoT, IoTFactory } from "./iot";
 import IPCHandler from "./IPCHandler";
 import ITickable from "./ITickable";
-import { parseAgreementLog } from "./utils";
 import FairFlexibilityTracker from "./FairFlexibilityTracker";
+import { parseAgreementLog } from "./utils";
 
 export default class Aggregator implements ITickable {
   private readonly logger: Logger = getLogger("aggregator");
@@ -96,7 +96,7 @@ export default class Aggregator implements ITickable {
   }
 
   private async getNetworkInfo() {
-    this.logger.log(`Getting network info`);
+    this.logger.log("Getting network info");
     try {
       [this.blockNumber, this.balance] = await Promise.all([
         this.provider.getBlockNumber(),
@@ -105,13 +105,20 @@ export default class Aggregator implements ITickable {
       this.logger.log(`Address ${this.wallet.address}`);
       this.logger.log(`Balance ${this.balance}`);
       this.logger.log(`BlockNumber ${this.blockNumber}`);
+    } catch (e) {
+      this.logger.error("Error getting network info", e);
+      IPCHandler.sendToast("Can't connect to the network", "error");
+    }
+  }
 
+  private async resetContract() {
+    this.logger.log("Resetting smart contract");
+    try {
       const tx = await this.contract.resetContract();
       await tx.wait();
       this.logger.log(`Contract resetted`);
     } catch (e) {
-      this.logger.error(`Error getting network info`);
-      this.logger.error(e);
+      this.logger.error("Error getting network info", e);
       IPCHandler.sendToast("Can't connect to the network", "error");
     }
   }
@@ -123,24 +130,29 @@ export default class Aggregator implements ITickable {
     event: RegisterAgreementEvent
   ) {
     if (event.blockNumber < this.blockNumber) return;
-    IPCHandler.onRegisterAgreementEvent(prosumer, parseAgreementLog(agreement), event.blockNumber);
-    this.logger.log(`RegisterAgreementEvent ${prosumer} ${agreement} - Block ${event.blockNumber}`);
+    IPCHandler.onAgreementEvent({
+      ...parseAgreementLog(agreement, event),
+      address: prosumer,
+      className: "positive-bg",
+    });
+    this.logger.log(
+      `RegisterAgreementEvent ${prosumer} [${agreement}] - Block ${event.blockNumber}`
+    );
   }
   private onReviseAgreement(
     prosumer: string,
-    oldAgreement: IAggregatorContract.AgreementStructOutput,
+    _: IAggregatorContract.AgreementStructOutput,
     newAgreement: IAggregatorContract.AgreementStructOutput,
     event: ReviseAgreementEvent
   ) {
     if (event.blockNumber < this.blockNumber) return;
-    IPCHandler.onReviseAgreementEvent(
-      prosumer,
-      parseAgreementLog(oldAgreement),
-      parseAgreementLog(newAgreement),
-      event.blockNumber
-    );
+    IPCHandler.onAgreementEvent({
+      ...parseAgreementLog(newAgreement, event),
+      address: prosumer,
+      className: "negative-bg",
+    });
     this.logger.log(
-      `ReviseAgreementEvent ${prosumer} ${oldAgreement} -> ${newAgreement} - Block ${event.blockNumber}`
+      `ReviseAgreementEvent ${prosumer} [${newAgreement}] - Block ${event.blockNumber}`
     );
   }
   private onCancelAgreement(
@@ -149,8 +161,12 @@ export default class Aggregator implements ITickable {
     event: CancelAgreementEvent
   ) {
     if (event.blockNumber < this.blockNumber) return;
-    IPCHandler.onCancelAgreementEvent(prosumer, parseAgreementLog(agreement), event.blockNumber);
-    this.logger.log(`CancelAgreementEvent ${prosumer} ${agreement} - Block ${event.blockNumber}`);
+    IPCHandler.onAgreementEvent({
+      ...parseAgreementLog(agreement, event),
+      address: prosumer,
+      className: "negative-bg",
+    });
+    this.logger.log(`CancelAgreementEvent ${prosumer} [${agreement}]- Block ${event.blockNumber}`);
   }
   private onRequestFlexibility(
     start: BigNumber,
@@ -165,7 +181,7 @@ export default class Aggregator implements ITickable {
     IPCHandler.onFlexibilityEvent({
       start: start.toString(),
       prosumer: "Aggregator",
-      color: "positive-bg",
+      className: "positive-bg",
       blockNumber: event.blockNumber,
       flexibility: gridFlexibility.toString(),
     });
@@ -184,7 +200,7 @@ export default class Aggregator implements ITickable {
     IPCHandler.onFlexibilityEvent({
       start: start.toString(),
       prosumer: prosumer,
-      color: "neutral-bg",
+      className: "neutral-bg",
       blockNumber: event.blockNumber,
       flexibility: flexibility.toString(),
     });
@@ -204,7 +220,7 @@ export default class Aggregator implements ITickable {
     IPCHandler.onFlexibilityEvent({
       start: start.toString(),
       prosumer: prosumer,
-      color: "negative-bg",
+      className: "negative-bg",
       blockNumber: event.blockNumber,
       flexibility: flexibility.toString(),
     });
@@ -237,8 +253,9 @@ export default class Aggregator implements ITickable {
 
   public async setupSimulation() {
     this.logger.log(`Setup production`);
-    await this.getNetworkInfo();
     this.listenContractLogs();
+    await this.getNetworkInfo();
+    await this.resetContract();
     this.iots = await IoTFactory.createIoTs(this, this.mnemonic, this.numberOfDERs);
     if (this.initialFunds) await this.distributeFounds();
     this.clock.addFunction(this.onTick.bind(this));

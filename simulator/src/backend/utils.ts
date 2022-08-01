@@ -1,4 +1,9 @@
-import { AgreementStructFrontend } from "../module";
+import { AgreementLogRow } from "src/frontend/types";
+import {
+  CancelAgreementEvent,
+  RegisterAgreementEvent,
+  ReviseAgreementEvent,
+} from "src/typechain-types/AggregatorContract";
 import { IAggregatorContract } from "../typechain-types";
 
 /**
@@ -34,19 +39,23 @@ export function sleep(ms: number) {
  * @param param0 struct received from the smart contract
  * @returns parsed object
  */
-export function parseAgreementLog({
-  flexibility,
-  flexibilityPrice,
-  energySource,
-  valuePrice,
-  value,
-}: IAggregatorContract.AgreementStructOutput): AgreementStructFrontend {
+export function parseAgreementLog(
+  {
+    flexibility,
+    flexibilityPrice,
+    energySource,
+    valuePrice,
+    value,
+  }: IAggregatorContract.AgreementStructOutput,
+  event: CancelAgreementEvent | RegisterAgreementEvent | ReviseAgreementEvent
+): Omit<AgreementLogRow, "address" | "className"> {
   return {
     flexibility: flexibility.toString(),
     flexibilityPrice: flexibilityPrice.toString(),
-    energySource: energySource.toString(),
+    energySource: energySource,
     valuePrice: valuePrice.toString(),
     value: value.toString(),
+    blockNumber: event.blockNumber,
   };
 }
 
