@@ -30,6 +30,7 @@
     "@ethersproject/providers": "^5.6.8",
     "bip39": "^3.0.4",
     "chart.js": "^3.8.0",
+    "chartjs-plugin-annotation": "^2.0.0",
     "ethereumjs-wallet": "^1.0.2",
     "ethers": "^5.6.9",
     "log4js": "^6.6.0"
