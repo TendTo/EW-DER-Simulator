@@ -113,4 +113,8 @@ export default class Clock {
   get timestampString() {
     return new Date(this._timestamp * 1000).toLocaleTimeString();
   }
+
+  get tickIntervalsInOneHour() {
+    return Math.floor(3600 / this.tickIncrement) + 1;
+  }
 }

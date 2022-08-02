@@ -26,7 +26,7 @@ export default class WindIoT extends IoT {
   }
 
   protected createAgreement(): Agreement {
-    const value = Math.floor(generatePoisson(2) * this.maxValue);
+    const value = Math.floor(generatePoisson(2) * (this.maxValue - this.minValue)) + this.minValue;
     const flexibility = Math.floor(value * 0.25);
     const valueCost = Math.floor(Math.random() * this.maxCost + this.minCost);
     const flexibilityCost = Math.floor(valueCost * 1.1);

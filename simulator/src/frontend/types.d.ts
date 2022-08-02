@@ -16,6 +16,7 @@ export type SettingsForm = HTMLFormElement & {
 export type ChartSetup = {
   baseline: number;
   startTimestamp: number;
+  nPoints: number;
 }
 
 export type ChartOptions = {

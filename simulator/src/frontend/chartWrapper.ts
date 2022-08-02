@@ -68,6 +68,16 @@ export default class ChartWrapper {
     this.chart.options.plugins.annotation.annotations["baseline"].yMax = newValue;
   }
 
+  public set verticalLines(nPoints: number) {
+    const annotations = this.chart.options.plugins.annotation.annotations;
+    annotations["startFlexibility"].xMax = Math.floor(nPoints / 4);
+    annotations["startFlexibility"].xMin = Math.floor(nPoints / 4);
+    annotations["endFlexibility"].xMax = Math.floor(nPoints / 2);
+    annotations["endFlexibility"].xMin = Math.floor(nPoints / 2);
+    annotations["restoreValue"].xMax = Math.floor((nPoints * 3) / 4);
+    annotations["restoreValue"].xMin = Math.floor((nPoints * 3) / 4);
+  }
+
   constructor({
     canvasId = "chart",
     maxDataPoints = MaxDataPoints,
@@ -147,12 +157,13 @@ export default class ChartWrapper {
     });
   }
 
-  public setup({ baseline = 0, startTimestamp = Date.now() / 1000 }: ChartSetup) {
+  public setup({ baseline, startTimestamp, nPoints }: ChartSetup) {
     this.baseline = baseline;
     this.maxY = baseline * 2;
-    this.labels = this.labels.map((_, i) =>
-      new Date((startTimestamp + i) * 1000).toLocaleTimeString()
-    );
+    this.verticalLines = nPoints;
+    this.labels = [];
+    for (let i = 0; i < nPoints; i++)
+      this.labels.push(new Date((startTimestamp + i) * 1000).toLocaleTimeString());
     this.chart.update();
   }
 

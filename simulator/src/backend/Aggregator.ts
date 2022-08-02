@@ -20,19 +20,20 @@ import {
   NumberOfDERs,
 } from "../module";
 import Clock from "./clock";
-import { EnergySource, ETHPerIoT, MaxDataPoints } from "./constants";
+import { EnergySource, ETHPerIoT } from "./constants";
 import { IIoT, IoTFactory } from "./iot";
 import IPCHandler from "./IPCHandler";
 import ITickable from "./ITickable";
 import FairFlexibilityTracker from "./FairFlexibilityTracker";
 import { parseAgreementLog } from "./utils";
+import { ChartSetup } from "src/frontend/types";
 
 export default class Aggregator implements ITickable {
-  private readonly maxPointNumber = MaxDataPoints;
   private readonly logger: Logger = getLogger("aggregator");
   private readonly tracker: FairFlexibilityTracker = new FairFlexibilityTracker();
   public readonly contract: AggregatorContract;
   public readonly provider: providers.JsonRpcProvider;
+  private readonly tickIntervalsInOneHour = this.clock.tickIntervalsInOneHour;
   private aggregatedValue: number = 0;
   private counter: number = 0;
   private iots: IIoT[] = [];
@@ -286,10 +287,14 @@ export default class Aggregator implements ITickable {
 
   public onTick(clock: Clock, timestamp: number) {
     this.logger.debug(`Aggregated value: ${this.aggregatedValue} - Tick ${timestamp}`);
-    let options = undefined;
-    if (this.counter >= this.maxPointNumber || this.counter === 0) {
+    let options: ChartSetup = undefined;
+    if (this.counter >= this.tickIntervalsInOneHour || this.counter === 0) {
       this.counter = 0;
-      options = { baseline: this.baseline, startTimestamp: this.timestamp };
+      options = {
+        baseline: this.baseline,
+        startTimestamp: this.timestamp,
+        nPoints: this.tickIntervalsInOneHour,
+      };
     }
     IPCHandler.onNewAggregatedReading(this.aggregatedValue, clock.timestampString, options);
 
