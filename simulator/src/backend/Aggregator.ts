@@ -20,7 +20,7 @@ import {
   NumberOfDERs,
 } from "../module";
 import Clock from "./clock";
-import { EnergySource, ETHPerIoT } from "./constants";
+import { EnergySource, ETHPerIoT, MaxDataPoints } from "./constants";
 import { IIoT, IoTFactory } from "./iot";
 import IPCHandler from "./IPCHandler";
 import ITickable from "./ITickable";
@@ -28,11 +28,13 @@ import FairFlexibilityTracker from "./FairFlexibilityTracker";
 import { parseAgreementLog } from "./utils";
 
 export default class Aggregator implements ITickable {
+  private readonly maxPointNumber = MaxDataPoints;
   private readonly logger: Logger = getLogger("aggregator");
   private readonly tracker: FairFlexibilityTracker = new FairFlexibilityTracker();
   public readonly contract: AggregatorContract;
   public readonly provider: providers.JsonRpcProvider;
   private aggregatedValue: number = 0;
+  private counter: number = 0;
   private iots: IIoT[] = [];
   private wallet: Wallet;
   private mnemonic: string;
@@ -116,10 +118,10 @@ export default class Aggregator implements ITickable {
     try {
       const tx = await this.contract.resetContract();
       await tx.wait();
-      this.logger.log(`Contract resetted`);
+      this.logger.log("Contract resetted");
     } catch (e) {
-      this.logger.error("Error getting network info", e);
-      IPCHandler.sendToast("Can't connect to the network", "error");
+      this.logger.error("Error resetting contract", e);
+      IPCHandler.sendToast("Can't reset the contract", "error");
     }
   }
 
@@ -130,6 +132,7 @@ export default class Aggregator implements ITickable {
     event: RegisterAgreementEvent
   ) {
     if (event.blockNumber < this.blockNumber) return;
+    IPCHandler.onSetBaseline(this.baseline);
     IPCHandler.onAgreementEvent({
       ...parseAgreementLog(agreement, event),
       address: prosumer,
@@ -146,6 +149,7 @@ export default class Aggregator implements ITickable {
     event: ReviseAgreementEvent
   ) {
     if (event.blockNumber < this.blockNumber) return;
+    IPCHandler.onSetBaseline(this.baseline);
     IPCHandler.onAgreementEvent({
       ...parseAgreementLog(newAgreement, event),
       address: prosumer,
@@ -161,6 +165,7 @@ export default class Aggregator implements ITickable {
     event: CancelAgreementEvent
   ) {
     if (event.blockNumber < this.blockNumber) return;
+    IPCHandler.onSetBaseline(this.baseline);
     IPCHandler.onAgreementEvent({
       ...parseAgreementLog(agreement, event),
       address: prosumer,
@@ -281,15 +286,15 @@ export default class Aggregator implements ITickable {
 
   public onTick(clock: Clock, timestamp: number) {
     this.logger.debug(`Aggregated value: ${this.aggregatedValue} - Tick ${timestamp}`);
-    IPCHandler.onNewAggregatedReading(this.aggregatedValue, clock.ISO);
-    if (this.tracker.isActive && this.tracker.hasEnded(timestamp)) {
-      this.logger.info(`Sending 'endFlexibilityRequest' command - Tick ${timestamp}`);
-      this.tracker.deactivate();
-      this.contract
-        .endFlexibilityRequest(this.tracker.results)
-        .then(() => this.logger.info(`Sending 'endFlexibilityRequest' command - Tick ${timestamp}`))
-        .catch((e) => this.logger.error("`Sending 'endFlexibilityRequest' command", e));
+    let options = undefined;
+    if (this.counter >= this.maxPointNumber || this.counter === 0) {
+      this.counter = 0;
+      options = { baseline: this.baseline, startTimestamp: this.timestamp };
     }
+    IPCHandler.onNewAggregatedReading(this.aggregatedValue, clock.timestampString, options);
+
+    this.applyTracker(timestamp);
+    this.counter++;
     this.aggregatedValue = 0;
   }
 
@@ -309,7 +314,26 @@ export default class Aggregator implements ITickable {
     }
   }
 
+  private applyTracker(timestamp: number) {
+    if (this.tracker.isActive && this.tracker.hasEnded(timestamp)) {
+      this.logger.info(`Sending 'endFlexibilityRequest' command`);
+      this.tracker.deactivate();
+      this.contract
+        .endFlexibilityRequest(this.tracker.results)
+        .then(() => this.logger.info("Sent 'endFlexibilityRequest' command"))
+        .catch((e) => this.logger.error("Sending 'endFlexibilityRequest' command", e));
+    }
+  }
+
   public get iotLength() {
     return this.iots.length;
+  }
+
+  public get baseline() {
+    return this.iots.reduce((acc, iot) => acc + iot.value, 0);
+  }
+
+  public get timestamp() {
+    return this.clock.timestamp;
   }
 }

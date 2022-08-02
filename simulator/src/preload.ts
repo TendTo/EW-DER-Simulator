@@ -18,6 +18,9 @@ const api: ElectronAPI = {
   },
   invoke: {},
   on: {
+    setBaseline(listener) {
+      ipcRenderer.on("setBaseline", listener);
+    },
     toast(listener) {
       ipcRenderer.on("toast", listener);
     },

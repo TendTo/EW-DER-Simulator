@@ -7,7 +7,6 @@ import { getLogger, Logger } from "log4js";
 import Clock from "../clock";
 import { PersonalEvent } from "./events";
 import IPCHandler from "../IPCHandler";
-import { TypedListener } from "src/typechain-types/common";
 import { RequestFlexibilityEvent } from "src/typechain-types/AggregatorContract";
 import FlexibilityEvent from "./events/FlexibilityEvent";
 
@@ -63,7 +62,7 @@ abstract class IoT implements IIoT {
     value = this.applyEvents(value, timestamp);
 
     this.aggregator.onIoTReading(this.address, value);
-    this.logger.debug(`IoT ${this.address} - Produced ${value} - Time ${clock.ISO}`);
+    this.logger.debug(`IoT ${this.address} - Produced ${value}`);
   };
 
   public stopProducing(sendLog: boolean) {
@@ -129,6 +128,10 @@ abstract class IoT implements IIoT {
 
   get address() {
     return this.wallet.address;
+  }
+
+  get value() {
+    return this.running ? this.agreement.value : 0;
   }
 }
 

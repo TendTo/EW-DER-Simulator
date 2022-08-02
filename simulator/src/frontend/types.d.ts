@@ -13,6 +13,17 @@ export type SettingsForm = HTMLFormElement & {
   initialFunds: HTMLInputElement;
 };
 
+export type ChartSetup = {
+  baseline: number;
+  startTimestamp: number;
+}
+
+export type ChartOptions = {
+  canvasId?: string;
+  maxDataPoints?: number;
+  fixed?: boolean;
+};
+
 export type FlexibilityForm = HTMLFormElement & {
   flexibilityStart: HTMLInputElement;
   flexibilityStop: HTMLInputElement;

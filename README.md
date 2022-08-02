@@ -53,10 +53,15 @@ npm test
 - [x] Aggiungere scala temporale
 - [x] Aggiungere misura aggregata
 - [ ] Aggiungere label del singolo DER
-- [ ] Aggiungere i pulsanti di chiusura della finestra
+- [x] Aggiungere i pulsanti di chiusura della finestra
 - [ ] Verificare il fallimento di registrazioni degli agreement
 - [x] Aggiungere un sistema di notifiche frontend
 - [ ] Possibilità di modificare il numero di DER durante la simulazione
+- [ ] Aggiungere counter per DER attualmente attivi (che hanno completato la transazione di agreement)
+- [x] Aggiungere baseline energia aggregatore
+- [x] Riportare solo l'ora nel grafico 
+- [x] Aumentare la finestra di grafico (magari tramite aggregazione di dati)
+- [x] Grafico fissato attorno alla baseline
 
 ## ⛏ Tools
 

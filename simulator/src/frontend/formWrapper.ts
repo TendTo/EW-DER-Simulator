@@ -61,7 +61,7 @@ export default class FromWrapper {
         Wind: isNaN(nWind) ? 1 : nWind,
       },
       contractAddress:
-        this.settingsForm.contractAddress.value || "0xCE3b21daF429B705d5f8eA3d409c047641a4496B",
+        this.settingsForm.contractAddress.value || "0x384e79D871eA213768F4e91970032a04A7C55993",
     };
   }
 

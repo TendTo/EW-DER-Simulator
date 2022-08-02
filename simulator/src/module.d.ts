@@ -2,7 +2,7 @@ import type { IpcRenderer, IpcRendererEvent } from "electron";
 import type { WebContents } from "electron/main";
 import type Clock from "./backend/clock";
 import type { EnergySource, Season } from "./backend/constants";
-import { AgreementLogRow, FlexibilityLogRow, ToastType } from "./frontend/types";
+import { AgreementLogRow, ChartSetup, FlexibilityLogRow, ToastType } from "./frontend/types";
 
 export type GetApiType<
   SendFromRenderer extends Record<string, (...args: any[]) => any>,
@@ -65,9 +65,19 @@ export type ElectronAPI = GetApiType<
     startLoading: () => Promise<void>;
     stopLoading: () => Promise<void>;
     aggregatorBalance: (address: string, balance: string) => Promise<void>;
-    newReading: (address: string, reading: number, isoString: string) => Promise<void>;
-    newAggregatedReading: (reading: number, isoString: string) => Promise<void>;
+    newReading: (
+      address: string,
+      reading: number,
+      isoString: string,
+      options?: ChartSetup
+    ) => Promise<void>;
+    newAggregatedReading: (
+      reading: number,
+      isoString: string,
+      options?: ChartSetup
+    ) => Promise<void>;
     toast: (message: string, type?: ToastType, duration?: number) => Promise<void>;
+    setBaseline: (baseline: number) => Promise<void>;
   }
 >;
 

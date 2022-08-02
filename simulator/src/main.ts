@@ -40,6 +40,11 @@ class Main {
         console: {
           type: "stdout",
         },
+        consoleFilter: {
+          type: "logLevelFilter",
+          appender: "console",
+          level: "info",
+        },
         all: { type: "file", filename: "logs/logs.log" },
         errors: {
           type: "file",
@@ -61,15 +66,15 @@ class Main {
       },
       categories: {
         default: {
-          appenders: ["console", "all", "errorsFilter"],
+          appenders: ["consoleFilter", "all", "errorsFilter"],
           level: "debug",
         },
         iot: {
-          appenders: ["console", "all", "errorsFilter", "iot"],
+          appenders: ["consoleFilter", "all", "errorsFilter", "iot"],
           level: "debug",
         },
         aggregator: {
-          appenders: ["console", "all", "errorsFilter", "aggregator"],
+          appenders: ["consoleFilter", "all", "errorsFilter", "aggregator"],
           level: "debug",
         },
       },

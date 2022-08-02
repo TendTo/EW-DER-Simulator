@@ -5,20 +5,14 @@ import FromWrapper from "./formWrapper";
 import ToastWrapper from "./toastWrapper";
 
 export default class EventHandler {
-  private readonly chart: ChartWrapper;
-  private readonly tableManager: TableManager;
-  private readonly buttonsWrapper: ButtonWrapper;
-  private readonly formWrapper: FromWrapper;
-  private readonly toastWrapper: ToastWrapper;
-  private isPlaying: boolean;
+  private readonly chart = new ChartWrapper();
+  private readonly tableManager = new TableManager();
+  private readonly buttonsWrapper = new ButtonWrapper();
+  private readonly formWrapper = new FromWrapper();
+  private readonly toastWrapper = new ToastWrapper();
+  private isPlaying = false;
 
   constructor() {
-    this.isPlaying = false;
-    this.chart = new ChartWrapper();
-    this.tableManager = new TableManager();
-    this.buttonsWrapper = new ButtonWrapper();
-    this.formWrapper = new FromWrapper();
-    this.toastWrapper = new ToastWrapper();
     this.addHandlers();
   }
 
@@ -35,6 +29,7 @@ export default class EventHandler {
     this.onToast();
     this.onFlexibilityEvent();
     this.onAgreementEvent();
+    this.onSetBaseline();
   }
 
   private onToast() {
@@ -96,7 +91,11 @@ export default class EventHandler {
 
   private onNewAggregatedReading() {
     // Receive new aggregated reading
-    window.electronAPI.on.newAggregatedReading((_, reading, ISOString) => {
+    window.electronAPI.on.newAggregatedReading((_, reading, ISOString, options) => {
+      if (options) {
+        this.chart.setup(options);
+        this.chart.reset(false);
+      }
       this.chart.shiftData(reading, ISOString);
     });
   }
@@ -130,6 +129,12 @@ export default class EventHandler {
   private onAgreementEvent() {
     window.electronAPI.on.agreementEvent((_, agreementRow) => {
       this.tableManager.addAgreementLogRow(agreementRow);
+    });
+  }
+
+  private onSetBaseline() {
+    window.electronAPI.on.setBaseline((_, baseline) => {
+      this.chart.setBaseline(baseline);
     });
   }
 }

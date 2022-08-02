@@ -8,7 +8,7 @@ import {
 } from "../module";
 import Aggregator from "./Aggregator";
 import Clock from "./clock";
-import { AgreementLogRow, ToastType, FlexibilityLogRow } from "../frontend/types";
+import { AgreementLogRow, ToastType, FlexibilityLogRow, ChartSetup } from "../frontend/types";
 
 export default class IPCHandler {
   private static instance: IPCHandler;
@@ -35,14 +35,14 @@ export default class IPCHandler {
     this.instance.window.webContents.send("toast", message, type, duration);
   }
 
-  static onNewAggregatedReading(reading: number, isoString: string) {
+  static onNewAggregatedReading(reading: number, isoString: string, options?: ChartSetup) {
     if (this.instance.window === null) throw new Error("Window is null");
-    this.instance.window.webContents.send("newAggregatedReading", reading, isoString);
+    this.instance.window.webContents.send("newAggregatedReading", reading, isoString, options);
   }
 
-  static onNewReading(address: string, reading: number, isoString: string) {
+  static onNewReading(address: string, reading: number, isoString: string, options?: ChartSetup) {
     if (this.instance.window === null) throw new Error("Window is null");
-    this.instance.window.webContents.send("newReading", address, reading, isoString);
+    this.instance.window.webContents.send("newReading", address, reading, isoString, options);
   }
 
   static onAggregatorBalance(address: string, balance: string) {
@@ -68,6 +68,10 @@ export default class IPCHandler {
     this.instance.window.webContents.send("flexibilityEvent", flexibilityLogRow);
   }
 
+  static onSetBaseline(baseline: number) {
+    this.instance.window.webContents.send("setBaseline", baseline);
+  }
+
   startSimulation = (
     _: IpcMainEvent,
     blockchainOptions: BlockchainOptions,
@@ -85,12 +89,8 @@ export default class IPCHandler {
     }
     this.aggregator
       .setupSimulation()
-      .then(() => {
-        this.aggregator.startSimulation();
-      })
-      .catch((err) => {
-        this.logger.error(err);
-      })
+      .then(() => this.aggregator.startSimulation())
+      .catch((err) => this.logger.error(err))
       .finally(() => IPCHandler.onStopLoading());
   };
 

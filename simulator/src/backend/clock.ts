@@ -110,7 +110,7 @@ export default class Clock {
     return new Date(this._timestamp * 1000).getUTCSeconds();
   }
 
-  get ISO() {
-    return new Date(this._timestamp * 1000).toISOString();
+  get timestampString() {
+    return new Date(this._timestamp * 1000).toLocaleTimeString();
   }
 }
