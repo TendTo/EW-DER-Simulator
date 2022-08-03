@@ -37,6 +37,42 @@ npm start
 npm test
 ```
 
+## Nethermind node
+
+### Installation
+
+[Hardware requirements](https://docs.nethermind.io/nethermind/first-steps-with-nethermind/hardware-requirements)  
+[Docs](https://docs.nethermind.io/nethermind/first-steps-with-nethermind/getting-started#installing-and-launching-nethermind)
+
+```bash
+# On debian based distro
+sudo add-apt-repository ppa:nethermindeth/nethermind
+sudo apt install nethermind
+
+# On MacOs
+brew tap nethermindeth/nethermind
+brew install nethermind
+```
+
+It is also possible to download the packages from the [official site](https://downloads.nethermind.io/) for other platforms, like Windows.
+
+### Launch
+
+Make sure the application is installed correctly and is on the $PATH env variable.
+
+```bash
+nethermind --config volta --Init.WebSocketsEnabled true --JsonRpc.WebSocketsPort 8545 --JsonRpc.Enabled true --JsonRpc.Host 0.0.0.0
+```
+
+#### Command options:
+- **config:** which blockchain to connect to. There are many options, like Mainnet and Ropsten, but we use volta
+- **JsonRpc.Enabled:** enables the JsonRpc functionalities
+- **Init.WebSocketsEnabled:** enables the connection via websockets
+- **JsonRpc.WebSocketsPort:** the port the JsonRpc node will listen on
+- **JsonRpc.Host:** only accept connections from this IP. 0.0.0.0 means _accept from anyone_. **It would be more secure to specify a single IP**
+
+Other more specific options are available [here](https://docs.nethermind.io/nethermind/ethereum-client/configuration)
+
 ## Flow
 
 ![flow](./docs/flow.jpg)
@@ -59,11 +95,11 @@ npm test
 - [ ] Possibilità di modificare il numero di DER durante la simulazione
 - [ ] Aggiungere counter per DER attualmente attivi (che hanno completato la transazione di agreement)
 - [x] Aggiungere baseline energia aggregatore
-- [x] Riportare solo l'ora nel grafico 
+- [x] Riportare solo l'ora nel grafico
 - [x] Aumentare la finestra di grafico (magari tramite aggregazione di dati)
 - [x] Grafico fissato attorno alla baseline
 - [ ] Aggiungere un nodo Volta separato a cui i DER fanno riferimento
-- [ ] Log flessibilità: [2022-08-02T16:46:04.521] [DEBUG] flexibility - 0,25,97,95,95,1
+- [x] Log flessibilità: [2022-08-02T16:46:04.521] [DEBUG] flexibility - 0,25,97,95,95,1
 
 ## ⛏ Tools
 
