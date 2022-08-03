@@ -8,7 +8,6 @@ import {
   CategoryScale,
 } from "chart.js";
 import * as chartAnnotations from "chartjs-plugin-annotation";
-import { MaxDataPoints } from "../backend/constants";
 import { ChartOptions, ChartSetup } from "./types";
 
 Chart.register(
@@ -60,7 +59,6 @@ export default class ChartWrapper {
 
   public set maxY(y: number) {
     this.chart.options.scales.y.max = y;
-    this.chart.options.scales.y.min = 0;
   }
 
   public set baseline(newValue: number) {
@@ -78,11 +76,18 @@ export default class ChartWrapper {
     annotations["restoreValue"].xMin = Math.floor((nPoints * 3) / 4);
   }
 
-  constructor({
-    canvasId = "chart",
-    maxDataPoints = MaxDataPoints,
-    fixed = true,
-  }: ChartOptions = {}) {
+  public set flexibilityBaseline(flexibilityBaseline: number) {
+    this.chart.options.plugins.annotation.annotations["flexibilityBaseline"] = flexibilityBaseline
+      ? {
+          type: "line",
+          yMin: flexibilityBaseline,
+          yMax: flexibilityBaseline,
+          borderDash: [5, 5],
+        }
+      : undefined;
+  }
+
+  constructor({ canvasId = "chart", maxDataPoints = 0, fixed = true }: ChartOptions = {}) {
     this.maxDataPoints = maxDataPoints;
     this.isFixed = fixed;
     const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
@@ -157,13 +162,17 @@ export default class ChartWrapper {
     });
   }
 
-  public setup({ baseline, startTimestamp, nPoints }: ChartSetup) {
+  public setup({ baseline, startTimestamp, nPoints, flexibilityBaseline }: ChartSetup) {
     this.baseline = baseline;
+    this.flexibilityBaseline = flexibilityBaseline;
     this.maxY = baseline * 2;
     this.verticalLines = nPoints;
     this.labels = [];
-    for (let i = 0; i < nPoints; i++)
-      this.labels.push(new Date((startTimestamp + i) * 1000).toLocaleTimeString());
+
+    const increment = 3600000 / (nPoints - 1);
+    const maxDate = startTimestamp * 1000 + 3600000 + increment;
+    for (let i = startTimestamp * 1000; i < maxDate; i += increment)
+      this.labels.push(new Date(i).toLocaleTimeString());
     this.chart.update();
   }
 

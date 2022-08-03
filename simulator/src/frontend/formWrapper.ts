@@ -75,14 +75,7 @@ export default class FromWrapper {
   }
 
   get flexibilityData(): FlexibilityOptions {
-    const flexibilityStart =
-      this.parseLocalDate(this.flexibilityForm.flexibilityStart.value) || Math.floor(Date.now() / 1000);
-    const flexibilityStop =
-      this.parseLocalDate(this.flexibilityForm.flexibilityStop.value) ||
-      flexibilityStart + 3600 * 24;
     return {
-      flexibilityStart,
-      flexibilityStop,
       flexibilityValue: parseInt(this.flexibilityForm.flexibilityValue.value),
     };
   }

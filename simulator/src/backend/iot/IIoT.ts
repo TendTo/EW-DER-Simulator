@@ -1,3 +1,4 @@
+import { BigNumber } from "ethers";
 import Agreement from "../Agreement";
 import ITickable from "../ITickable";
 
@@ -11,4 +12,6 @@ export default interface IIoT extends ITickable {
   stopProducing(sendLog: boolean): void;
 
   listenToEvents(): void;
+
+  provideFlexibility(start: BigNumber, stop: BigNumber, flexibility: BigNumber): void;
 }

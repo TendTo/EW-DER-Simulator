@@ -20,17 +20,17 @@ import {
   NumberOfDERs,
 } from "../module";
 import Clock from "./clock";
-import { EnergySource, ETHPerIoT } from "./constants";
+import { EnergySource, ETHPerIoT, FlexibilityEndOffset, FlexibilityStartOffset } from "./constants";
 import { IIoT, IoTFactory } from "./iot";
 import IPCHandler from "./IPCHandler";
 import ITickable from "./ITickable";
-import FairFlexibilityTracker from "./FairFlexibilityTracker";
+import FairFlexibilityTracker from "./FlexibilityTracker";
 import { parseAgreementLog } from "./utils";
 import { ChartSetup } from "src/frontend/types";
 
 export default class Aggregator implements ITickable {
   private readonly logger: Logger = getLogger("aggregator");
-  private readonly tracker: FairFlexibilityTracker = new FairFlexibilityTracker();
+  public readonly tracker: FairFlexibilityTracker = new FairFlexibilityTracker();
   public readonly contract: AggregatorContract;
   public readonly provider: providers.JsonRpcProvider;
   private readonly tickIntervalsInOneHour = this.clock.tickIntervalsInOneHour;
@@ -58,22 +58,32 @@ export default class Aggregator implements ITickable {
 
   public async requestFlexibility({
     flexibilityValue,
-    flexibilityStart = Date.now() / 1000,
-    flexibilityStop = flexibilityStart + 60 * 60 * 24,
+    flexibilityStart = this.clock.timestamp + FlexibilityStartOffset,
+    flexibilityStop = this.clock.timestamp + FlexibilityEndOffset,
   }: FlexibilityOptions) {
+    const baseline = this.baseline;
+    const flexibilityBaseline = Math.floor(baseline + (baseline * flexibilityValue) / 100);
+    this.counter = 0;
     this.logger.log(
-      `Request flexibility from ${flexibilityStart} to ${flexibilityStop} of ${flexibilityValue} Watts`
+      `Request flexibility from ${flexibilityStart} to ${flexibilityStop} of ${flexibilityValue}% - ${baseline} -> ${flexibilityBaseline}`
     );
     try {
-      this.tracker.activate({ flexibilityValue, flexibilityStart, flexibilityStop });
-      const tx = await this.contract.requestFlexibility(
-        flexibilityStart,
-        flexibilityStop,
-        flexibilityValue
+      this.tracker.activate({ flexibilityBaseline, flexibilityStart, flexibilityStop });
+      // const tx = await this.contract.requestFlexibility(
+      //   flexibilityStart,
+      //   flexibilityStop,
+      //   this.baseline + (this.baseline * flexibilityValue) / 100
+      // );
+      this.iots.forEach((iot) =>
+        iot.provideFlexibility(
+          BigNumber.from(flexibilityStart),
+          BigNumber.from(flexibilityStop),
+          BigNumber.from(flexibilityBaseline - baseline)
+        )
       );
       IPCHandler.sendToast("Aggregator - Flexibility request sent", "success");
       this.logger.log("Aggregator - Flexibility request sent");
-      return tx.wait();
+      // return tx.wait();
     } catch (e) {
       this.logger.error("Error requesting flexibility", e);
       IPCHandler.sendToast("Aggregator - Error requesting flexibility", "error");
@@ -184,13 +194,6 @@ export default class Aggregator implements ITickable {
     this.logger.log(
       `RequestFlexibilityEvent ${start} ${end} ${gridFlexibility} - Block ${event.blockNumber}`
     );
-    IPCHandler.onFlexibilityEvent({
-      start: start.toString(),
-      prosumer: "Aggregator",
-      className: "positive-bg",
-      blockNumber: event.blockNumber,
-      flexibility: gridFlexibility.toString(),
-    });
   }
   private onStartFlexibilityProvisioning(
     start: BigNumber,
@@ -203,14 +206,11 @@ export default class Aggregator implements ITickable {
     this.logger.log(
       `StartFlexibilityProvisioningEvent ${start} ${prosumer} ${flexibility} ${reward} - Block ${event.blockNumber}`
     );
-    IPCHandler.onFlexibilityEvent({
-      start: start.toString(),
-      prosumer: prosumer,
-      className: "neutral-bg",
-      blockNumber: event.blockNumber,
-      flexibility: flexibility.toString(),
-    });
-    this.tracker.addIoT(prosumer, flexibility.toNumber());
+    this.tracker.addIoT(
+      prosumer,
+      flexibility.toNumber(),
+      this.iots.find((iot) => iot.address === prosumer).value
+    );
   }
   private onConfirmFlexibilityProvisioning(
     start: BigNumber,
@@ -223,13 +223,6 @@ export default class Aggregator implements ITickable {
     this.logger.log(
       `ConfirmFlexibilityProvisioningEvent ${start} ${prosumer} ${flexibility} ${reward} - Block ${event.blockNumber}`
     );
-    IPCHandler.onFlexibilityEvent({
-      start: start.toString(),
-      prosumer: prosumer,
-      className: "negative-bg",
-      blockNumber: event.blockNumber,
-      flexibility: flexibility.toString(),
-    });
   }
 
   //#endregion
@@ -261,7 +254,7 @@ export default class Aggregator implements ITickable {
     this.logger.log(`Setup production`);
     this.listenContractLogs();
     await this.getNetworkInfo();
-    await this.resetContract();
+    // await this.resetContract();
     this.iots = await IoTFactory.createIoTs(this, this.mnemonic, this.numberOfDERs);
     if (this.initialFunds) await this.distributeFounds();
     this.clock.addFunction(this.onTick.bind(this));
@@ -282,7 +275,7 @@ export default class Aggregator implements ITickable {
 
   public onIoTReading(address: string, value: number) {
     this.aggregatedValue += value;
-    if (this.tracker.isActive) this.tracker.parseReading(address, this.aggregatedValue);
+    if (this.tracker.isActive) this.tracker.parseReading(address, value, this.clock.timestamp);
   }
 
   public onTick(clock: Clock, timestamp: number) {
@@ -294,13 +287,14 @@ export default class Aggregator implements ITickable {
         baseline: this.baseline,
         startTimestamp: this.timestamp,
         nPoints: this.tickIntervalsInOneHour,
+        flexibilityBaseline: this.tracker.flexibilityBaseline,
       };
     }
     IPCHandler.onNewAggregatedReading(this.aggregatedValue, clock.timestampString, options);
 
-    this.applyTracker(timestamp);
     this.counter++;
     this.aggregatedValue = 0;
+    this.checkStopTracker(timestamp);
   }
 
   public async variateIoTs({ derType, derVariation }: DerVariationOptions) {
@@ -319,14 +313,22 @@ export default class Aggregator implements ITickable {
     }
   }
 
-  private applyTracker(timestamp: number) {
+  private checkStopTracker(timestamp: number) {
     if (this.tracker.isActive && this.tracker.hasEnded(timestamp)) {
-      this.logger.info(`Sending 'endFlexibilityRequest' command`);
+      const result = this.tracker.result;
+      const contractResults = this.tracker.contractResults;
       this.tracker.deactivate();
-      this.contract
-        .endFlexibilityRequest(this.tracker.results)
-        .then(() => this.logger.info("Sent 'endFlexibilityRequest' command"))
-        .catch((e) => this.logger.error("Sending 'endFlexibilityRequest' command", e));
+
+      const flexibilityLogger = getLogger("flexibility");
+      flexibilityLogger.info(
+        `${result.id},${result.successStart},${result.successFlexibility},${result.successReset},${result.averageValue},${result.success},`
+      );
+      IPCHandler.onFlexibilityEvent(result);
+      this.logger.info(`Sending 'endFlexibilityRequest' command`);
+      // this.contract
+      //   .endFlexibilityRequest(contractResults)
+      //   .then(() => this.logger.info("Sent 'endFlexibilityRequest' command"))
+      //   .catch((e) => this.logger.error("Sending 'endFlexibilityRequest' command", e));
     }
   }
 

@@ -15,9 +15,10 @@ export type SettingsForm = HTMLFormElement & {
 
 export type ChartSetup = {
   baseline: number;
+  flexibilityBaseline?: number;
   startTimestamp: number;
   nPoints: number;
-}
+};
 
 export type ChartOptions = {
   canvasId?: string;
@@ -26,8 +27,6 @@ export type ChartOptions = {
 };
 
 export type FlexibilityForm = HTMLFormElement & {
-  flexibilityStart: HTMLInputElement;
-  flexibilityStop: HTMLInputElement;
   flexibilityValue: HTMLInputElement;
 };
 
@@ -48,12 +47,12 @@ export type AgreementLogRow = {
 };
 
 export type FlexibilityLogRow = {
-  start: string;
-  prosumer: string;
-  flexibility: string;
-  blockNumber: number;
-  stop?: string;
-  className: "positive-bg" | "neutral-bg" | "negative-bg";
+  id: number;
+  successStart: number;
+  successReset: number;
+  successFlexibility: number;
+  averageValue: number;
+  success: boolean;
 };
 
 export type AgreementEventType = "register" | "revise" | "cancel";

@@ -1,30 +1,29 @@
-import BaseEvent from "./BaseEvent";
-
 export default class FlexibilityEvent {
-  private readonly responseTimestamp: number;
+  private readonly startIoTFlexibilityTimestamp: number;
+  private readonly endIoTFlexibilityTimestamp: number;
   public provideMessageSent: boolean = false;
-  public isActive: boolean;
+  public isActive: boolean = false;
 
   constructor(
     public readonly start: number,
     public readonly stop: number,
-    public readonly gridFlexibility: number,
+    public readonly flexibility: number,
     public readonly currentTimestamp: number
   ) {
-    this.responseTimestamp =
-      currentTimestamp +
-      Math.floor(Math.random() * (start - currentTimestamp) + (start - currentTimestamp) * 0.1);
+    this.startIoTFlexibilityTimestamp =
+      currentTimestamp + Math.floor(Math.random() * (start - currentTimestamp) - 1);
+    this.endIoTFlexibilityTimestamp = stop + Math.floor(Math.random() * 15 * 60);
   }
 
   shouldProvideFlexibility(timestamp: number) {
-    return !this.provideMessageSent && this.hasStarted(timestamp);
+    return !this.provideMessageSent && this.hasStarted(timestamp) && !this.hasEnded(timestamp);
   }
 
   hasStarted(timestamp: number): boolean {
-    return timestamp >= this.responseTimestamp;
+    return timestamp >= this.startIoTFlexibilityTimestamp;
   }
 
   hasEnded(timestamp: number): boolean {
-    return timestamp > this.stop;
+    return timestamp >= this.endIoTFlexibilityTimestamp;
   }
 }

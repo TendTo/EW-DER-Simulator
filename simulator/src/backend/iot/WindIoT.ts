@@ -18,6 +18,7 @@ export default class WindIoT extends IoT {
    * @returns energy produced in watt
    */
   protected produce(timestamp: number): number {
+    return this.agreement.value;
     return Math.random() * this.agreement.value + this.agreement.value / 2;
   }
 
@@ -34,8 +35,9 @@ export default class WindIoT extends IoT {
   }
 
   protected applyFlexibilityEvent(value: number, timestamp: number): number {
-    const averageEnergy = this.agreement.value + this.flexibilityEvent.gridFlexibility;
-    const newValue = Math.random() * averageEnergy + averageEnergy / 2;
+    const flexibilityEnergy = this.flexibilityEvent.flexibility;
+    const newValue = flexibilityEnergy;
+    //  Math.random() * averageEnergy + averageEnergy / 2;
 
     this.logger.log(`IoT ${this.wallet.address} - Flexibility: ${value} -> ${newValue}`);
     return newValue;

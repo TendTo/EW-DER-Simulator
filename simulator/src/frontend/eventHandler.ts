@@ -18,7 +18,6 @@ export default class EventHandler {
 
   private addHandlers() {
     this.avoidNumberScroll();
-    this.onDerVariation();
     this.onFlexibilityRequest();
     this.onStartLoading();
     this.onStopLoading();
@@ -45,18 +44,9 @@ export default class EventHandler {
     });
   }
 
-  private onDerVariation() {
-    this.formWrapper.addDerFormOnSubmit((derData) => {
-      window.electronAPI.send.derVariation(derData);
-    });
-  }
-
   private onFlexibilityRequest() {
     this.formWrapper.addFlexibilityFormOnSubmit((flexibilityData) => {
-      if (flexibilityData.flexibilityStart > flexibilityData.flexibilityStop) {
-        this.toastWrapper.show("Flexibility start must be before flexibility stop", "error");
-        return;
-      }
+      if (!this.isPlaying) return this.toastWrapper.show("Simulation not running", "error");
       window.electronAPI.send.flexibilityRequest(flexibilityData);
     });
   }

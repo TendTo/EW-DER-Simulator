@@ -63,6 +63,10 @@ class Main {
           type: "file",
           filename: "logs/iot.log",
         },
+        flexibility: {
+          type: "file",
+          filename: "logs/flexibility.log",
+        }
       },
       categories: {
         default: {
@@ -77,6 +81,10 @@ class Main {
           appenders: ["consoleFilter", "all", "errorsFilter", "aggregator"],
           level: "debug",
         },
+        flexibility: {
+          appenders: ["consoleFilter", "all", "errorsFilter", "flexibility"],
+          level: "debug",
+        }
       },
     });
   }

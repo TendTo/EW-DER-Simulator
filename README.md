@@ -62,6 +62,8 @@ npm test
 - [x] Riportare solo l'ora nel grafico 
 - [x] Aumentare la finestra di grafico (magari tramite aggregazione di dati)
 - [x] Grafico fissato attorno alla baseline
+- [ ] Aggiungere un nodo Volta separato a cui i DER fanno riferimento
+- [ ] Log flessibilità: [2022-08-02T16:46:04.521] [DEBUG] flexibility - 0,25,97,95,95,1
 
 ## ⛏ Tools
 

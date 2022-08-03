@@ -160,39 +160,21 @@
             <h2 style="grid-area: title">Simulation</h2>
             <canvas style="grid-area: graph" id="chart" width="500" height="500"></canvas>
             <h3 style="grid-area: flexibility">Flexibility request</h3>
-            <!-- Flexibility form -->
+            <!-- Simple Flexibility form -->
             <form
               id="flexibilityForm"
               style="grid-area: flexibilityForm"
-              class="form-flexibility form-border"
+              class="form-border flex-row gap-1 align-end"
             >
-              <div class="form-group">
-                <label for="flexibilityStart">Start</label>
-                <input
-                  id="flexibilityStart"
-                  name="flexibilityStart"
-                  type="datetime-local"
-                  class="form-control"
-                />
-              </div>
-              <div class="form-group">
-                <label for="flexibilityStop">Stop</label>
-                <input
-                  id="flexibilityStop"
-                  name="flexibilityStop"
-                  type="datetime-local"
-                  class="form-control"
-                />
-              </div>
               <div class="form-group grow">
-                <label for="flexibilityValue">Flexibility</label>
+                <label for="flexibilityValue">Percentage variation</label>
                 <input
                   id="flexibilityValue"
                   name="flexibilityValue"
                   type="number"
                   class="form-control"
-                  min="-10000"
-                  max="10000"
+                  min="-25"
+                  max="25"
                   required
                 />
               </div>
@@ -202,70 +184,10 @@
                 type="submit"
                 class="btn btn-primary row-button"
               >
-                Send request
+                Send flexibility request
               </button>
             </form>
-            <!-- End Flexibility form -->
-            <!-- Der form -->
-            <form id="derForm" style="grid-area: derForm" class="flex-row gap-1 form-border">
-              <div class="form-group">
-                <label for="derType">Type of DER</label>
-                <select name="type" id="derType" class="form-control">
-                  <option value="Solar">Solar</option>
-                  <option value="Wind">Wind</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="derVariation">Variation</label>
-                <input
-                  id="derVariation"
-                  name="derVariation"
-                  type="number"
-                  class="form-control"
-                  min="-100"
-                  max="100"
-                  required
-                />
-              </div>
-              <div class="form-group">
-                <br />
-                <button
-                  id="requestFlexibility"
-                  role="button"
-                  type="submit"
-                  class="btn btn-primary row-button mt-10"
-                >
-                  Send request
-                </button>
-              </div>
-            </form>
-            <!-- End Flexibility form -->
-            <!-- Log table -->
-            <table style="grid-area: flexibilityTable">
-              <thead>
-                <tr>
-                  <th>Block number</th>
-                  <th>Prosumer</th>
-                  <th>Start</th>
-                  <th>Stop</th>
-                  <th>Flexibility</th>
-                </tr>
-              </thead>
-              <tbody id="flexibilityLogTBody">
-                <!-- Log row template -->
-                <template id="flexibilityLogTemplate">
-                  <tr>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                  </tr>
-                </template>
-                <!-- End Log row template -->
-              </tbody>
-            </table>
-            <!-- End Log table -->
+            <!-- End Simple Flexibility form -->
             <!-- Log table -->
             <table style="grid-area: agreementTable">
               <thead>
@@ -294,6 +216,56 @@
               </tbody>
             </table>
             <!-- End Log table -->
+            <!-- Flexibility table -->
+            <table style="grid-area: derForm">
+              <thead>
+                <tr>
+                  <th>Start flexibility</th>
+                  <th>Success Start</th>
+                  <th>Success Flexibility</th>
+                  <th>Average flexibility</th>
+                  <th>Success Reset to baseline</th>
+                </tr>
+              </thead>
+              <tbody id="flexibilityLogTBody">
+                <!-- Log row template -->
+                <template id="flexibilityLogTemplate">
+                  <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                </template>
+                <!-- End Log row template -->
+              </tbody>
+            </table>
+            <!-- End Flexibility table -->
+            <!-- Flexibility table -->
+            <table style="grid-area: flexibilityTable">
+              <thead>
+                <tr>
+                  <th>Totale</th>
+                  <th>Success Start</th>
+                  <th>Success Flexibility</th>
+                  <th>Average flexibility</th>
+                  <th>Success Reset to baseline</th>
+                  <th>Flexibility success</th>
+                </tr>
+              </thead>
+              <tbody id="totalFlexibilityTBody">
+                <tr>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                </tr>
+              </tbody>
+            </table>
+            <!-- End Flexibility table -->
           </main>
           <!-- End Main Panel -->
         </div>

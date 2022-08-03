@@ -1,8 +1,6 @@
-import { BigNumber } from "ethers";
-import { RequestFlexibilityEvent } from "src/typechain-types/AggregatorContract";
 import { Agreement } from "..";
 import Aggregator from "../Aggregator";
-import { EnergySource, Season } from "../constants";
+import { EnergySource } from "../constants";
 import { generatePoisson } from "../utils";
 import { MeteoEvent, PersonalEvent } from "./events";
 import IoT from "./IoT";
@@ -21,6 +19,7 @@ export default class SolarIoT extends IoT {
    * @returns energy produced in watt
    */
   protected produce(timestamp: number): number {
+    return this.agreement.value;
     return (
       this.agreement.value * 0.1 * Math.sin((Math.PI * (timestamp - 21600)) / 43200) +
       this.agreement.value
@@ -40,9 +39,9 @@ export default class SolarIoT extends IoT {
   }
 
   protected applyFlexibilityEvent(value: number, timestamp: number): number {
-    const averageEnergy = this.agreement.value + this.flexibilityEvent.gridFlexibility;
-    const newValue =
-      averageEnergy * 0.1 * Math.sin((Math.PI * (timestamp - 21600)) / 43200) + averageEnergy;
+    const flexibilityValue = this.flexibilityEvent.flexibility;
+    const newValue = flexibilityValue;
+    // flexibilityValue * 0.1 * Math.sin((Math.PI * (timestamp - 21600)) / 43200) + flexibilityValue;
 
     this.logger.log(`IoT ${this.wallet.address} - Flexibility: ${value} -> ${newValue}`);
     return newValue;
