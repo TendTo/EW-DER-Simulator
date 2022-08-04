@@ -53,7 +53,8 @@ export default class FromWrapper {
     const nSolar = parseInt(this.settingsForm.numberOfSolarDERs.value);
     const nWind = parseInt(this.settingsForm.numberOfWindDERs.value);
     return {
-      rpcUrl: this.settingsForm.rpcUrl.value || "http://134.209.139.226:8545",
+      aggRpcUrl: this.settingsForm.aggRpcUrl.value || "http://134.209.139.226:8545",
+      derRpcUrl: this.settingsForm.derRpcUrl.value || "http://134.209.139.226:8545",
       seed: this.settingsForm.seed.value || this.settingsForm.sk.value,
       sk: this.settingsForm.sk.value,
       numberOfDERs: {

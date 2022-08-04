@@ -1,7 +1,7 @@
 import type { IpcRenderer, IpcRendererEvent } from "electron";
 import type { WebContents } from "electron/main";
 import type Clock from "./backend/clock";
-import type { EnergySource, Season } from "./backend/constants";
+import type { EnergySource } from "./backend/constants";
 import { AgreementLogRow, ChartSetup, FlexibilityLogRow, ToastType } from "./frontend/types";
 
 export type GetApiType<
@@ -21,7 +21,8 @@ export type GetApiType<
 export type NumberOfDERs = Partial<Record<keyof typeof EnergySource, number>>;
 
 export type BlockchainOptions = {
-  rpcUrl: string;
+  aggRpcUrl: string;
+  derRpcUrl: string;
   contractAddress: string;
   seed: string;
   sk: string;

@@ -32,7 +32,8 @@ export default class Aggregator implements ITickable {
   private readonly logger: Logger = getLogger("aggregator");
   public readonly tracker: FairFlexibilityTracker = new FairFlexibilityTracker();
   public readonly contract: AggregatorContract;
-  public readonly provider: providers.JsonRpcProvider;
+  public readonly derProvider: providers.JsonRpcProvider;
+  private readonly aggProvider: providers.JsonRpcProvider;
   private readonly tickIntervalsInOneHour = this.clock.tickIntervalsInOneHour;
   private aggregatedValue: number = 0;
   private counter: number = 0;
@@ -44,12 +45,13 @@ export default class Aggregator implements ITickable {
   private balance: BigNumber;
 
   constructor(
-    { sk, seed, numberOfDERs, contractAddress, rpcUrl }: BlockchainOptions,
+    { sk, seed, numberOfDERs, contractAddress, aggRpcUrl, derRpcUrl }: BlockchainOptions,
     public readonly clock: Clock,
     private readonly initialFunds: boolean
   ) {
-    this.provider = new providers.JsonRpcProvider(rpcUrl);
-    this.wallet = new Wallet(sk, this.provider);
+    this.aggProvider = new providers.JsonRpcProvider(aggRpcUrl);
+    this.derProvider = new providers.JsonRpcProvider(derRpcUrl);
+    this.wallet = new Wallet(sk, this.aggProvider);
     this.mnemonic = seed;
     this.numberOfDERs = numberOfDERs;
     this.contract = AggregatorContract__factory.connect(contractAddress, this.wallet);
@@ -112,7 +114,7 @@ export default class Aggregator implements ITickable {
     this.logger.log("Getting network info");
     try {
       [this.blockNumber, this.balance] = await Promise.all([
-        this.provider.getBlockNumber(),
+        this.aggProvider.getBlockNumber(),
         this.wallet.getBalance(),
       ]);
       this.logger.log(`Address ${this.wallet.address}`);

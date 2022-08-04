@@ -1,7 +1,8 @@
 import { EnergySource } from "src/backend/constants";
 
 export type SettingsForm = HTMLFormElement & {
-  rpcUrl: HTMLInputElement;
+  aggRpcUrl: HTMLInputElement;
+  derRpcUrl: HTMLInputElement;
   sk: HTMLInputElement;
   seed: HTMLInputElement;
   numberOfSolarDERs: HTMLInputElement;

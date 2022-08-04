@@ -21,7 +21,7 @@ abstract class IoT implements IIoT {
   protected constructor(protected aggregator: Aggregator, sk: string) {
     this.logger = getLogger("iot");
     this.running = false;
-    this.wallet = new Wallet(sk, this.aggregator.provider);
+    this.wallet = new Wallet(sk, this.aggregator.derProvider);
     this.agreement = this.createAgreement();
     this.contract = aggregator.contract.connect(this.wallet);
     this.aggregator.clock.addFunction(this.onTick);
