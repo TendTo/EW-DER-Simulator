@@ -28,6 +28,7 @@ export default class IPCHandler {
     ipcMain.on("stopSimulation", this.instance.stopSimulation);
     ipcMain.on("derVariation", this.instance.derVariation);
     ipcMain.on("flexibilityRequest", this.instance.flexibilityRequest);
+    ipcMain.on("pauseResumeSimulation", this.instance.pauseResumeSimulation);
   }
 
   static sendToast(message: string, type?: ToastType, duration?: number) {
@@ -113,5 +114,9 @@ export default class IPCHandler {
     IPCHandler.onStartLoading();
     IPCHandler.sendToast("Sending the flexibility request", "info");
     this.aggregator.requestFlexibility(flexibilityData).then(() => IPCHandler.onStopLoading());
+  };
+
+  pauseResumeSimulation = (_: IpcMainEvent) => {
+    this.aggregator?.clock.pauseResumeSimulation();
   };
 }

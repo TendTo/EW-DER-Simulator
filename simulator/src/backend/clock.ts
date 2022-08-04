@@ -47,6 +47,9 @@ export default class Clock {
     this.isRunning = false;
     clearInterval(this.timer);
   }
+  pauseResumeSimulation() {
+    this.isRunning = !this.isRunning;
+  }
   /**
    * Adds a function to the list of functions to be called.
    * @param callback The function to be called.
@@ -82,6 +85,10 @@ export default class Clock {
     return this._timestamp;
   }
 
+  get nextTimestamp() {
+    return this._timestamp + this.tickIncrement;
+  }
+
   get season() {
     const moth = new Date(this._timestamp * 1000).getUTCMonth();
     if (moth >= 3 && moth <= 5) return Season.Spring;
@@ -115,6 +122,6 @@ export default class Clock {
   }
 
   get tickIntervalsInOneHour() {
-    return Math.floor(3600 / this.tickIncrement) + 1;
+    return Math.floor(3600 / this.tickIncrement);
   }
 }

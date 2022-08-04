@@ -58,6 +58,7 @@ export type ElectronAPI = GetApiType<
     ) => void;
     flexibilityRequest: (flexibilityData: FlexibilityOptions) => void;
     derVariation: (derVariationData: DerVariationOptions) => void;
+    pauseResumeSimulation: () => void;
   },
   {},
   {
