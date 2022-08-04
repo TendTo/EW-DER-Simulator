@@ -10,7 +10,9 @@ export default class EventHandler {
   private readonly buttonsWrapper = new ButtonWrapper();
   private readonly formWrapper = new FromWrapper();
   private readonly toastWrapper = new ToastWrapper();
+  private readonly activeDers = document.getElementById("activeDers");
   private isPlaying = false;
+  private nActiveDers = 0;
 
   constructor() {
     this.addHandlers();
@@ -58,6 +60,8 @@ export default class EventHandler {
         return;
       }
       this.isPlaying = true;
+      this.nActiveDers = 0;
+      this.activeDers.innerHTML = "Current number of DERs: 0";
       window.electronAPI.send.startSimulation(blockchainData, clockData, initialFunds);
       console.log("Simulation started", blockchainData, clockData, initialFunds);
     });
@@ -70,6 +74,7 @@ export default class EventHandler {
         this.toastWrapper.show("Simulation not running", "warning");
         return;
       }
+      this.activeDers.innerHTML = "";
       window.electronAPI.send.stopSimulation();
       this.isPlaying = false;
       this.chart.reset();
@@ -119,6 +124,8 @@ export default class EventHandler {
   private onAgreementEvent() {
     window.electronAPI.on.agreementEvent((_, agreementRow) => {
       this.tableManager.addAgreementLogRow(agreementRow);
+      if (agreementRow.className === "positive-bg")
+        this.activeDers.innerHTML = `Current number of DERs: ${++this.nActiveDers}`;
     });
   }
 

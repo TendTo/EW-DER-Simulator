@@ -93,12 +93,12 @@ Other more specific options are available [here](https://docs.nethermind.io/neth
 - [ ] Verificare il fallimento di registrazioni degli agreement
 - [x] Aggiungere un sistema di notifiche frontend
 - [ ] Possibilità di modificare il numero di DER durante la simulazione
-- [ ] Aggiungere counter per DER attualmente attivi (che hanno completato la transazione di agreement)
+- [x] Aggiungere counter per DER attualmente attivi (che hanno completato la transazione di agreement)
 - [x] Aggiungere baseline energia aggregatore
 - [x] Riportare solo l'ora nel grafico
 - [x] Aumentare la finestra di grafico (magari tramite aggregazione di dati)
 - [x] Grafico fissato attorno alla baseline
-- [ ] Aggiungere un nodo Volta separato a cui i DER fanno riferimento
+- [x] Aggiungere un nodo Volta separato a cui i DER fanno riferimento
 - [x] Log flessibilità: [2022-08-02T16:46:04.521] [DEBUG] flexibility - 0,25,97,95,95,1
 - [ ] Average flexibility in percentuale
 - [ ] Pause button
