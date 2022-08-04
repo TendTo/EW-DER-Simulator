@@ -1,4 +1,5 @@
 import FlexibilityResult, { ErrorCheck } from "./FlexibilityResult";
+import { IIoT } from "./iot";
 
 type IoTFlexibilityData = Record<string, FlexibilityResult>;
 
@@ -17,48 +18,53 @@ type FlexibilityResultData = {
 };
 
 export default class FairFlexibilityTracker {
-  private iotTracker: IoTFlexibilityData = {};
-  private startTimestamp: number;
-  private stopTimestamp: number;
-  private resetTimestamp: number;
-  private baseline: number;
+  #iotTracker: IoTFlexibilityData = {};
+  #startTimestamp: number;
+  #stopTimestamp: number;
+  #resetTimestamp: number;
+  #flexibilityBaseline: number;
 
   activate({ flexibilityStart, flexibilityStop, flexibilityBaseline }: FlexibilityActivationData) {
-    this.iotTracker = {};
-    this.startTimestamp = flexibilityStart;
-    this.stopTimestamp = flexibilityStop;
-    this.baseline = flexibilityBaseline;
-    this.resetTimestamp = flexibilityStop + 900;
+    this.#iotTracker = {};
+    this.#startTimestamp = flexibilityStart;
+    this.#stopTimestamp = flexibilityStop;
+    this.#flexibilityBaseline = flexibilityBaseline;
+    this.#resetTimestamp = flexibilityStop + 900;
   }
 
   deactivate() {
-    this.startTimestamp = undefined;
-    this.stopTimestamp = undefined;
+    this.#startTimestamp = undefined;
+    this.#stopTimestamp = undefined;
   }
 
-  addIoT(iot: string, expectedFlexibility: number, baseline: number) {
-    this.iotTracker[iot] = new FlexibilityResult(expectedFlexibility, baseline);
+  addIoT(iot: IIoT) {
+    if (!this.#iotTracker[iot.address])
+      this.#iotTracker[iot.address] = new FlexibilityResult(iot.expectedFlexibility, iot.value);
+    this.#iotTracker[iot.address].startProvidingFlexibility();
   }
 
-  parseReading(iot: string, reading: number, timestamp: number) {
-    if (!this.iotTracker[iot]) return;
+  parseReading(iot: IIoT, reading: number, timestamp: number) {
+    if (!this.#iotTracker[iot.address])
+      this.#iotTracker[iot.address] = new FlexibilityResult(iot.expectedFlexibility, iot.value);
+
     let errorCheck: ErrorCheck = undefined;
-    if (timestamp > this.startTimestamp && timestamp < this.stopTimestamp)
+    if (timestamp >= this.#startTimestamp && timestamp < this.#stopTimestamp)
       errorCheck = "flexibility";
-    else if (timestamp > this.resetTimestamp) errorCheck = "baseline";
-    this.iotTracker[iot].addValue(reading, errorCheck);
+    else if (timestamp >= this.#resetTimestamp) errorCheck = "baseline";
+
+    if (errorCheck) this.#iotTracker[iot.address].addValue(reading, errorCheck);
   }
 
   public hasEnded(timestamp: number) {
-    return timestamp > this.resetTimestamp;
+    return timestamp > this.#resetTimestamp;
   }
 
   public get tracked() {
-    return this.iotTracker;
+    return this.#iotTracker;
   }
 
   public get contractResults(): FlexibilityResultData[] {
-    return Object.entries(this.iotTracker).map(
+    return Object.entries(this.#iotTracker).map(
       ([iot, { average, intervalError, startError, stopError }]) => ({
         prosumer: iot,
         flexibility: average,
@@ -71,7 +77,7 @@ export default class FairFlexibilityTracker {
 
   public get result() {
     const [succStart, succFlexibility, succReset, totFlexibility] = Object.values(
-      this.iotTracker
+      this.#iotTracker
     ).reduce(
       (acc, { average, intervalError, startError, stopError }) => {
         if (!startError) acc[0]++;
@@ -82,9 +88,9 @@ export default class FairFlexibilityTracker {
       },
       [0, 0, 0, 0]
     );
-    const nIots = Object.keys(this.iotTracker).length;
+    const nIots = Object.keys(this.#iotTracker).length;
     return {
-      id: this.startTimestamp,
+      id: this.#startTimestamp,
       successStart: succStart / nIots,
       successReset: succReset / nIots,
       successFlexibility: succFlexibility / nIots,
@@ -95,10 +101,22 @@ export default class FairFlexibilityTracker {
   }
 
   public get isActive() {
-    return !!this.stopTimestamp;
+    return !!this.#stopTimestamp;
   }
 
   public get flexibilityBaseline() {
-    return this.isActive ? this.baseline : 0;
+    return this.isActive ? this.#flexibilityBaseline : 0;
+  }
+
+  public get flexibilityStart() {
+    return this.isActive ? this.#startTimestamp : 0;
+  }
+
+  public get flexibilityStop() {
+    return this.isActive ? this.#stopTimestamp : 0;
+  }
+
+  public get flexibilityReset() {
+    return this.isActive ? this.#resetTimestamp : 0;
   }
 }

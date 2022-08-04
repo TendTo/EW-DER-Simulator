@@ -95,7 +95,7 @@ export default class TableManager {
     cols[2].innerHTML = ((successFlexibility * 100) / this.flexibilityRows.length).toFixed(2) + "%";
     cols[3].innerHTML = (averageValue / this.flexibilityRows.length).toFixed(2);
     cols[4].innerHTML = ((successReset * 100) / this.flexibilityRows.length).toFixed(2) + "%";
-    cols[5].innerHTML = ((successReset * 100) / this.flexibilityRows.length).toFixed(2) + "%";
+    cols[5].innerHTML = ((successful * 100) / this.flexibilityRows.length).toFixed(2) + "%";
   }
 
   reset() {

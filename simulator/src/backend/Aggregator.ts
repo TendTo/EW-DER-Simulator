@@ -60,8 +60,8 @@ export default class Aggregator implements ITickable {
 
   public async requestFlexibility({
     flexibilityValue,
-    flexibilityStart = this.clock.timestamp + FlexibilityStartOffset,
-    flexibilityStop = this.clock.timestamp + FlexibilityEndOffset,
+    flexibilityStart = this.clock.nextTimestamp + FlexibilityStartOffset,
+    flexibilityStop = this.clock.nextTimestamp + FlexibilityEndOffset,
   }: FlexibilityOptions) {
     const baseline = this.baseline;
     const flexibilityBaseline = Math.floor(baseline + (baseline * flexibilityValue) / 100);
@@ -145,12 +145,12 @@ export default class Aggregator implements ITickable {
     event: RegisterAgreementEvent
   ) {
     if (event.blockNumber < this.blockNumber) return;
-    IPCHandler.onSetBaseline(this.baseline);
     IPCHandler.onAgreementEvent({
       ...parseAgreementLog(agreement, event),
       address: prosumer,
       className: "positive-bg",
     });
+    IPCHandler.onSetBaseline(this.baseline);
     this.logger.log(
       `RegisterAgreementEvent ${prosumer} [${agreement}] - Block ${event.blockNumber}`
     );
@@ -208,11 +208,7 @@ export default class Aggregator implements ITickable {
     this.logger.log(
       `StartFlexibilityProvisioningEvent ${start} ${prosumer} ${flexibility} ${reward} - Block ${event.blockNumber}`
     );
-    this.tracker.addIoT(
-      prosumer,
-      flexibility.toNumber(),
-      this.iots.find((iot) => iot.address === prosumer).value
-    );
+    this.tracker.addIoT(this.iots.find((iot) => iot.address === prosumer));
   }
   private onConfirmFlexibilityProvisioning(
     start: BigNumber,
@@ -275,9 +271,9 @@ export default class Aggregator implements ITickable {
     this.iots = [];
   }
 
-  public onIoTReading(address: string, value: number) {
+  public onIoTReading(iot: IIoT, value: number) {
     this.aggregatedValue += value;
-    if (this.tracker.isActive) this.tracker.parseReading(address, value, this.clock.timestamp);
+    if (this.tracker.isActive) this.tracker.parseReading(iot, value, this.clock.timestamp);
   }
 
   public onTick(clock: Clock, timestamp: number) {
@@ -344,5 +340,9 @@ export default class Aggregator implements ITickable {
 
   public get timestamp() {
     return this.clock.timestamp;
+  }
+
+  public get gridFlexibility() {
+    return this.tracker.flexibilityBaseline;
   }
 }

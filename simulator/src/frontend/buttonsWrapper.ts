@@ -1,20 +1,21 @@
 export default class ButtonWrapper {
-  private readonly buttons: HTMLButtonElement[];
-  private readonly spinner: HTMLDivElement;
-  private readonly startButton: HTMLButtonElement;
-  private readonly stopButton: HTMLButtonElement;
-
-  constructor() {
-    this.buttons = Array.from(document.querySelectorAll("button"));
-    this.startButton = document.getElementById("start") as HTMLButtonElement;
-    this.stopButton = document.getElementById("stop") as HTMLButtonElement;
-    this.spinner = document.getElementById("spinner") as HTMLDivElement;
-  }
+  public readonly buttons = Array.from(document.querySelectorAll("button"));
+  public readonly startButton = document.getElementById("start") as HTMLButtonElement;
+  public readonly stopButton = document.getElementById("stop") as HTMLButtonElement;
+  public readonly spinner = document.getElementById("spinner") as HTMLDivElement;
+  public readonly pauseButton = document.getElementById("pause") as HTMLButtonElement;
+  public readonly flexibilityBtn = document.getElementById("flexibilityRequestBtn") as HTMLButtonElement;
 
   public loading(loading: boolean) {
-    this.buttons.forEach((button) => {
-      button.disabled = loading;
-    });
+    if (loading) {
+      this.buttons.forEach((button) => {
+        button.disabled = loading;
+      });
+    } else {
+      this.stopButton.disabled = loading;
+      this.pauseButton.disabled = loading;
+      this.flexibilityBtn.disabled = loading;
+    }
     this.spinner.style.display = loading ? "block" : "none";
   }
 

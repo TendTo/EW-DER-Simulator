@@ -9,6 +9,7 @@ export default class FlexibilityResult {
   #startError: boolean = undefined;
   #intervalError: boolean = false;
   #stopError: boolean = undefined;
+  #providingFlexibility: boolean = false;
 
   constructor(
     public readonly expectedFlexibility: number,
@@ -35,6 +36,10 @@ export default class FlexibilityResult {
     return this.#stopError;
   }
 
+  public get providingFlexibility() {
+    return this.#providingFlexibility;
+  }
+
   public addValue(value: number, errorCheck?: ErrorCheck) {
     if (errorCheck === "flexibility") {
       if (this.#startError === undefined)
@@ -43,8 +48,12 @@ export default class FlexibilityResult {
       this.#count++;
       this.#intervalError =
         this.#intervalError ||
-        !inErrorMargin(this.expectedFlexibility, value, FlexibilityErrorMargin);
+        !inErrorMargin(value, this.expectedFlexibility, FlexibilityErrorMargin);
     } else if (this.#stopError === undefined && errorCheck === "baseline")
       this.#stopError = !inErrorMargin(value, this.expectedBaseline, FlexibilityErrorMargin);
+  }
+
+  public startProvidingFlexibility() {
+    this.#providingFlexibility = true;
   }
 }

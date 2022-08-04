@@ -31,6 +31,7 @@ export default class EventHandler {
     this.onFlexibilityEvent();
     this.onAgreementEvent();
     this.onSetBaseline();
+    this.onPauseResumeSimulator();
   }
 
   private onToast() {
@@ -132,6 +133,16 @@ export default class EventHandler {
   private onSetBaseline() {
     window.electronAPI.on.setBaseline((_, baseline) => {
       this.chart.setBaseline(baseline);
+    });
+  }
+
+  private onPauseResumeSimulator() {
+    this.buttonsWrapper.pauseButton.addEventListener("click", () => {
+      if (!this.isPlaying) {
+        this.toastWrapper.show("Simulation not running", "warning");
+        return;
+      }
+      window.electronAPI.send.pauseResumeSimulation();
     });
   }
 }

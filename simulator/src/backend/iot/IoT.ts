@@ -37,7 +37,6 @@ abstract class IoT implements IIoT {
       // const receipt = await tx.wait();
       this.running = true;
       this.logger.log(`IoT ${this.address} - Agreement registered`);
-      // return receipt;
     } catch (e) {
       IPCHandler.sendToast(`IoT ${this.address} - Error registering agreement`, "error");
       this.logger.error(`IoT ${this.address} - Error registering agreement`);
@@ -60,7 +59,7 @@ abstract class IoT implements IIoT {
       value = this.applyFlexibilityEvent(value, timestamp);
     value = this.applyEvents(value, timestamp);
 
-    this.aggregator.onIoTReading(this.address, value);
+    this.aggregator.onIoTReading(this, value);
     this.logger.debug(`IoT ${this.address} - Produced ${value}`);
   };
 
@@ -113,11 +112,7 @@ abstract class IoT implements IIoT {
       //   .catch((e) => this.logger.error(`IoT ${this.address} - Error providing flexibility`, e));
       this.flexibilityEvent.provideMessageSent = true;
       this.flexibilityEvent.isActive = true;
-      this.aggregator.tracker.addIoT(
-        this.address,
-        this.flexibilityEvent.flexibility,
-        this.agreement.value
-      );
+      this.aggregator.tracker.addIoT(this);
     }
     this.logger.log(
       `IoT ${this.address} - Current timestamp: ${timestamp} - Flexibility starts at ${this.flexibilityEvent.start}`
@@ -143,7 +138,11 @@ abstract class IoT implements IIoT {
   }
 
   get value() {
-    return this.running ? this.agreement.value : 0;
+    return this.agreement.value;
+  }
+
+  get expectedFlexibility() {
+    return (this.aggregator.gridFlexibility * this.agreement.value) / this.aggregator.baseline;
   }
 }
 

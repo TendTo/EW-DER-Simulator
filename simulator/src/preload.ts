@@ -15,6 +15,9 @@ const api: ElectronAPI = {
     flexibilityRequest(flexibilityData) {
       ipcRenderer.send("flexibilityRequest", flexibilityData);
     },
+    pauseResumeSimulation() {
+      ipcRenderer.send("pauseResumeSimulation");
+    },
   },
   invoke: {},
   on: {

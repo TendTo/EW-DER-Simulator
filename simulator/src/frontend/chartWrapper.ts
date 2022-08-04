@@ -68,12 +68,12 @@ export default class ChartWrapper {
 
   public set verticalLines(nPoints: number) {
     const annotations = this.chart.options.plugins.annotation.annotations;
-    annotations["startFlexibility"].xMax = Math.floor(nPoints / 4);
-    annotations["startFlexibility"].xMin = Math.floor(nPoints / 4);
-    annotations["endFlexibility"].xMax = Math.floor(nPoints / 2);
-    annotations["endFlexibility"].xMin = Math.floor(nPoints / 2);
-    annotations["restoreValue"].xMax = Math.floor((nPoints * 3) / 4);
-    annotations["restoreValue"].xMin = Math.floor((nPoints * 3) / 4);
+    annotations["startFlexibility"].xMax = Math.ceil(nPoints / 4) + 1;
+    annotations["startFlexibility"].xMin = Math.ceil(nPoints / 4) + 1;
+    annotations["endFlexibility"].xMax = Math.ceil(nPoints / 2);
+    annotations["endFlexibility"].xMin = Math.ceil(nPoints / 2);
+    annotations["restoreValue"].xMax = Math.ceil((nPoints * 3) / 4) + 1;
+    annotations["restoreValue"].xMin = Math.ceil((nPoints * 3) / 4) + 1;
   }
 
   public set flexibilityBaseline(flexibilityBaseline: number) {
@@ -83,6 +83,7 @@ export default class ChartWrapper {
           yMin: flexibilityBaseline,
           yMax: flexibilityBaseline,
           borderDash: [5, 5],
+          borderColor: "red",
         }
       : undefined;
   }
@@ -106,6 +107,7 @@ export default class ChartWrapper {
         ],
       },
       options: {
+        animation: false,
         responsive: false,
         elements: {
           point: {
