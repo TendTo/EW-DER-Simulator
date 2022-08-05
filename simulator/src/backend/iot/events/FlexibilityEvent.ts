@@ -10,9 +10,7 @@ export default class FlexibilityEvent {
     public readonly flexibility: number,
     public readonly currentTimestamp: number
   ) {
-    // currentTimestamp + Math.floor(Math.random() * (start - currentTimestamp));
-    // this.endIoTFlexibilityTimestamp = stop + Math.floor(Math.random() * 15 * 60);
-    this.startIoTFlexibilityTimestamp = start;
+    this.startIoTFlexibilityTimestamp = currentTimestamp;
     this.endIoTFlexibilityTimestamp = stop;
   }
 

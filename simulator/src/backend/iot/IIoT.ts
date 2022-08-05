@@ -3,6 +3,7 @@ import Agreement from "../Agreement";
 import ITickable from "../ITickable";
 
 export default interface IIoT extends ITickable {
+  production: number;
   expectedFlexibility: number;
   value: number;
   address: string;
@@ -14,5 +15,5 @@ export default interface IIoT extends ITickable {
 
   listenToEvents(): void;
 
-  provideFlexibility(start: BigNumber, stop: BigNumber, flexibility: BigNumber): void;
+  agreementStatus(registered: boolean): void;
 }

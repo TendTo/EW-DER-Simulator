@@ -6,8 +6,10 @@ import IIoT from "./IIoT";
 import { getLogger, Logger } from "log4js";
 import Clock from "../clock";
 import { PersonalEvent } from "./events";
-import IPCHandler from "../IPCHandler";
 import FlexibilityEvent from "./events/FlexibilityEvent";
+import { NodeErrors } from "../constants";
+import IPCHandler from "../IPCHandler";
+import { RequestFlexibilityEvent } from "src/typechain-types/AggregatorContract";
 
 abstract class IoT implements IIoT {
   public readonly agreement: Agreement;
@@ -30,18 +32,34 @@ abstract class IoT implements IIoT {
 
   private async registerAgreement() {
     if (this.running) return;
-    try {
-      if ((await this.wallet.getBalance()).lt(BigNumber.from(1000)))
-        this.logger.warn(`IoT ${this.address} - Low Balance`);
-      // const tx = await this.contract.registerAgreement(this.agreement.struct);
-      // const receipt = await tx.wait();
-      this.running = true;
-      this.logger.log(`IoT ${this.address} - Agreement registered`);
-    } catch (e) {
-      IPCHandler.sendToast(`IoT ${this.address} - Error registering agreement`, "error");
-      this.logger.error(`IoT ${this.address} - Error registering agreement`);
-      this.logger.error(`IoT ${this.address} - ${e}`);
-    }
+    this.contract
+      .registerAgreement(this.agreement.struct)
+      .then((tx) =>
+        tx
+          .wait()
+          .then(() => {
+            this.logger.log(`IoT ${this.address} - Agreement registered`);
+          })
+          .catch((e) => {
+            IPCHandler.sendToast(`IoT ${this.address} - Error registering agreement`, "error");
+            this.logger.error(`${this.address} - Registering agreement`, e);
+          })
+      )
+      .catch((e) => {
+        if (e.code === NodeErrors.UNPREDICTABLE_GAS_LIMIT) {
+          IPCHandler.sendToast(
+            `IoT ${this.address} - Unpredictable gas limit at agreement`,
+            "warning"
+          );
+          this.logger.warn(`${this.address} - Registering agreement 2`, e);
+        }
+        IPCHandler.sendToast(`IoT ${this.address} - Error registering agreement`, "error");
+        this.logger.warn(`${this.address} - Registering agreement`, e);
+      });
+  }
+
+  public agreementStatus(registered: boolean) {
+    this.running = registered;
   }
 
   public async startProducing() {
@@ -76,24 +94,24 @@ abstract class IoT implements IIoT {
     this.contract.on(filter, this.provideFlexibility.bind(this));
   }
 
-  // TODO: Should not be public -> private
-  public provideFlexibility(
+  private provideFlexibility(
     start: BigNumber,
     stop: BigNumber,
-    flexibility: BigNumber
-    // event: RequestFlexibilityEvent
+    flexibility: BigNumber,
+    event: RequestFlexibilityEvent
   ) {
     // TODO: get the list's length from the contract
     // const value = Math.floor(flexibility.div(await this.contract.prosumerListLength()).toNumber());
+    const baseline = this.aggregator.baseline;
     const derFlexibility = flexibility
+      .sub(baseline)
       .mul(this.agreement.value)
-      .div(this.aggregator.baseline)
+      .div(baseline)
       .toNumber();
     const value = derFlexibility + this.agreement.value;
 
     this.logger.log(
-      `IoT ${this.wallet.address} - Flexibility event: from ${start} to ${stop} with value ${value} `
-      // - BlockNumber: ${event.blockNumber}
+      `IoT ${this.wallet.address} - Flexibility event: from ${start} to ${stop} with value ${value} - BlockNumber: ${event.blockNumber}`
     );
     this.flexibilityEvent = new FlexibilityEvent(
       start.toNumber(),
@@ -106,17 +124,14 @@ abstract class IoT implements IIoT {
   protected shouldApplyFlexibility(timestamp: number) {
     if (!this.flexibilityEvent || this.flexibilityEvent.hasEnded(timestamp)) return false;
     if (this.flexibilityEvent.shouldProvideFlexibility(timestamp)) {
-      // this.contract
-      //   .provideFlexibilityFair(this.flexibilityEvent.start, this.flexibilityEvent.flexibility)
-      //   .then(() => (this.flexibilityEvent.isActive = true))
-      //   .catch((e) => this.logger.error(`IoT ${this.address} - Error providing flexibility`, e));
+      this.contract
+        .provideFlexibilityFair(this.flexibilityEvent.start, this.flexibilityEvent.flexibility)
+        .then(() => this.logger.info(`IoT ${this.address} - Flexibility provided`))
+        .catch((e) => this.logger.error(`IoT ${this.address} - Error providing flexibility`, e));
       this.flexibilityEvent.provideMessageSent = true;
       this.flexibilityEvent.isActive = true;
       this.aggregator.tracker.addIoT(this);
     }
-    this.logger.log(
-      `IoT ${this.address} - Current timestamp: ${timestamp} - Flexibility starts at ${this.flexibilityEvent.start}`
-    );
     if (!this.flexibilityEvent.isActive) return false;
     return true;
   }
@@ -139,6 +154,10 @@ abstract class IoT implements IIoT {
 
   get value() {
     return this.agreement.value;
+  }
+
+  get production() {
+    return this.running ? this.agreement.value : 0;
   }
 
   get expectedFlexibility() {
