@@ -66,7 +66,7 @@ export default class TableManager {
     cols[0].innerHTML = id.toString();
     cols[1].innerHTML = (successStart * 100).toFixed(2) + "%";
     cols[2].innerHTML = (successFlexibility * 100).toFixed(2) + "%";
-    cols[3].innerHTML = averageValue.toFixed(2);
+    cols[3].innerHTML = (averageValue * 100).toFixed(2) + "%";
     cols[4].innerHTML = (successReset * 100).toFixed(2) + "%";
     this.flexibilityLogTBody.prepend(clone);
     this.addTotalFlexibilityRow();

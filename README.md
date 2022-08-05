@@ -100,8 +100,11 @@ Other more specific options are available [here](https://docs.nethermind.io/neth
 - [x] Grafico fissato attorno alla baseline
 - [x] Aggiungere un nodo Volta separato a cui i DER fanno riferimento
 - [x] Log flessibilità: [2022-08-02T16:46:04.521] [DEBUG] flexibility - 0,25,97,95,95,1
-- [ ] Average flexibility in percentuale
+- [x] Average flexibility in percentuale
 - [x] Pause button
+- [ ] Zoom on flexibility
+- [ ] Invert flexibility flow
+- [ ] Optimize flexibility from typescript
 
 ## ⛏ Tools
 
