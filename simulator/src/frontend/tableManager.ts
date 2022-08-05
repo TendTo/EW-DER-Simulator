@@ -1,4 +1,4 @@
-import { AgreementLogRow, AgreementEventType, FlexibilityLogRow } from "./types";
+import { AgreementLogRow, FlexibilityLogRow } from "./types";
 
 export default class TableManager {
   private readonly agreementLogTBody: HTMLElement;
@@ -6,7 +6,7 @@ export default class TableManager {
   private readonly flexibilityLogTBody: HTMLElement;
   private readonly flexibilityLogTemplate: HTMLTemplateElement;
   private readonly totalFlexibilityTBody: HTMLTemplateElement;
-  private readonly flexibilityRows: Omit<FlexibilityLogRow, "id">[] = [];
+  private flexibilityRows: Omit<FlexibilityLogRow, "id">[] = [];
 
   constructor() {
     this.agreementLogTBody = document.getElementById("agreementLogTBody");
@@ -98,8 +98,22 @@ export default class TableManager {
     cols[5].innerHTML = ((successful * 100) / this.flexibilityRows.length).toFixed(2) + "%";
   }
 
+  resetTotalFlexibilityRow() {
+    const cols = this.totalFlexibilityTBody.querySelectorAll("td");
+    if (cols.length !== 6) throw new Error("TotalFlexibilityRow: Invalid template");
+    cols[0].classList.remove("positive-bg", "negative-bg");
+    cols[0].innerHTML = "";
+    cols[1].innerHTML = "";
+    cols[2].innerHTML = "";
+    cols[3].innerHTML = "";
+    cols[4].innerHTML = "";
+    cols[5].innerHTML = "";
+  }
+
   reset() {
     this.agreementLogTBody.replaceChildren();
     this.flexibilityLogTBody.replaceChildren();
+    this.resetTotalFlexibilityRow();
+    this.flexibilityRows = [];
   }
 }

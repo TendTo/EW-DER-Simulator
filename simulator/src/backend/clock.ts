@@ -85,10 +85,6 @@ export default class Clock {
     return this._timestamp;
   }
 
-  get nextTimestamp() {
-    return this._timestamp + this.tickIncrement;
-  }
-
   get season() {
     const moth = new Date(this._timestamp * 1000).getUTCMonth();
     if (moth >= 3 && moth <= 5) return Season.Spring;

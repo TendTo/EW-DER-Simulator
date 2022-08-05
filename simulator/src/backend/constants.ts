@@ -16,6 +16,10 @@ export enum Season {
   Autumn,
 }
 
+export enum NodeErrors {
+  UNPREDICTABLE_GAS_LIMIT = "UNPREDICTABLE_GAS_LIMIT",
+}
+
 export const ETHPerIoT = BigNumber.from("10000000000000000");
 export const PersonalEventProbability = 0;
 export const MeteoEventProbability = 0;

@@ -25,6 +25,6 @@ export default class FlexibilityEvent {
   }
 
   hasEnded(timestamp: number): boolean {
-    return timestamp >= this.endIoTFlexibilityTimestamp;
+    return timestamp > this.endIoTFlexibilityTimestamp;
   }
 }

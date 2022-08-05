@@ -40,16 +40,20 @@ export default class FlexibilityResult {
     return this.#providingFlexibility;
   }
 
-  public addValue(value: number, errorCheck?: ErrorCheck) {
-    if (errorCheck === "flexibility") {
-      if (this.#startError === undefined)
-        this.#startError = !inErrorMargin(value, this.expectedFlexibility, FlexibilityErrorMargin);
-      this.#value += value;
-      this.#count++;
-      this.#intervalError =
-        this.#intervalError ||
-        !inErrorMargin(value, this.expectedFlexibility, FlexibilityErrorMargin);
-    } else if (this.#stopError === undefined && errorCheck === "baseline")
+  public addFlexibilityValue(value: number) {
+    /** Valutazione della fine del transitorio iniziale: start error */
+    if (this.#startError === undefined)
+      this.#startError = !inErrorMargin(value, this.expectedFlexibility, FlexibilityErrorMargin);
+    this.#value += value;
+    this.#count++;
+    this.#intervalError =
+      this.#intervalError ||
+      !inErrorMargin(value, this.expectedFlexibility, FlexibilityErrorMargin);
+  }
+
+  public addResetValue(value: number) {
+    if (this.#stopError === undefined)
+      /** Valutazione della fine del transitorio finale: stop error */
       this.#stopError = !inErrorMargin(value, this.expectedBaseline, FlexibilityErrorMargin);
   }
 

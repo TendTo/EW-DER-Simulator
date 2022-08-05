@@ -66,14 +66,14 @@ export default class ChartWrapper {
     this.chart.options.plugins.annotation.annotations["baseline"].yMax = newValue;
   }
 
-  public set verticalLines(nPoints: number) {
+  public set verticalLines(points: [number, number, number]) {
     const annotations = this.chart.options.plugins.annotation.annotations;
-    annotations["startFlexibility"].xMax = Math.ceil(nPoints / 4) + 1;
-    annotations["startFlexibility"].xMin = Math.ceil(nPoints / 4) + 1;
-    annotations["endFlexibility"].xMax = Math.ceil(nPoints / 2);
-    annotations["endFlexibility"].xMin = Math.ceil(nPoints / 2);
-    annotations["restoreValue"].xMax = Math.ceil((nPoints * 3) / 4) + 1;
-    annotations["restoreValue"].xMin = Math.ceil((nPoints * 3) / 4) + 1;
+    annotations["startFlexibility"].xMax = points[0];
+    annotations["startFlexibility"].xMin = points[0];
+    annotations["endFlexibility"].xMax = points[1];
+    annotations["endFlexibility"].xMin = points[1];
+    annotations["restoreValue"].xMax = points[2];
+    annotations["restoreValue"].xMin = points[2];
   }
 
   public set flexibilityBaseline(flexibilityBaseline: number) {
@@ -164,17 +164,23 @@ export default class ChartWrapper {
     });
   }
 
-  public setup({ baseline, startTimestamp, nPoints, flexibilityBaseline }: ChartSetup) {
+  public setup({ baseline, currentTimestamp, nPoints, flexibilityBaseline }: ChartSetup) {
     this.baseline = baseline;
     this.flexibilityBaseline = flexibilityBaseline;
     this.maxY = baseline * 2;
-    this.verticalLines = nPoints;
     this.labels = [];
 
+    const currentMs = currentTimestamp * 1000;
     const increment = 3600000 / (nPoints - 1);
-    const maxDate = startTimestamp * 1000 + 3600000 + increment;
-    for (let i = startTimestamp * 1000; i < maxDate; i += increment)
-      this.labels.push(new Date(i).toLocaleTimeString());
+    const maxDate = currentMs + 3600000 + increment;
+    const verticalLines = [0, 0, 0] as [number, number, number];
+    for (let d = currentMs, i = 0; d < maxDate; d += increment, i++) {
+      this.labels.push(new Date(d).toLocaleTimeString());
+      if (!verticalLines[0] && d >= currentMs + 900000) verticalLines[0] = i;
+      if (!verticalLines[1] && d >= currentMs + 1800000) verticalLines[1] = i;
+      if (!verticalLines[2] && d >= currentMs + 2700000) verticalLines[2] = i;
+    }
+    this.verticalLines = verticalLines;
     this.chart.update();
   }
 
