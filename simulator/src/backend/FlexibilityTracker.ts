@@ -19,7 +19,9 @@ type FlexibilityResultData = {
 
 export default class FairFlexibilityTracker {
   #iotTracker: IoTFlexibilityData = {};
+  /** Modulazione a regime: inizio del regime, fine del transitorio */
   #startTimestamp: number;
+  /** Termine della modulazione e inizio del ritorno alla baseline */
   #stopTimestamp: number;
   #resetTimestamp: number;
   #flexibilityBaseline: number;
@@ -47,12 +49,10 @@ export default class FairFlexibilityTracker {
     if (!this.#iotTracker[iot.address])
       this.#iotTracker[iot.address] = new FlexibilityResult(iot.expectedFlexibility, iot.value);
 
-    let errorCheck: ErrorCheck = undefined;
-    if (timestamp >= this.#startTimestamp && timestamp < this.#stopTimestamp)
-      errorCheck = "flexibility";
-    else if (timestamp >= this.#resetTimestamp) errorCheck = "baseline";
-
-    if (errorCheck) this.#iotTracker[iot.address].addValue(reading, errorCheck);
+    if (timestamp >= this.#startTimestamp && timestamp <= this.#stopTimestamp) {
+      this.#iotTracker[iot.address].addFlexibilityValue(reading);
+    } else if (timestamp >= this.#resetTimestamp)
+      this.#iotTracker[iot.address].addResetValue(reading);
   }
 
   public hasEnded(timestamp: number) {
@@ -76,7 +76,7 @@ export default class FairFlexibilityTracker {
   }
 
   public get result() {
-    const [succStart, succFlexibility, succReset, totFlexibility] = Object.values(
+    const [succStart, succFlexibility, succReset, averageFlexibility] = Object.values(
       this.#iotTracker
     ).reduce(
       (acc, { average, intervalError, startError, stopError }) => {
@@ -94,7 +94,7 @@ export default class FairFlexibilityTracker {
       successStart: succStart / nIots,
       successReset: succReset / nIots,
       successFlexibility: succFlexibility / nIots,
-      averageValue: totFlexibility / nIots,
+      averageValue: (averageFlexibility - this.flexibilityBaseline) / this.#flexibilityBaseline,
       success:
         succStart / nIots >= 0.95 && succReset / nIots >= 0.95 && succFlexibility / nIots >= 0.95,
     };
