@@ -19,6 +19,7 @@ export type ChartSetup = {
   flexibilityBaseline?: number;
   currentTimestamp: number;
   nPoints: number;
+  zoom?: boolean;
 };
 
 export type ChartOptions = {

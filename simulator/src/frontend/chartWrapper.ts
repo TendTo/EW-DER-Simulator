@@ -61,6 +61,10 @@ export default class ChartWrapper {
     this.chart.options.scales.y.max = y;
   }
 
+  public set minY(y: number) {
+    this.chart.options.scales.y.min = y;
+  }
+
   public set baseline(newValue: number) {
     this.chart.options.plugins.annotation.annotations["baseline"].yMin = newValue;
     this.chart.options.plugins.annotation.annotations["baseline"].yMax = newValue;
@@ -164,11 +168,18 @@ export default class ChartWrapper {
     });
   }
 
-  public setup({ baseline, currentTimestamp, nPoints, flexibilityBaseline }: ChartSetup) {
+  public setup({ baseline, currentTimestamp, nPoints, flexibilityBaseline, zoom }: ChartSetup) {
     this.baseline = baseline;
     this.flexibilityBaseline = flexibilityBaseline;
-    this.maxY = baseline * 2;
     this.labels = [];
+    if (zoom) {
+      const offset = (flexibilityBaseline - baseline) / 2;
+      this.maxY = flexibilityBaseline + offset;
+      this.minY = baseline - offset;
+    } else {
+      this.maxY = baseline * 2;
+      this.minY = 0;
+    }
 
     const currentMs = currentTimestamp * 1000;
     const increment = 3600000 / (nPoints - 1);

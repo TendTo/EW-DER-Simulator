@@ -8,8 +8,8 @@ export default class EventHandler {
   private readonly chart = new ChartWrapper();
   private readonly tableManager = new TableManager();
   private readonly buttonsWrapper = new ButtonWrapper();
-  private readonly formWrapper = new FromWrapper();
   private readonly toastWrapper = new ToastWrapper();
+  private readonly formWrapper = new FromWrapper(this.toastWrapper);
   private readonly activeDers = document.getElementById("activeDers");
   private isPlaying = false;
   private nActiveDers = 0;

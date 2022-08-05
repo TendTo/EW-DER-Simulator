@@ -282,6 +282,7 @@ export default class Aggregator implements ITickable {
         currentTimestamp: this.timestamp,
         nPoints: this.tickIntervalsInOneHour,
         flexibilityBaseline: this.tracker.flexibilityBaseline,
+        zoom: this.tracker.isActive,
       };
     }
     IPCHandler.onNewAggregatedReading(this.aggregatedValue, clock.timestampString, options);

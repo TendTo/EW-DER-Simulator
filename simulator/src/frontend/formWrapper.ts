@@ -5,18 +5,16 @@ import {
   DerVariationOptions,
   FlexibilityOptions,
 } from "../module";
+import ToastWrapper from "./toastWrapper";
 import { DerForm, FlexibilityForm, SettingsForm } from "./types";
 
 export default class FromWrapper {
-  private settingsForm: SettingsForm;
-  private flexibilityForm: FlexibilityForm;
-  private derForm: DerForm;
+  private settingsForm = document.getElementById("settings") as SettingsForm;
+  private flexibilityForm = document.getElementById("flexibilityForm") as FlexibilityForm;
+  private derForm = document.getElementById("derForm") as DerForm;
+  private env = window.electronAPI.env;
 
-  constructor() {
-    this.settingsForm = document.getElementById("settings") as SettingsForm;
-    this.flexibilityForm = document.getElementById("flexibilityForm") as FlexibilityForm;
-    this.derForm = document.getElementById("derForm") as DerForm;
-  }
+  constructor(private toastWrapper: ToastWrapper) {}
 
   public addSettingsFormOnSubmit(
     callback: (
@@ -52,11 +50,17 @@ export default class FromWrapper {
   get blockchainData(): BlockchainOptions {
     const nSolar = parseInt(this.settingsForm.numberOfSolarDERs.value);
     const nWind = parseInt(this.settingsForm.numberOfWindDERs.value);
+    if (!this.env.SK && !this.settingsForm.sk.value) {
+      this.toastWrapper.show("Please enter your SK", "error");
+      throw Error("No private key provided");
+    }
     return {
-      aggRpcUrl: this.settingsForm.aggRpcUrl.value || "http://134.209.139.226:8545",
-      derRpcUrl: this.settingsForm.derRpcUrl.value || "http://134.209.139.226:8545",
+      aggRpcUrl:
+        this.settingsForm.aggRpcUrl.value || this.env.AGG_RPC_URL || "http://134.209.139.226:8545",
+      derRpcUrl:
+        this.settingsForm.derRpcUrl.value || this.env.DER_RPC_URL || "http://134.209.139.226:8545",
       seed: this.settingsForm.seed.value || this.settingsForm.sk.value,
-      sk: this.settingsForm.sk.value,
+      sk: this.settingsForm.sk.value || this.env.SK,
       numberOfDERs: {
         Solar: isNaN(nSolar) ? 1 : nSolar,
         Wind: isNaN(nWind) ? 1 : nWind,

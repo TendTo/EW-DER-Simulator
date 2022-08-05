@@ -81,7 +81,14 @@ export type ElectronAPI = GetApiType<
     toast: (message: string, type?: ToastType, duration?: number) => Promise<void>;
     setBaseline: (baseline: number) => Promise<void>;
   }
->;
+> & {
+  env: {
+    SK?: string;
+    CONTRACT_ADDRESS?: string;
+    DER_RPC_URL?: string;
+    AGG_RPC_URL?: string;
+  };
+};
 
 declare global {
   interface Window {
