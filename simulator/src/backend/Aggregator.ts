@@ -41,8 +41,8 @@ export default class Aggregator implements ITickable {
   private wallet: Wallet;
   private mnemonic: string;
   private numberOfDERs: NumberOfDERs;
-  private blockNumber: number;
   private balance: BigNumber;
+  public blockNumber: number;
 
   constructor(
     { sk, seed, numberOfDERs, contractAddress, aggRpcUrl, derRpcUrl }: BlockchainOptions,
@@ -65,6 +65,7 @@ export default class Aggregator implements ITickable {
   }: FlexibilityOptions) {
     const baseline = this.baseline;
     const flexibilityBaseline = Math.floor(baseline + (baseline * flexibilityValue) / 100);
+    // Reset the origin of the graph
     this.counter = 0;
     this.logger.log(
       `Request flexibility from ${flexibilityStart} to ${flexibilityStop} of ${flexibilityValue}% - ${baseline} -> ${flexibilityBaseline}`
@@ -272,6 +273,7 @@ export default class Aggregator implements ITickable {
   }
 
   public onTick(clock: Clock, timestamp: number) {
+    // The options object makes the graph redraw with the new origin
     let options: ChartSetup = undefined;
     if (this.counter >= this.tickIntervalsInOneHour || this.counter === 0) {
       this.counter = 0;

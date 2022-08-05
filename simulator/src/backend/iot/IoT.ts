@@ -100,6 +100,7 @@ abstract class IoT implements IIoT {
     flexibility: BigNumber,
     event: RequestFlexibilityEvent
   ) {
+    if (event.blockNumber < this.aggregator.blockNumber) return;
     // TODO: get the list's length from the contract
     // const value = Math.floor(flexibility.div(await this.contract.prosumerListLength()).toNumber());
     const baseline = this.aggregator.baseline;
