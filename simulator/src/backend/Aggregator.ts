@@ -30,7 +30,7 @@ export default class Aggregator implements ITickable {
   private readonly logger: Logger = getLogger("aggregator");
   public readonly tracker: FairFlexibilityTracker = new FairFlexibilityTracker();
   public readonly contract: AggregatorContract;
-  public readonly derProvider: providers.JsonRpcProvider;
+  public readonly derRpcUrl: string;
   private readonly aggProvider: providers.JsonRpcProvider;
   private readonly tickIntervalsInOneHour = this.clock.tickIntervalsInOneHour;
   private aggregatedValue: number = 0;
@@ -49,7 +49,7 @@ export default class Aggregator implements ITickable {
     private readonly initialFunds: boolean
   ) {
     this.aggProvider = new providers.JsonRpcProvider(aggRpcUrl);
-    this.derProvider = new providers.JsonRpcProvider(derRpcUrl);
+    this.derRpcUrl = derRpcUrl;
     this.wallet = new Wallet(sk, this.aggProvider);
     this.mnemonic = seed;
     this.numberOfDERs = numberOfDERs;
@@ -129,8 +129,11 @@ export default class Aggregator implements ITickable {
       await tx.wait();
       this.logger.log("Contract resetted");
     } catch (e) {
-      this.logger.error("Error resetting contract", e);
-      IPCHandler.sendToast("Can't reset the contract", "error");
+      this.logger.warn("Error resetting contract", e);
+      IPCHandler.sendToast(
+        "Can't reset the contract. The simulation will procede anyway",
+        "warning"
+      );
     }
   }
 

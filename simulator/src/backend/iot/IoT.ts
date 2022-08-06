@@ -1,4 +1,4 @@
-import { BigNumber, Wallet } from "ethers";
+import { BigNumber, providers, Wallet } from "ethers";
 import { AggregatorContract } from "../../typechain-types";
 import Agreement from "../Agreement";
 import Aggregator from "../Aggregator";
@@ -9,7 +9,7 @@ import { PersonalEvent } from "./events";
 import FlexibilityEvent from "./events/FlexibilityEvent";
 import { NodeErrors } from "../constants";
 import IPCHandler from "../IPCHandler";
-import {
+import type {
   EndRequestFlexibilityEvent,
   RequestFlexibilityEvent,
 } from "src/typechain-types/AggregatorContract";
@@ -26,7 +26,7 @@ abstract class IoT implements IIoT {
   protected constructor(protected aggregator: Aggregator, sk: string) {
     this.logger = getLogger("iot");
     this.running = false;
-    this.wallet = new Wallet(sk, this.aggregator.derProvider);
+    this.wallet = new Wallet(sk, new providers.JsonRpcProvider(aggregator.derRpcUrl));
     this.agreement = this.createAgreement();
     this.contract = aggregator.contract.connect(this.wallet);
     this.aggregator.clock.addFunction(this.onTick);
@@ -92,23 +92,29 @@ abstract class IoT implements IIoT {
     this.logger.debug(`IoT ${this.address} - Stopped`);
   }
 
-  public listenToEvents() {
-    const filter = this.contract.filters.RequestFlexibility();
-    this.contract.on(filter, this.provideFlexibility.bind(this));
-    this.contract.on(
-      this.contract.filters.EndRequestFlexibility(),
-      (start: BigNumber, stop: BigNumber, _: BigNumber, __: EndRequestFlexibilityEvent) => {
-        if (
-          this.flexibilityEvent &&
-          this.flexibilityEvent.start === start.toNumber() &&
-          this.flexibilityEvent.stop === stop.toNumber()
-        )
-          this.flexibilityEvent.isConfirmed = true;
-      }
+  protected confirmProvidedFlexibility(
+    start: BigNumber,
+    stop: BigNumber,
+    _: BigNumber,
+    event: EndRequestFlexibilityEvent
+  ) {
+    this.logger.info(
+      `IoT ${this.address} -
+      Flexibility event ended - Start: ${start.toString()}
+      Local Flexibility event - Start: ${this.flexibilityEvent ? this.flexibilityEvent.start : 0}
+      BlockNumber: ${event.blockNumber}`
     );
+    if (this.flexibilityEvent && this.flexibilityEvent.start === start.toNumber()) {
+      this.logger.info(`IoT ${this.address} - Sending 'provideFlexibilityFair'`);
+      this.contract
+        .provideFlexibilityFair(this.flexibilityEvent.start, this.flexibilityEvent.flexibility)
+        .then(() => this.logger.info(`IoT ${this.address} - Flexibility provided`))
+        .catch((e) => this.logger.error(`IoT ${this.address} - Error providing flexibility`, e));
+      this.flexibilityEvent = null;
+    }
   }
 
-  private provideFlexibility(
+  protected provideFlexibility(
     start: BigNumber,
     stop: BigNumber,
     flexibility: BigNumber,
@@ -136,16 +142,22 @@ abstract class IoT implements IIoT {
     );
   }
 
+  private listenToEvents() {
+    this.logger.debug(`IoT ${this.address} - Listening to events`);
+    this.contract.removeAllListeners();
+    this.contract.on(
+      this.contract.filters.RequestFlexibility(),
+      this.provideFlexibility.bind(this)
+    );
+    this.contract.on(
+      this.contract.filters.EndRequestFlexibility(),
+      this.confirmProvidedFlexibility.bind(this)
+    );
+  }
+
   protected shouldApplyFlexibility(timestamp: number) {
     if (!this.flexibilityEvent || this.flexibilityEvent.hasEnded(timestamp)) return false;
     if (this.flexibilityEvent.hasStarted(timestamp)) return true;
-    if (this.flexibilityEvent.isConfirmed) {
-      this.contract
-        .provideFlexibilityFair(this.flexibilityEvent.start, this.flexibilityEvent.flexibility)
-        .then(() => this.logger.info(`IoT ${this.address} - Flexibility provided`))
-        .catch((e) => this.logger.error(`IoT ${this.address} - Error providing flexibility`, e));
-      this.flexibilityEvent = null;
-    }
     return false;
   }
 
