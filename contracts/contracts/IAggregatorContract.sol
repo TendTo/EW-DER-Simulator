@@ -47,29 +47,33 @@ interface IAggregatorContract {
     }
 
     event RegisterAgreement(address indexed prosumer, Agreement agreement);
-    event ReviseAgreement(
-        address indexed prosumer,
-        Agreement oldAgreement,
-        Agreement newAgreement
-    );
+    event ReviseAgreement(address indexed prosumer, Agreement oldAgreement, Agreement newAgreement);
     event CancelAgreement(address indexed prosumer, Agreement agreement);
 
-    event RequestFlexibility(
-        uint256 indexed start,
-        uint256 indexed stop,
-        int256 gridFlexibility
-    );
+    event RequestFlexibility(uint256 indexed start, uint256 indexed stop, int256 gridFlexibility);
     event StartFlexibilityProvisioning(
         uint256 indexed start,
         address indexed prosumer,
         int256 flexibility,
         int256 reward
     );
-    event ConfirmFlexibilityProvisioning(
+    event EndRequestFlexibility(
+        uint256 indexed start,
+        uint256 indexed stop,
+        int256 gridFlexibility
+    );
+    event FlexibilityProvisioningSuccess(
         uint256 indexed start,
         address indexed prosumer,
         int256 flexibility,
         int256 reward
+    );
+    event FlexibilityProvisioningError(
+        uint256 indexed start,
+        address indexed prosumer,
+        int256 flexibilityFromAggregator,
+        int256 flexibilityFromProsumer,
+        int256 expectedFlexibility
     );
     event RewardProduction(
         address indexed prosumer,
@@ -90,11 +94,9 @@ interface IAggregatorContract {
         int256 _flexibility
     ) external;
 
-    function provideFlexibilityFair(uint256 _start, int256 _flexibility)
-        external;
+    function provideFlexibilityFair(uint256 _start, int256 _flexibility) external;
 
-    function endFlexibilityRequest(FlexibilityResult[] calldata results)
-        external;
+    function endFlexibilityRequest(uint256 _start, FlexibilityResult[] calldata _results) external;
 
     function rewardProduction() external;
 

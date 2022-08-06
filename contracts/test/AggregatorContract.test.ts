@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { AggregatorContract__factory, AggregatorContract } from "../typechain-types";
-import { ContractError, EnergySource } from "./constants";
+import { ContractError, ContractEvents, EnergySource } from "./constants";
 
 describe("AggregatorContract", function () {
   let contractFactory: AggregatorContract__factory;
@@ -181,17 +181,36 @@ describe("AggregatorContract", function () {
           .withArgs(iot1Addr);
       });
     });
+    describe("endFlexibilityRequest", function () {
+      it("end the flexibility request and reward all the prosumers who participated (one prosumer)", async function () {
+        await iot1Contract.registerAgreement(agreement);
+        await contract.requestFlexibility(start, end, gridFlexibility);
+        await contract.endFlexibilityRequest(start, [
+          { flexibility: gridFlexibility, prosumer: iot1Addr },
+        ]);
+        expect(await contract.flexibilityResults(iot1Addr)).to.equal(gridFlexibility);
+      });
+      it("revert on unauthorized use with 'UnauthorizedAggregatorError(msg.sender)'", async function () {
+        await expect(iot1Contract.endFlexibilityRequest(0, []))
+          .to.be.revertedWithCustomError(contract, ContractError.UnauthorizedAggregatorError)
+          .withArgs(iot1Addr);
+      });
+      it("revert on unauthorized use with 'FlexibilityRequestNotFoundError(expectedStart, actualStart)'", async function () {
+        await expect(contract.endFlexibilityRequest(100, []))
+          .to.be.revertedWithCustomError(contract, ContractError.FlexibilityRequestNotFoundError)
+          .withArgs(0, 100);
+      });
+    });
     describe("provideFlexibilityFair", function () {
       it("notify the intention of providing the flexibility requested with him as the only prosumer", async function () {
         await iot1Contract.registerAgreement(agreement);
         await contract.requestFlexibility(start, end, gridFlexibility);
-        const iotFlexibility = gridFlexibility;
-        await iot1Contract.provideFlexibilityFair(start, iotFlexibility);
-        const pendingReward = await contract.pendingRewards(iot1Addr);
-        expect(pendingReward.start.toNumber()).to.equal(start);
-        expect(pendingReward.flexibility.toNumber()).to.equal(iotFlexibility);
-        expect(pendingReward.reward.toNumber()).to.equal(
-          iotFlexibility * agreement.flexibilityPrice
+        await contract.endFlexibilityRequest(start, [
+          { flexibility: gridFlexibility, prosumer: iot1Addr },
+        ]);
+        await iot1Contract.provideFlexibilityFair(start, gridFlexibility);
+        expect((await contract.prosumers(iot1Addr)).balance.toNumber()).to.equal(
+          gridFlexibility * agreement.flexibilityPrice
         );
       });
       it("notify the intention of providing the flexibility requested with multiple prosumers", async function () {
@@ -207,47 +226,39 @@ describe("AggregatorContract", function () {
         const energyBalance = (await contract.energyBalance()).toNumber();
         const iot1Flexibility = Math.floor((gridFlexibility * agreement.value) / energyBalance);
         const iot2Flexibility = Math.floor((gridFlexibility * iot2Agreement.value) / energyBalance);
+
+        await contract.endFlexibilityRequest(start, [
+          { flexibility: iot1Flexibility, prosumer: iot1Addr },
+          { flexibility: iot2Flexibility, prosumer: iot2Addr },
+        ]);
         await iot1Contract.provideFlexibilityFair(start, iot1Flexibility);
         await iot2Contract.provideFlexibilityFair(start, iot2Flexibility);
 
-        const pendingReward1 = await contract.pendingRewards(iot1Addr);
-        expect(pendingReward1.flexibility.toNumber()).to.equal(iot1Flexibility);
-        expect(pendingReward1.reward.toNumber()).to.equal(
+        expect((await contract.prosumers(iot1Addr)).balance.toNumber()).to.equal(
           iot1Flexibility * agreement.flexibilityPrice
         );
-        const pendingReward2 = await contract.pendingRewards(iot2Addr);
-        expect(pendingReward2.flexibility.toNumber()).to.equal(iot2Flexibility);
-        expect(pendingReward2.reward.toNumber()).to.equal(
+        expect((await contract.prosumers(iot2Addr)).balance.toNumber()).to.equal(
           iot2Flexibility * iot2Agreement.flexibilityPrice
         );
       });
-      it("notify the intention of providing the flexibility requested with within the margins", async function () {
+      it("notify the intention of providing the flexibility requested out of the expected margins (lower bound)", async function () {
         await iot1Contract.registerAgreement(agreement);
         await contract.requestFlexibility(start, end, gridFlexibility);
-
         let iotFlexibility = Math.floor(gridFlexibility * 0.9);
-        await iot1Contract.provideFlexibilityFair(start, iotFlexibility);
-        let pendingReward = await contract.pendingRewards(iot1Addr);
-        expect(pendingReward.flexibility.toNumber()).to.equal(iotFlexibility);
+        await contract.endFlexibilityRequest(start, [
+          { flexibility: iotFlexibility, prosumer: iot1Addr },
+        ]);
 
-        iotFlexibility = Math.floor(gridFlexibility * 1.1);
-        await iot1Contract.provideFlexibilityFair(start, iotFlexibility);
-        pendingReward = await contract.pendingRewards(iot1Addr);
-        expect(pendingReward.flexibility.toNumber()).to.equal(iotFlexibility);
-
-        let invalidIotFlexibility = Math.floor(gridFlexibility * 1.2);
-        await expect(iot1Contract.provideFlexibilityFair(start, invalidIotFlexibility))
-          .to.be.revertedWithCustomError(contract, ContractError.FlexibilityError)
-          .withArgs(gridFlexibility, invalidIotFlexibility);
-        pendingReward = await contract.pendingRewards(iot1Addr);
-        expect(pendingReward.flexibility.toNumber()).to.equal(iotFlexibility);
-
-        invalidIotFlexibility = Math.floor(gridFlexibility * 0.8);
-        await expect(iot1Contract.provideFlexibilityFair(start, invalidIotFlexibility))
-          .to.be.revertedWithCustomError(contract, ContractError.FlexibilityError)
-          .withArgs(gridFlexibility, invalidIotFlexibility);
-        pendingReward = await contract.pendingRewards(iot1Addr);
-        expect(pendingReward.flexibility.toNumber()).to.equal(iotFlexibility);
+        // In aggregator range, but out of expected value
+        await expect(iot1Contract.provideFlexibilityFair(start, Math.floor(iotFlexibility * 0.9)))
+          .to.emit(contract, ContractEvents.FlexibilityProvisioningError)
+          .withArgs(
+            start,
+            iot1Addr,
+            iotFlexibility,
+            Math.floor(iotFlexibility * 0.9),
+            gridFlexibility
+          );
       });
       it("revert on 0 value with 'ZeroValueError('flexibility')'", async function () {
         await iot1Contract.registerAgreement(agreement);
@@ -268,32 +279,6 @@ describe("AggregatorContract", function () {
         await expect(iot1Contract.provideFlexibilityFair(start, 1))
           .to.be.revertedWithCustomError(contract, ContractError.FlexibilityRequestNotFoundError)
           .withArgs(0, start);
-      });
-      it("revert on to different flexibility provided with 'FlexibilityError(expectedValue, actualValue)'", async function () {
-        await iot1Contract.registerAgreement(agreement);
-        await iot2Contract.registerAgreement(agreement);
-        await contract.requestFlexibility(start, end, gridFlexibility);
-        await expect(iot1Contract.provideFlexibilityFair(start, gridFlexibility))
-          .to.be.revertedWithCustomError(contract, ContractError.FlexibilityError)
-          .withArgs(Math.floor(gridFlexibility / 2), gridFlexibility);
-      });
-    });
-    describe("endFlexibilityRequest", function () {
-      it("end the flexibility request and reward all the prosumers who participated (one prosumer)", async function () {
-        await iot1Contract.registerAgreement(agreement);
-        await contract.requestFlexibility(start, end, gridFlexibility);
-        await iot1Contract.provideFlexibilityFair(start, gridFlexibility);
-        await contract.endFlexibilityRequest([
-          { flexibility: gridFlexibility, prosumer: iot1Addr },
-        ]);
-        expect((await contract.prosumers(iot1Addr)).balance).to.equal(
-          agreement.flexibilityPrice * gridFlexibility
-        );
-      });
-      it("revert on unauthorized use with 'UnauthorizedAggregatorError(msg.sender)'", async function () {
-        await expect(iot1Contract.endFlexibilityRequest([]))
-          .to.be.revertedWithCustomError(contract, ContractError.UnauthorizedAggregatorError)
-          .withArgs(iot1Addr);
       });
     });
   });
@@ -322,15 +307,7 @@ describe("AggregatorContract", function () {
 
       await contract.resetContract();
       const { balance, idx, reputation } = await contract.prosumers(iot1Addr);
-      const { reward, start, flexibility } = await contract.pendingRewards(iot1Addr);
-      expect([
-        balance.toNumber(),
-        idx.toNumber(),
-        reputation,
-        reward.toNumber(),
-        start.toNumber(),
-        flexibility.toNumber(),
-      ]).to.have.ordered.members([0, 0, 0, 0, 0, 0]);
+      expect([balance.toNumber(), idx.toNumber(), reputation]).to.have.ordered.members([0, 0, 0]);
     });
     it("selfDestruct: Contract is deleted", async function () {
       await contract.selfDestruct();

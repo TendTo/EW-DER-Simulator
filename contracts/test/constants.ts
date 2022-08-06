@@ -16,3 +16,15 @@ export enum ContractError {
   FlexibilityError = "FlexibilityError",
   FlexibilityRequestNotFoundError = "FlexibilityRequestNotFoundError",
 }
+
+export enum ContractEvents {
+  CancelAgreement = "CancelAgreement",
+  EndRequestFlexibility = "EndRequestFlexibility",
+  FlexibilityProvisioningError = "FlexibilityProvisioningError",
+  FlexibilityProvisioningSuccess = "FlexibilityProvisioningSuccess",
+  RegisterAgreement = "RegisterAgreement",
+  RequestFlexibility = "RequestFlexibility",
+  ReviseAgreement = "ReviseAgreement",
+  RewardProduction = "RewardProduction",
+  StartFlexibilityProvisioning = "StartFlexibilityProvisioning",
+}
