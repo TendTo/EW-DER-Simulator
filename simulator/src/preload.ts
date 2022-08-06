@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from "electron";
 import { ElectronAPI } from "./module";
 import { readFileSync, existsSync } from "fs";
+import { join } from "path";
 
 const api: ElectronAPI = {
   send: {
@@ -52,11 +53,9 @@ const api: ElectronAPI = {
   },
   env: {},
 };
-//if file .env exists, read it and set env variables in the api.env object
+// If file .env exists, read it and set env variables in the api.env object
 // with the key being the env variable name and the value being the env variable value
-// without using dotenv, because it's not supported in electron
-const envPath = `${process.cwd()}/.env`;
-console.log("envPath", envPath);
+const envPath = join(process.cwd(), ".env");
 if (existsSync(envPath)) {
   const env = readFileSync(envPath, "utf8").trim().split("\n");
   env.forEach((line) => {
@@ -64,5 +63,4 @@ if (existsSync(envPath)) {
     api.env[key.trim()] = value.trim();
   });
 }
-console.log("api", api);
 contextBridge.exposeInMainWorld("electronAPI", api);

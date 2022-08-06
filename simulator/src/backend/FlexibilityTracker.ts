@@ -39,12 +39,6 @@ export default class FairFlexibilityTracker {
     this.#stopTimestamp = undefined;
   }
 
-  addIoT(iot: IIoT) {
-    if (!this.#iotTracker[iot.address])
-      this.#iotTracker[iot.address] = new FlexibilityResult(iot.expectedFlexibility, iot.value);
-    this.#iotTracker[iot.address].startProvidingFlexibility();
-  }
-
   parseReading(iot: IIoT, reading: number, timestamp: number) {
     if (!this.#iotTracker[iot.address])
       this.#iotTracker[iot.address] = new FlexibilityResult(iot.expectedFlexibility, iot.value);

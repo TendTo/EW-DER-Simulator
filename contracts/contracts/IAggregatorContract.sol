@@ -51,17 +51,12 @@ interface IAggregatorContract {
     event CancelAgreement(address indexed prosumer, Agreement agreement);
 
     event RequestFlexibility(uint256 indexed start, uint256 indexed stop, int256 gridFlexibility);
-    event StartFlexibilityProvisioning(
-        uint256 indexed start,
-        address indexed prosumer,
-        int256 flexibility,
-        int256 reward
-    );
     event EndRequestFlexibility(
         uint256 indexed start,
         uint256 indexed stop,
         int256 gridFlexibility
     );
+
     event FlexibilityProvisioningSuccess(
         uint256 indexed start,
         address indexed prosumer,

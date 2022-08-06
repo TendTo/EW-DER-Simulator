@@ -7,11 +7,9 @@ import {
 } from "../typechain-types";
 import {
   CancelAgreementEvent,
-  ConfirmFlexibilityProvisioningEvent,
   RegisterAgreementEvent,
   RequestFlexibilityEvent,
   ReviseAgreementEvent,
-  StartFlexibilityProvisioningEvent,
 } from "../typechain-types/AggregatorContract";
 import {
   BlockchainOptions,
@@ -43,6 +41,7 @@ export default class Aggregator implements ITickable {
   private numberOfDERs: NumberOfDERs;
   private balance: BigNumber;
   public blockNumber: number;
+  #baseline = 0;
 
   constructor(
     { sk, seed, numberOfDERs, contractAddress, aggRpcUrl, derRpcUrl }: BlockchainOptions,
@@ -63,19 +62,22 @@ export default class Aggregator implements ITickable {
     flexibilityStart = this.clock.timestamp + FlexibilityStartOffset,
     flexibilityStop = this.clock.timestamp + FlexibilityEndOffset,
   }: FlexibilityOptions) {
-    const baseline = this.baseline;
-    const flexibilityBaseline = Math.floor(baseline + (baseline * flexibilityValue) / 100);
+    const flexibilityBaseline = Math.floor(
+      this.#baseline + (this.#baseline * flexibilityValue) / 100
+    );
     // Reset the origin of the graph
     this.counter = 0;
     this.logger.log(
-      `Request flexibility from ${flexibilityStart} to ${flexibilityStop} of ${flexibilityValue}% - ${baseline} -> ${flexibilityBaseline}`
+      `Request flexibility from ${flexibilityStart} to ${flexibilityStop} of ${flexibilityValue}% - ${
+        this.#baseline
+      } -> ${flexibilityBaseline}`
     );
     try {
       this.tracker.activate({ flexibilityBaseline, flexibilityStart, flexibilityStop });
       const tx = await this.contract.requestFlexibility(
         flexibilityStart,
         flexibilityStop,
-        Math.floor(this.baseline + (this.baseline * flexibilityValue) / 100)
+        Math.floor(this.#baseline + (this.#baseline * flexibilityValue) / 100)
       );
       IPCHandler.sendToast("Aggregator - Flexibility request sent", "success");
       this.logger.log("Flexibility request sent");
@@ -140,7 +142,7 @@ export default class Aggregator implements ITickable {
   ) {
     if (event.blockNumber < this.blockNumber) return;
     this.iots.find((iot) => iot.address === prosumer).agreementStatus(true);
-    IPCHandler.onSetBaseline(this.baseline);
+    this.updateBaseline();
     IPCHandler.onAgreementEvent({
       ...parseAgreementLog(agreement, event),
       address: prosumer,
@@ -157,7 +159,7 @@ export default class Aggregator implements ITickable {
     event: ReviseAgreementEvent
   ) {
     if (event.blockNumber < this.blockNumber) return;
-    IPCHandler.onSetBaseline(this.baseline);
+    this.updateBaseline();
     IPCHandler.onAgreementEvent({
       ...parseAgreementLog(newAgreement, event),
       address: prosumer,
@@ -174,7 +176,7 @@ export default class Aggregator implements ITickable {
   ) {
     if (event.blockNumber < this.blockNumber) return;
     this.iots.find((iot) => iot.address === prosumer).agreementStatus(false);
-    IPCHandler.onSetBaseline(this.baseline);
+    this.updateBaseline();
     IPCHandler.onAgreementEvent({
       ...parseAgreementLog(agreement, event),
       address: prosumer,
@@ -193,31 +195,6 @@ export default class Aggregator implements ITickable {
       `RequestFlexibilityEvent ${start} ${end} ${gridFlexibility} - Block ${event.blockNumber}`
     );
   }
-  private onStartFlexibilityProvisioning(
-    start: BigNumber,
-    prosumer: string,
-    flexibility: BigNumber,
-    reward: BigNumber,
-    event: StartFlexibilityProvisioningEvent
-  ) {
-    if (event.blockNumber < this.blockNumber) return;
-    this.logger.log(
-      `StartFlexibilityProvisioningEvent ${start} ${prosumer} ${flexibility} ${reward} - Block ${event.blockNumber}`
-    );
-    this.tracker.addIoT(this.iots.find((iot) => iot.address === prosumer));
-  }
-  private onConfirmFlexibilityProvisioning(
-    start: BigNumber,
-    prosumer: string,
-    flexibility: BigNumber,
-    reward: BigNumber,
-    event: ConfirmFlexibilityProvisioningEvent
-  ) {
-    if (event.blockNumber < this.blockNumber) return;
-    this.logger.log(
-      `ConfirmFlexibilityProvisioningEvent ${start} ${prosumer} ${flexibility} ${reward} - Block ${event.blockNumber}`
-    );
-  }
 
   //#endregion
 
@@ -233,14 +210,6 @@ export default class Aggregator implements ITickable {
     this.contract.on(
       this.contract.filters.RequestFlexibility(),
       this.onRequestFlexibility.bind(this)
-    );
-    this.contract.on(
-      this.contract.filters.StartFlexibilityProvisioning(),
-      this.onStartFlexibilityProvisioning.bind(this)
-    );
-    this.contract.on(
-      this.contract.filters.ConfirmFlexibilityProvisioning(),
-      this.onConfirmFlexibilityProvisioning.bind(this)
     );
   }
 
@@ -278,7 +247,7 @@ export default class Aggregator implements ITickable {
     if (this.counter >= this.tickIntervalsInOneHour || this.counter === 0) {
       this.counter = 0;
       options = {
-        baseline: this.baseline,
+        baseline: this.#baseline,
         currentTimestamp: this.timestamp,
         nPoints: this.tickIntervalsInOneHour,
         flexibilityBaseline: this.tracker.flexibilityBaseline,
@@ -315,6 +284,7 @@ export default class Aggregator implements ITickable {
     if (this.tracker.isActive && this.tracker.hasEnded(timestamp)) {
       const result = this.tracker.result;
       const contractResults = this.tracker.contractResults;
+      const start = this.tracker.flexibilityStart;
       this.tracker.deactivate();
 
       const flexibilityLogger = getLogger("flexibility");
@@ -324,10 +294,15 @@ export default class Aggregator implements ITickable {
       IPCHandler.onFlexibilityEvent(result);
       this.logger.info(`Sending 'endFlexibilityRequest' command`);
       this.contract
-        .endFlexibilityRequest(contractResults)
+        .endFlexibilityRequest(start, contractResults)
         .then(() => this.logger.info("Sent 'endFlexibilityRequest' command"))
         .catch((e) => this.logger.error("Sending 'endFlexibilityRequest' command", e));
     }
+  }
+
+  private updateBaseline() {
+    this.#baseline = this.iots.reduce((acc, iot) => acc + iot.production, 0);
+    IPCHandler.onSetBaseline(this.#baseline);
   }
 
   public get iotLength() {
@@ -335,7 +310,7 @@ export default class Aggregator implements ITickable {
   }
 
   public get baseline() {
-    return this.iots.reduce((acc, iot) => acc + iot.production, 0);
+    return this.#baseline;
   }
 
   public get timestamp() {

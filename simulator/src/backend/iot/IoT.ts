@@ -9,7 +9,10 @@ import { PersonalEvent } from "./events";
 import FlexibilityEvent from "./events/FlexibilityEvent";
 import { NodeErrors } from "../constants";
 import IPCHandler from "../IPCHandler";
-import { RequestFlexibilityEvent } from "src/typechain-types/AggregatorContract";
+import {
+  EndRequestFlexibilityEvent,
+  RequestFlexibilityEvent,
+} from "src/typechain-types/AggregatorContract";
 
 abstract class IoT implements IIoT {
   public readonly agreement: Agreement;
@@ -92,6 +95,17 @@ abstract class IoT implements IIoT {
   public listenToEvents() {
     const filter = this.contract.filters.RequestFlexibility();
     this.contract.on(filter, this.provideFlexibility.bind(this));
+    this.contract.on(
+      this.contract.filters.EndRequestFlexibility(),
+      (start: BigNumber, stop: BigNumber, _: BigNumber, __: EndRequestFlexibilityEvent) => {
+        if (
+          this.flexibilityEvent &&
+          this.flexibilityEvent.start === start.toNumber() &&
+          this.flexibilityEvent.stop === stop.toNumber()
+        )
+          this.flexibilityEvent.isConfirmed = true;
+      }
+    );
   }
 
   private provideFlexibility(
@@ -124,17 +138,15 @@ abstract class IoT implements IIoT {
 
   protected shouldApplyFlexibility(timestamp: number) {
     if (!this.flexibilityEvent || this.flexibilityEvent.hasEnded(timestamp)) return false;
-    if (this.flexibilityEvent.shouldProvideFlexibility(timestamp)) {
+    if (this.flexibilityEvent.hasStarted(timestamp)) return true;
+    if (this.flexibilityEvent.isConfirmed) {
       this.contract
         .provideFlexibilityFair(this.flexibilityEvent.start, this.flexibilityEvent.flexibility)
         .then(() => this.logger.info(`IoT ${this.address} - Flexibility provided`))
         .catch((e) => this.logger.error(`IoT ${this.address} - Error providing flexibility`, e));
-      this.flexibilityEvent.provideMessageSent = true;
-      this.flexibilityEvent.isActive = true;
-      this.aggregator.tracker.addIoT(this);
+      this.flexibilityEvent = null;
     }
-    if (!this.flexibilityEvent.isActive) return false;
-    return true;
+    return false;
   }
 
   protected abstract produce(timestamp: number): number;

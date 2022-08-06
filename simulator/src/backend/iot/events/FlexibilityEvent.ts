@@ -1,8 +1,8 @@
 export default class FlexibilityEvent {
   private readonly startIoTFlexibilityTimestamp: number;
   private readonly endIoTFlexibilityTimestamp: number;
-  public provideMessageSent: boolean = false;
   public isActive: boolean = false;
+  public isConfirmed: boolean = false;
 
   constructor(
     public readonly start: number,
@@ -12,10 +12,6 @@ export default class FlexibilityEvent {
   ) {
     this.startIoTFlexibilityTimestamp = currentTimestamp;
     this.endIoTFlexibilityTimestamp = stop;
-  }
-
-  shouldProvideFlexibility(timestamp: number) {
-    return !this.provideMessageSent && this.hasStarted(timestamp) && !this.hasEnded(timestamp);
   }
 
   hasStarted(timestamp: number): boolean {
