@@ -142,6 +142,7 @@ export default class EventHandler {
         this.toastWrapper.show("Simulation not running", "warning");
         return;
       }
+      this.buttonsWrapper.pause();
       window.electronAPI.send.pauseResumeSimulation();
     });
   }
