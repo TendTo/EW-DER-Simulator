@@ -7,9 +7,7 @@ import {
 } from "../typechain-types";
 import {
   CancelAgreementEvent,
-  EndRequestFlexibilityEvent,
   RegisterAgreementEvent,
-  RequestFlexibilityEvent,
   ReviseAgreementEvent,
 } from "../typechain-types/AggregatorContract";
 import {
@@ -27,24 +25,11 @@ import FairFlexibilityTracker from "./FlexibilityTracker";
 import { arrayPromiseSplitter, parseAgreementLog } from "./utils";
 import { ChartSetup } from "src/frontend/types";
 
-type RequestFlexibilityCallback = (
-  start: BigNumber,
-  end: BigNumber,
-  gridFlexibility: BigNumber,
-  event: RequestFlexibilityEvent
-) => void;
-type EndRequestFlexibilityCallback = (
-  start: BigNumber,
-  end: BigNumber,
-  gridFlexibility: BigNumber,
-  event: EndRequestFlexibilityEvent
-) => void;
-
 export default class Aggregator implements ITickable {
   private readonly logger: Logger = getLogger("aggregator");
   public readonly tracker: FairFlexibilityTracker = new FairFlexibilityTracker();
   public readonly contract: AggregatorContract;
-  public readonly derRpcUrl: providers.JsonRpcProvider;
+  public readonly derRpcUrl: string;
   private readonly aggProvider: providers.JsonRpcProvider;
   private readonly tickIntervalsInOneHour = this.clock.tickIntervalsInOneHour;
   private aggregatedValue: number = 0;
@@ -56,8 +41,6 @@ export default class Aggregator implements ITickable {
   private balance: BigNumber;
   public blockNumber: number;
   #baseline = 0;
-  #requestFlexibilityCallbacks: RequestFlexibilityCallback[] = [];
-  #endRequestFlexibilityCallbacks: EndRequestFlexibilityCallback[] = [];
 
   constructor(
     { sk, seed, numberOfDERs, contractAddress, aggRpcUrl, derRpcUrl }: BlockchainOptions,
@@ -65,7 +48,7 @@ export default class Aggregator implements ITickable {
     private readonly initialFunds: boolean
   ) {
     this.aggProvider = new providers.JsonRpcProvider(aggRpcUrl);
-    this.derRpcUrl = new providers.JsonRpcProvider(derRpcUrl);
+    this.derRpcUrl = derRpcUrl;
     this.wallet = new Wallet(sk, this.aggProvider);
     this.mnemonic = seed;
     this.numberOfDERs = numberOfDERs;
@@ -207,28 +190,6 @@ export default class Aggregator implements ITickable {
     });
     this.logger.log(`CancelAgreementEvent ${prosumer} [${agreement}]- Block ${event.blockNumber}`);
   }
-  private onRequestFlexibility(
-    start: BigNumber,
-    end: BigNumber,
-    gridFlexibility: BigNumber,
-    event: RequestFlexibilityEvent
-  ) {
-    if (event.blockNumber < this.blockNumber) return;
-    for (let i = 0; i < this.#requestFlexibilityCallbacks.length; i++) {
-      this.#requestFlexibilityCallbacks[i](start, end, gridFlexibility, event);
-    }
-  }
-  private onEndRequestFlexibility(
-    start: BigNumber,
-    end: BigNumber,
-    gridFlexibility: BigNumber,
-    event: RequestFlexibilityEvent
-  ) {
-    if (event.blockNumber < this.blockNumber) return;
-    for (let i = 0; i < this.#endRequestFlexibilityCallbacks.length; i++) {
-      this.#endRequestFlexibilityCallbacks[i](start, end, gridFlexibility, event);
-    }
-  }
 
   //#endregion
 
@@ -240,14 +201,6 @@ export default class Aggregator implements ITickable {
     this.contract.on(
       this.contract.filters.RegisterAgreement(),
       this.onRegisterAgreement.bind(this)
-    );
-    this.contract.on(
-      this.contract.filters.RequestFlexibility(),
-      this.onRequestFlexibility.bind(this)
-    );
-    this.contract.on(
-      this.contract.filters.EndRequestFlexibility(),
-      this.onEndRequestFlexibility.bind(this)
     );
   }
 
@@ -343,26 +296,6 @@ export default class Aggregator implements ITickable {
   private updateBaseline() {
     this.#baseline = this.iots.reduce((acc, iot) => acc + iot.production, 0);
     IPCHandler.onSetBaseline(this.#baseline);
-  }
-
-  public addEndRequestFlexibilityCallback(callback: EndRequestFlexibilityCallback) {
-    this.#endRequestFlexibilityCallbacks.push(callback);
-  }
-
-  public removeEndRequestFlexibilityCallback(callback: EndRequestFlexibilityCallback) {
-    this.#endRequestFlexibilityCallbacks = this.#endRequestFlexibilityCallbacks.filter(
-      (c) => c !== callback
-    );
-  }
-
-  public addRequestFlexibilityCallback(callback: RequestFlexibilityCallback) {
-    this.#requestFlexibilityCallbacks.push(callback);
-  }
-
-  public removeRequestFlexibilityCallback(callback: RequestFlexibilityCallback) {
-    this.#requestFlexibilityCallbacks = this.#requestFlexibilityCallbacks.filter(
-      (c) => c !== callback
-    );
   }
 
   public get iotLength() {

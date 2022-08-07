@@ -81,7 +81,7 @@ export function inErrorMargin(value1: number, value2: number, percentage: number
 export function arrayPromiseSplitter<A, R>(
   callback: (arr: A[]) => Promise<R>,
   array: A[],
-  chunkSize: number = 200
+  chunkSize: number = 100000
 ): Promise<R> {
   // Split the array in subarray of 300 elements and send the chunks to the callback sequentially
   const chunks = [];

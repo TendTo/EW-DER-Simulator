@@ -26,7 +26,7 @@ abstract class IoT implements IIoT {
   protected constructor(protected aggregator: Aggregator, sk: string) {
     this.logger = getLogger("iot");
     this.running = false;
-    this.wallet = new Wallet(sk, aggregator.derRpcUrl);
+    this.wallet = new Wallet(sk, new providers.JsonRpcProvider(aggregator.derRpcUrl));
     this.agreement = this.createAgreement();
     this.contract = aggregator.contract.connect(this.wallet);
     this.aggregator.clock.addFunction(this.onTick);
@@ -80,17 +80,16 @@ abstract class IoT implements IIoT {
     this.running = false;
     this.aggregator.clock.removeFunction(this.onTick);
     if (sendLog) this.contract.cancelAgreement();
-    this.aggregator.removeRequestFlexibilityCallback(this.provideFlexibility);
-    this.aggregator.removeEndRequestFlexibilityCallback(this.confirmProvidedFlexibility);
+    this.contract.removeAllListeners();
     this.logger.debug(`IoT ${this.address} - Stopped`);
   }
 
-  protected confirmProvidedFlexibility = (
+  protected confirmProvidedFlexibility(
     start: BigNumber,
     stop: BigNumber,
     _: BigNumber,
     event: EndRequestFlexibilityEvent
-  ) => {
+  ) {
     this.logger.info(
       `IoT ${this.address} -
       Flexibility event ended - Start: ${start.toString()}
@@ -105,14 +104,14 @@ abstract class IoT implements IIoT {
         .catch((e) => this.logger.error(`IoT ${this.address} - Error providing flexibility`, e));
       this.flexibilityEvent = null;
     }
-  };
+  }
 
-  protected provideFlexibility = (
+  protected provideFlexibility(
     start: BigNumber,
     stop: BigNumber,
     flexibility: BigNumber,
     event: RequestFlexibilityEvent
-  ) => {
+  ) {
     if (event.blockNumber < this.aggregator.blockNumber) return;
     const baseline = this.aggregator.baseline;
     const derFlexibility = flexibility
@@ -131,12 +130,19 @@ abstract class IoT implements IIoT {
       value,
       this.aggregator.clock.timestamp
     );
-  };
+  }
 
   private listenToEvents() {
     this.logger.debug(`IoT ${this.address} - Listening to events`);
-    this.aggregator.addRequestFlexibilityCallback(this.provideFlexibility);
-    this.aggregator.addEndRequestFlexibilityCallback(this.confirmProvidedFlexibility);
+    this.contract.removeAllListeners();
+    this.contract.on(
+      this.contract.filters.RequestFlexibility(),
+      this.provideFlexibility.bind(this)
+    );
+    this.contract.on(
+      this.contract.filters.EndRequestFlexibility(),
+      this.confirmProvidedFlexibility.bind(this)
+    );
   }
 
   protected shouldApplyFlexibility(timestamp: number) {
