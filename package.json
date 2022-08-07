@@ -15,7 +15,8 @@
     "coverage": "npm run coverage --prefix contracts",
     "deploy:volta": "npm run deploy:volta --prefix contracts",
     "build": "npm run build --prefix simulator",
-    "package": "npm run package --prefix simulator"
+    "package": "npm run package --prefix simulator",
+    "estimate": "npm run estimate --prefix contracts"
   },
   "author": "",
   "license": "ISC",

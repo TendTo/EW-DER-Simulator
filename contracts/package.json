@@ -14,7 +14,8 @@
     "postcompile": "cpr typechain-types ../simulator/src/typechain-types/ -d",
     "test": "hardhat test",
     "coverage": "hardhat coverage",
-    "deploy:volta": "hardhat run --network volta scripts/deployAggregatorContract.ts"
+    "deploy:volta": "hardhat run --network volta scripts/deployAggregatorContract.ts",
+    "estimate": "hardhat run scripts/estimateGas.ts"
   },
   "author": "",
   "license": "ISC",
