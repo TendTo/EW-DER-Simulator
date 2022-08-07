@@ -26,7 +26,7 @@ abstract class IoT implements IIoT {
   protected constructor(protected aggregator: Aggregator, sk: string) {
     this.logger = getLogger("iot");
     this.running = false;
-    this.wallet = new Wallet(sk, new providers.JsonRpcProvider(aggregator.derRpcUrl));
+    this.wallet = new Wallet(sk, aggregator.derRpcUrl);
     this.agreement = this.createAgreement();
     this.contract = aggregator.contract.connect(this.wallet);
     this.aggregator.clock.addFunction(this.onTick);
@@ -35,21 +35,11 @@ abstract class IoT implements IIoT {
 
   private async registerAgreement() {
     if (this.running) return;
-    // Await a random amount of time (0 - 30 sec) to avoid registering at the same time as the other IoT and 
+    // Await a random amount of time (0 - 30 sec) to avoid registering at the same time as the other IoT and
     await new Promise((resolve) => setTimeout(resolve, Math.floor(Math.random() * 30000)));
     this.contract
       .registerAgreement(this.agreement.struct)
-      .then((tx) =>
-        tx
-          .wait()
-          .then(() => {
-            this.logger.log(`IoT ${this.address} - Agreement registered`);
-          })
-          .catch((e) => {
-            IPCHandler.sendToast(`IoT ${this.address} - Error registering agreement`, "error");
-            this.logger.error(`${this.address} - Registering agreement`, e);
-          })
-      )
+      .then(() => this.logger.log(`IoT ${this.address} - Agreement Sent`))
       .catch((e) => {
         if (e.code === NodeErrors.UNPREDICTABLE_GAS_LIMIT) {
           IPCHandler.sendToast(
@@ -90,16 +80,17 @@ abstract class IoT implements IIoT {
     this.running = false;
     this.aggregator.clock.removeFunction(this.onTick);
     if (sendLog) this.contract.cancelAgreement();
-    this.contract.removeAllListeners();
+    this.aggregator.removeRequestFlexibilityCallback(this.provideFlexibility);
+    this.aggregator.removeEndRequestFlexibilityCallback(this.confirmProvidedFlexibility);
     this.logger.debug(`IoT ${this.address} - Stopped`);
   }
 
-  protected confirmProvidedFlexibility(
+  protected confirmProvidedFlexibility = (
     start: BigNumber,
     stop: BigNumber,
     _: BigNumber,
     event: EndRequestFlexibilityEvent
-  ) {
+  ) => {
     this.logger.info(
       `IoT ${this.address} -
       Flexibility event ended - Start: ${start.toString()}
@@ -114,14 +105,14 @@ abstract class IoT implements IIoT {
         .catch((e) => this.logger.error(`IoT ${this.address} - Error providing flexibility`, e));
       this.flexibilityEvent = null;
     }
-  }
+  };
 
-  protected provideFlexibility(
+  protected provideFlexibility = (
     start: BigNumber,
     stop: BigNumber,
     flexibility: BigNumber,
     event: RequestFlexibilityEvent
-  ) {
+  ) => {
     if (event.blockNumber < this.aggregator.blockNumber) return;
     const baseline = this.aggregator.baseline;
     const derFlexibility = flexibility
@@ -140,19 +131,12 @@ abstract class IoT implements IIoT {
       value,
       this.aggregator.clock.timestamp
     );
-  }
+  };
 
   private listenToEvents() {
     this.logger.debug(`IoT ${this.address} - Listening to events`);
-    this.contract.removeAllListeners();
-    this.contract.on(
-      this.contract.filters.RequestFlexibility(),
-      this.provideFlexibility.bind(this)
-    );
-    this.contract.on(
-      this.contract.filters.EndRequestFlexibility(),
-      this.confirmProvidedFlexibility.bind(this)
-    );
+    this.aggregator.addRequestFlexibilityCallback(this.provideFlexibility);
+    this.aggregator.addEndRequestFlexibilityCallback(this.confirmProvidedFlexibility);
   }
 
   protected shouldApplyFlexibility(timestamp: number) {
