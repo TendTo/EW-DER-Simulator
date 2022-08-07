@@ -35,6 +35,8 @@ abstract class IoT implements IIoT {
 
   private async registerAgreement() {
     if (this.running) return;
+    // Await a random amount of time (0 - 30 sec) to avoid registering at the same time as the other IoT and 
+    await new Promise((resolve) => setTimeout(resolve, Math.floor(Math.random() * 30000)));
     this.contract
       .registerAgreement(this.agreement.struct)
       .then((tx) =>
@@ -121,8 +123,6 @@ abstract class IoT implements IIoT {
     event: RequestFlexibilityEvent
   ) {
     if (event.blockNumber < this.aggregator.blockNumber) return;
-    // TODO: get the list's length from the contract
-    // const value = Math.floor(flexibility.div(await this.contract.prosumerListLength()).toNumber());
     const baseline = this.aggregator.baseline;
     const derFlexibility = flexibility
       .sub(baseline)

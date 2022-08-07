@@ -69,3 +69,33 @@ export function parseAgreementLog(
 export function inErrorMargin(value1: number, value2: number, percentage: number): boolean {
   return (Math.abs(value1 - value2) * 100) / value1 <= percentage;
 }
+
+/**
+ * Execute a promise that takes in input an array by splitting it into chunks of a given size
+ * and executing the promise for each chunk sequentially.
+ * @param callback promise that takes in input an array of values
+ * @param array input array
+ * @param chunkSize the size of the chunks to split the array into
+ * @returns result of the last callback called on the last chunk
+ */
+export function arrayPromiseSplitter<A, R>(
+  callback: (arr: A[]) => Promise<R>,
+  array: A[],
+  chunkSize: number = 200
+): Promise<R> {
+  // Split the array in subarray of 300 elements and send the chunks to the callback sequentially
+  const chunks = [];
+  for (let i = 0; i < array.length; i += chunkSize) {
+    chunks.push(array.slice(i, i + chunkSize));
+  }
+  // Call all the callback functions sequentially
+  return chunks.reduce(async (promise, chunk) => {
+    try {
+      const tx = await promise;
+      if (tx && "wait" in tx) await tx.wait();
+    } catch (e) {
+      console.error(e);
+    }
+    return callback(chunk);
+  }, Promise.resolve());
+}

@@ -23,7 +23,7 @@ import { IIoT, IoTFactory } from "./iot";
 import IPCHandler from "./IPCHandler";
 import ITickable from "./ITickable";
 import FairFlexibilityTracker from "./FlexibilityTracker";
-import { parseAgreementLog } from "./utils";
+import { arrayPromiseSplitter, parseAgreementLog } from "./utils";
 import { ChartSetup } from "src/frontend/types";
 
 export default class Aggregator implements ITickable {
@@ -95,9 +95,13 @@ export default class Aggregator implements ITickable {
     IPCHandler.sendToast(`Aggregator - Sending ${strTotalCost} VT to IoTs`, "info");
     this.logger.log(`Sending ${strTotalCost} VT to ${iotList.length} IoTs`);
     try {
-      const tx = await this.contract.sendFunds(
-        iotList.map((iot) => iot.address),
-        { value: totalCost }
+      const tx = await arrayPromiseSplitter(
+        (addresses: string[]) =>
+          this.contract.sendFunds(addresses, {
+            value: ETHPerIoT.mul(addresses.length),
+            gasLimit: 8000000,
+          }),
+        iotList.map((iot) => iot.address)
       );
       return await tx.wait();
     } catch (e) {
@@ -296,8 +300,10 @@ export default class Aggregator implements ITickable {
       );
       IPCHandler.onFlexibilityEvent(result);
       this.logger.info(`Sending 'endFlexibilityRequest' command`);
-      this.contract
-        .endFlexibilityRequest(start, contractResults)
+      arrayPromiseSplitter(
+        (results) => this.contract.endFlexibilityRequest(start, results, { gasLimit: 8000000 }),
+        contractResults
+      )
         .then(() => this.logger.info("Sent 'endFlexibilityRequest' command"))
         .catch((e) => this.logger.error("Sending 'endFlexibilityRequest' command", e));
     }
