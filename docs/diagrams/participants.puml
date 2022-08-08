@@ -1,5 +1,4 @@
-@startuml diagram-flow-aggregator
-title Flusso aggregatore
+@startuml participant
 
 sprite $ew_logo [48x48/16] {
     000000000000000000245667766542000000000000000000
@@ -54,14 +53,20 @@ sprite $ew_logo [48x48/16] {
 
 !include <tupadr3/font-awesome-5/solar_panel>
 !include <tupadr3/font-awesome-5/bolt>
-!include <tupadr3/font-awesome-5/user>
+!include <tupadr3/font-awesome-5/clock>
+!include <logos/electron>
+!include <material/factory>
+!include <material/counter>
 
-!include <logos/influxdb>
-!include <logos/nestjs>
+!define FrontendColor FloralWhite
+!define BackendColor GhostWhite
+!define BlockchainColor WhiteSmoke
+
+hide unlinked
 
 skinparam DefaultTextAlignment center
-skinparam MaxMessageSize 100
-skinparam BackgroundColor transparent
+skinparam MaxMessageSize 120
+skinparam WrapWidth 120
 skinparam Shadowing false
 
 skinparam participant {
@@ -70,31 +75,20 @@ skinparam participant {
     Shadowing false
 }
 
-participant "<$solar_panel,color=DarkGreen>\nDER" as der1
-participant "<$solar_panel,color=DarkGreen>\nDER" as der2
-participant "<$user,color=Black>\nProsumer" as prosumer
-participant "<$bolt,color=Orange>\nAggregator" as aggregator
-participant "<$ew_logo,color=Purple>\nEW chain" as ewc
-participant "<$influxdb,color=Blue>\nInfluxDB" as influxDB
-
-'Prosumer
-loop si accumulano sufficienti letture
-    der1 --> prosumer ++: letture
-    der2 --> prosumer : letture
-end
-prosumer --> prosumer : calola la precise-proof
-prosumer --> prosumer : firma la precise-proof
-prosumer --> aggregator : letture aggregate
-deactivate prosumer
-
-'Aggregator
-activate aggregator
-aggregator --> aggregator : verifica la precise-proof
-aggregator --> aggregator : verifica la firma della precise-proof
-aggregator <--> ewc : verifica il possesso dei DER
-aggregator <--> ewc : verifica che non vi sia un log già presente su EW-chain
-aggregator --> influxDB : memorizza i dati sul database
-aggregator --> ewc : log della precise-proof su EW-chain
-deactivate aggregator
+box "Frontend" #FrontendColor
+participant  "<$electron,color=Blue>\nEvent Handler" as eh #FrontendColor
+end box
+box "Backend" #BackendColor
+participant "<$electron,color=Blue>\nIPC Handler" as ipc #BackendColor
+participant "<$clock,color=RosyBrown>\nClock" as clockl #BackendColor
+participant "<$ma_counter,color=Gray>\nTracker" as tracker #BackendColor
+participant "<$bolt,color=Orange>\nAggregator" as aggregator #BackendColor
+participant "<$ma_factory,color=DarkGray>\nIoT Factory" as factory #BackendColor
+participant "<$solar_panel,color=DarkGreen>\nIoT" as iot #BackendColor
+participant "<$clock,color=RosyBrown>\nClock" as clockr #BackendColor
+end box
+box "Blockchain" #BlockchainColor
+participant "<$ew_logo,color=Purple>\nEW chain" as ewc #BlockchainColor
+end box
 
 @enduml

@@ -30,7 +30,6 @@ abstract class IoT implements IIoT {
     this.agreement = this.createAgreement();
     this.contract = aggregator.contract.connect(this.wallet);
     this.aggregator.clock.addFunction(this.onTick);
-    this.listenToEvents();
   }
 
   private async registerAgreement() {
@@ -59,6 +58,7 @@ abstract class IoT implements IIoT {
 
   public async startProducing() {
     this.logger.debug(`IoT ${this.address} - Start producing`);
+    this.listenToEvents();
     this.registerAgreement();
   }
 

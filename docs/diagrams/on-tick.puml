@@ -1,0 +1,42 @@
+@startuml on-tick
+title On Tick
+
+!include ./participants.puml
+
+'On tick IoTs
+-> clockr ++ : **tickInterval** seconds have passed
+loop foreach IoTs callback in callbacks
+    clockr -> iot ++ : //onTick//
+    iot -> iot : //rollForEvents//
+    iot -> iot : //produce//
+    alt should provide flexibility
+        iot -> iot : //applyFlexibilityEvent//
+    end
+    iot -> iot : //applyEvents//
+    aggregator <- iot ++ : //onIoTReading//
+    alt the tracker is active
+        tracker <- aggregator ++ : //parseReading//
+        return <&check>
+    end
+    return <&check>
+end
+
+'On tick aggregator
+clockr -> aggregator ++ : //onTick//
+note over aggregator : If the chart is full, reset the origin point
+ipc <- aggregator ++ : //onNewAggregatedReading//
+eh <- ipc : //onNewAggregatedReading//
+return <&check>
+'End flexibility request
+aggregator -> aggregator : //checkStopTracker//
+alt the flexibility has ended
+    tracker ->  aggregator : **results**
+    tracker <- aggregator ++ : //deactivate//
+    return <&check>
+    ipc <- aggregator ++ : //onFlexibilityEvent//
+    eh <- ipc : //onFlexibilityEvent//
+    return <&check>
+    aggregator -> ewc : //endFlexibilityRequest//
+end
+
+@enduml

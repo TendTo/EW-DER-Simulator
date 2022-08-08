@@ -1,0 +1,20 @@
+@startuml on-register-agreement-event
+title On RegisterAgreement Event
+
+!include ./participants.puml
+
+'New RegisterAgreement event
+aggregator <- ewc ++ : **RegisterAgreement**
+aggregator -> aggregator : //updateBaseline//
+
+'Frontend
+ipc <- aggregator ++ : //onSetBaseline//
+eh <- ipc : //onSetBaseline//
+return <&check>
+
+ipc <- aggregator ++ : //onAgreementEvent//
+eh <- ipc : //onAgreementEvent//
+return <&check>
+
+
+@enduml

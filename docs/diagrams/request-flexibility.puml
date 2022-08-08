@@ -1,0 +1,26 @@
+@startuml request-flexibility
+title Request flexibility
+
+!include ./participants.puml
+
+'Frontend
+--> eh ++ : Request flexibility button click
+eh -> eh : //onFlexibilityRequest//
+note over eh : Get the parameters of the request from user input
+eh -> ipc -- : //flexibilityRequest//
+
+'Backend
+activate ipc
+ipc -> ipc : //startOnLoading//
+ipc -> aggregator ++ : //requestFlexibility//
+
+'Request flexibility
+aggregator -> tracker ++ : //activate//
+return <&check>
+
+aggregator -> ewc : //requestFlexibility//
+return <&check>
+
+ipc -> ipc : //onStopLoading//
+
+@enduml

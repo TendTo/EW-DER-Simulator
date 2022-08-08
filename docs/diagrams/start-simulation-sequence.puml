@@ -1,0 +1,53 @@
+@startuml start-simulation-sequence
+title Start simulation Sequence
+
+!include ./participants.puml
+
+'Frontend
+--> eh ++ : Start simulation button click
+eh -> eh : //onStartSimulation//
+note over eh : Get the parameters of the simulation from user input
+eh -> ipc -- : //startSimulation//
+
+'Backend
+activate ipc
+ipc -> ipc : //startOnLoading//
+ipc -> clockl ++ : //new//
+return **clockl**
+ipc -> aggregator ++ : //new//
+return **Aggregator**
+
+'Setup
+ipc -> aggregator ++ : //setupSimulation//
+aggregator -> aggregator : //listenContractLogs//
+aggregator -> aggregator : //getNetworkInfo//
+aggregator -> ewc : //resetContract//
+aggregator -> factory ++ : //createIoTs//
+loop for i = 0 to n - 1
+    factory -> iot ++ : //new//
+    clockl <- iot ++ : //addFunction//
+    return <&check>
+    return **IoT**
+end
+return **IoTs**
+alt send initial funds
+    aggregator -> ewc : //sendFunds//
+end
+clockl <- aggregator ++ : //addFunction//
+return <&check>
+return <&check>
+
+'Start simulation
+ipc -> aggregator ++ : //startSimulation//
+loop foreach IoT in IoTs
+    aggregator -> iot ++ : //startProducing//
+    iot -> iot : //listenToEvents//
+    iot -> iot : //registerAgreement//
+    iot -> ewc : //registerAgreement//
+end
+aggregator -> clockl : //start//
+return <&check>
+return <&check>
+ipc -> ipc : //onStopLoading//
+
+@enduml
