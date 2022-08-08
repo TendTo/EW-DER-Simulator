@@ -8,7 +8,4 @@ iot <- ewc ++ : **RequestFlexibility**
 iot -> iot : //provideFlexibility//
 note over iot : A new **FlexibilityEvent** is created and will be considered in the production cycle
 
-
-
-
 @enduml

@@ -9,7 +9,4 @@ iot -> iot : //confirmProvidedFlexibility//
 iot -> ewc : //provideFlexibilityFair//
 note over iot : Remove the **FlexibilityEvent**
 
-
-
-
 @enduml

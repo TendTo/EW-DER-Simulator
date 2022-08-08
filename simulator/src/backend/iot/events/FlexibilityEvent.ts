@@ -1,3 +1,7 @@
+/**
+ * A flexibility event has been emitted by the smart contract.
+ * Each flexibility has a startTimestamp, a stopTimestamp and a flexibility value.
+ */
 export default class FlexibilityEvent {
   private readonly startIoTFlexibilityTimestamp: number;
   private readonly endIoTFlexibilityTimestamp: number;

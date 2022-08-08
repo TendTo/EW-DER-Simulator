@@ -16,5 +16,4 @@ ipc <- aggregator ++ : //onAgreementEvent//
 eh <- ipc : //onAgreementEvent//
 return <&check>
 
-
 @enduml

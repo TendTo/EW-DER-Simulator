@@ -40,8 +40,13 @@ export default class FlexibilityResult {
     return this.#providingFlexibility;
   }
 
+  /**
+   * Add the value in the historical record of data that the IoT produced during this flexibility event.
+   * If this is the first value the IoT produced, also set the start error.
+   * @param value value of the reading
+   */
   public addFlexibilityValue(value: number) {
-    /** Valutazione della fine del transitorio iniziale: start error */
+    // Valutazione della fine del transitorio iniziale: start error
     if (this.#startError === undefined)
       this.#startError = !inErrorMargin(value, this.expectedFlexibility, FlexibilityErrorMargin);
     this.#value += value;
@@ -50,10 +55,13 @@ export default class FlexibilityResult {
       this.#intervalError ||
       !inErrorMargin(value, this.expectedFlexibility, FlexibilityErrorMargin);
   }
-
+  /**
+   * At the end of the transition period towards the reset of the baseline, check that the baseline has been restored
+   * @param value value of the reading
+   */
   public addResetValue(value: number) {
     if (this.#stopError === undefined)
-      /** Valutazione della fine del transitorio finale: stop error */
+      // Valutazione della fine del transitorio finale: stop error
       this.#stopError = !inErrorMargin(value, this.expectedBaseline, FlexibilityErrorMargin);
   }
 

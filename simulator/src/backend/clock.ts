@@ -17,9 +17,6 @@ export default class Clock {
   private tickInterval: number;
   private _timestamp: number;
 
-  /**
-   * Creates a new clock.
-   */
   constructor({
     startingTimestamp = Math.floor(Date.now() / 1000),
     tickIncrement = 1,
@@ -47,12 +44,15 @@ export default class Clock {
     this.isRunning = false;
     clearInterval(this.timer);
   }
+  /**
+   * Pause or resume the clock.
+   */
   pauseResumeSimulation() {
     this.isRunning = !this.isRunning;
   }
   /**
    * Adds a function to the list of functions to be called.
-   * @param callback The function to be called.
+   * @param callback The function to be added to the list.
    */
   addFunction(callback: TickCallback) {
     this.callbacks.push(callback);
@@ -65,13 +65,15 @@ export default class Clock {
     const idx = this.callbacks.indexOf(callback);
     if (idx !== -1) this.callbacks.splice(idx, 1);
   }
+  /**
+   * Reset all the callbacks.
+   */
   reset() {
     this.callbacks = [];
   }
 
   /**
    * Simulates a second.
-   * @returns The time of the clock.
    */
   tick() {
     if (!this.isRunning) return;

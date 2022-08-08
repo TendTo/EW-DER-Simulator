@@ -1,6 +1,11 @@
 import { IAggregatorContract } from "../typechain-types";
 import { EnergySource } from "./constants";
 
+/**
+ * Agreement between the aggregator and the IoT device that represents a prosumer.
+ * It determines the energy source that the prosumer is willing to use, the baseline and the flexibility
+ * the prosumer in able to provide.
+ */
 export default class Agreement {
   constructor(
     public readonly value: number,
