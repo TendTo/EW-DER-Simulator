@@ -79,9 +79,9 @@ export default class FairFlexibilityTracker {
    */
   public get contractResults(): FlexibilityResultData[] {
     return Object.entries(this.#iotTracker).map(
-      ([iot, { average, intervalError, startError, stopError }]) => ({
+      ([iot, { intAverage, intervalError, startError, stopError }]) => ({
         prosumer: iot,
-        flexibility: average,
+        flexibility: intAverage,
         intervalError,
         startError,
         stopError,

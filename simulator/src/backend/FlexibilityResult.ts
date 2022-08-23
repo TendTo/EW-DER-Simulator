@@ -24,6 +24,10 @@ export default class FlexibilityResult {
     return this.#value / this.#count;
   }
 
+  public get intAverage() {
+    return Math.floor(this.#value / this.#count);
+  }
+
   public get intervalError() {
     return this.#intervalError;
   }
