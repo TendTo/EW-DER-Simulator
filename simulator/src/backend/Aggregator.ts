@@ -127,6 +127,8 @@ export default class Aggregator implements ITickable {
    */
   private async getNetworkInfo() {
     this.logger.log("Getting network info");
+    this.logger.log(`Aggregator rpc url: ${this.aggProvider.connection.url}`);
+    this.logger.log(`IoT rpc url: ${this.derRpcUrl}`);
     try {
       [this.blockNumber, this.balance] = await Promise.all([
         this.aggProvider.getBlockNumber(),
@@ -366,17 +368,17 @@ export default class Aggregator implements ITickable {
       this.tracker.deactivate();
 
       const flexibilityLogger = getLogger("flexibility");
-      flexibilityLogger.info(
+      flexibilityLogger.log(
         `${result.id},${result.successStart},${result.successFlexibility},${result.successReset},${result.averageValue},${result.success},`
       );
       IPCHandler.onFlexibilityEvent(result);
-      this.logger.info(`Sending 'endFlexibilityRequest' command`);
+      this.logger.log(`Sending 'endFlexibilityRequest' command`);
       // Call the endFlexibilityRequest function (arrayPromiseSplitter splits the array in chunks if it is too long)
       arrayPromiseSplitter(
         (results) => this.contract.endFlexibilityRequest(start, results, { gasLimit: 8000000 }),
         contractResults
       )
-        .then(() => this.logger.info("Sent 'endFlexibilityRequest' command"))
+        .then(() => this.logger.log("Sent 'endFlexibilityRequest' command"))
         .catch((e) => this.logger.error("Sending 'endFlexibilityRequest' command", e));
     }
   }

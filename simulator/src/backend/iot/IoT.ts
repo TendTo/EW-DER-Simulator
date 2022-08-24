@@ -40,12 +40,10 @@ abstract class IoT implements IIoT {
    */
   private async registerAgreement() {
     if (this.running) return;
-    // Await a random amount of time (0 - 30 sec) to avoid registering at exactly the same time as the other IoT
-    await new Promise((resolve) => setTimeout(resolve, Math.floor(Math.random() * 30000)));
     // Register the new agreement
     this.contract
       .registerAgreement(this.agreement.struct)
-      .then(() => this.logger.log(`IoT ${this.address} - Agreement Sent`))
+      .then(() => this.logger.log(`${this.address} - Agreement Sent`))
       .catch((e) => {
         if (e.code === NodeErrors.UNPREDICTABLE_GAS_LIMIT) {
           IPCHandler.sendToast(
@@ -70,7 +68,7 @@ abstract class IoT implements IIoT {
    * and registering a new agreement with the smart contract.
    */
   public async startProducing() {
-    this.logger.debug(`IoT ${this.address} - Start producing`);
+    this.logger.debug(`${this.address} - Start producing`);
     this.listenToEvents();
     this.registerAgreement();
   }
@@ -96,7 +94,7 @@ abstract class IoT implements IIoT {
     value = this.applyEvents(value, timestamp);
     // Send the value to the aggregator
     this.aggregator.onIoTReading(this, value);
-    this.logger.debug(`IoT ${this.address} - Produced ${value}`);
+    this.logger.debug(`${this.address} - Produced ${value}`);
   };
   /**
    * Stop the IoT from being active and producing readings at each tick.
@@ -107,7 +105,7 @@ abstract class IoT implements IIoT {
     this.aggregator.clock.removeFunction(this.onTick);
     if (cancelAgreement) this.contract.cancelAgreement();
     this.contract.removeAllListeners();
-    this.logger.debug(`IoT ${this.address} - Stopped`);
+    this.logger.debug(`${this.address} - Stopped`);
   }
   /**
    * Called by a EndRequestFlexibility event from the smart contract.
@@ -125,18 +123,18 @@ abstract class IoT implements IIoT {
     _: BigNumber,
     event: EndRequestFlexibilityEvent
   ) {
-    this.logger.info(
-      `IoT ${this.address} -
+    this.logger.log(
+      `${this.address} -
       Flexibility event ended - Start: ${start.toString()}
       Local Flexibility event - Start: ${this.flexibilityEvent ? this.flexibilityEvent.start : 0}
       BlockNumber: ${event.blockNumber}`
     );
     if (this.flexibilityEvent && this.flexibilityEvent.start === start.toNumber()) {
-      this.logger.info(`IoT ${this.address} - Sending 'provideFlexibilityFair'`);
+      this.logger.log(`${this.address} - Sending 'provideFlexibilityFair'`);
       this.contract
         .provideFlexibilityFair(this.flexibilityEvent.start, this.flexibilityEvent.flexibility)
-        .then(() => this.logger.info(`IoT ${this.address} - Flexibility provided`))
-        .catch((e) => this.logger.error(`IoT ${this.address} - Error providing flexibility`, e));
+        .then(() => this.logger.log(`${this.address} - Flexibility provided`))
+        .catch((e) => this.logger.error(`${this.address} - Error providing flexibility`, e));
       this.flexibilityEvent = null;
     }
   }
@@ -165,7 +163,7 @@ abstract class IoT implements IIoT {
     const value = derFlexibility + this.agreement.value;
 
     this.logger.log(
-      `IoT ${this.wallet.address} - Flexibility event: from ${start} to ${stop} with value ${value} - BlockNumber: ${event.blockNumber}`
+      `${this.wallet.address} - Flexibility event: from ${start} to ${stop} with value ${value} - BlockNumber: ${event.blockNumber}`
     );
     // Create a new flexibility event that will be applied to the value produced by the IoT for its duration
     this.flexibilityEvent = new FlexibilityEvent(
@@ -179,7 +177,7 @@ abstract class IoT implements IIoT {
    * Listen the the smart contract's events and register the corresponding functions.
    */
   private listenToEvents() {
-    this.logger.debug(`IoT ${this.address} - Listening to events`);
+    this.logger.debug(`${this.address} - Listening to events`);
     this.contract.removeAllListeners();
     this.contract.on(
       this.contract.filters.RequestFlexibility(),

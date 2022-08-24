@@ -9,7 +9,7 @@ export default class WindIoT extends IoT {
   static meteoEvent: MeteoEvent;
   public constructor(aggregator: Aggregator, sk: string) {
     super(aggregator, sk);
-    this.logger.debug(`IoT ${this.wallet.address} - Created WindIoT`);
+    this.logger.debug(`${this.wallet.address} - Created WindIoT`);
   }
 
   /**
@@ -39,20 +39,20 @@ export default class WindIoT extends IoT {
     const newValue = flexibilityEnergy;
     //  Math.random() * averageEnergy + averageEnergy / 2;
 
-    this.logger.log(`IoT ${this.wallet.address} - Flexibility: ${value} -> ${newValue}`);
+    this.logger.debug(`${this.wallet.address} - Flexibility: ${value} -> ${newValue}`);
     return newValue;
   }
 
   protected applyEvents(value: number, timestamp: number): number {
     if (this.personalEvent) {
       const newValue = value + this.personalEvent.intensity;
-      this.logger.log(`IoT ${this.wallet.address} - Personal event: ${value} -> ${newValue}`);
+      this.logger.debug(`${this.wallet.address} - Personal event: ${value} -> ${newValue}`);
       if (this.personalEvent.hasEnded(timestamp)) this.personalEvent = null;
       return newValue;
     }
     if (WindIoT.meteoEvent) {
       const newValue = value + WindIoT.meteoEvent.intensity;
-      this.logger.log(`IoT ${this.wallet.address} - Wind event: ${value} -> ${newValue}`);
+      this.logger.debug(`${this.wallet.address} - Wind event: ${value} -> ${newValue}`);
       if (WindIoT.meteoEvent.hasEnded(timestamp)) WindIoT.meteoEvent = null;
       return newValue;
     }
@@ -60,8 +60,14 @@ export default class WindIoT extends IoT {
   }
 
   protected rollForEvents(timestamp: number): void {
-    if (!this.personalEvent) this.personalEvent = PersonalEvent.rollForEvent(timestamp);
-    if (!WindIoT.meteoEvent) WindIoT.meteoEvent = MeteoEvent.rollForEvent(timestamp);
+    if (!this.personalEvent) {
+      this.personalEvent = PersonalEvent.rollForEvent(timestamp);
+      if (this.personalEvent) this.logger.log(`${this.wallet.address} - New Personal event`);
+    }
+    if (!WindIoT.meteoEvent) {
+      WindIoT.meteoEvent = MeteoEvent.rollForEvent(timestamp);
+      if (WindIoT.meteoEvent) this.logger.log(`${this.wallet.address} - New WindIoT event`);
+    }
   }
 
   protected get minValue(): number {

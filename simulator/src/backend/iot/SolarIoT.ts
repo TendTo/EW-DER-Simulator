@@ -10,7 +10,7 @@ export default class SolarIoT extends IoT {
 
   public constructor(aggregator: Aggregator, sk: string) {
     super(aggregator, sk);
-    this.logger.debug(`IoT ${this.wallet.address} - Created SolarIoT`);
+    this.logger.debug(`${this.wallet.address} - Created SolarIoT`);
   }
 
   /**
@@ -43,20 +43,20 @@ export default class SolarIoT extends IoT {
     const newValue = flexibilityValue;
     // flexibilityValue * 0.1 * Math.sin((Math.PI * (timestamp - 21600)) / 43200) + flexibilityValue;
 
-    this.logger.log(`IoT ${this.wallet.address} - Flexibility: ${value} -> ${newValue}`);
+    this.logger.debug(`${this.wallet.address} - Flexibility: ${value} -> ${newValue}`);
     return newValue;
   }
 
   protected applyEvents(value: number, timestamp: number): number {
     if (this.personalEvent) {
       const newValue = value + this.personalEvent.intensity;
-      this.logger.log(`IoT ${this.wallet.address} - Personal event: ${value} -> ${newValue}`);
+      this.logger.debug(`${this.wallet.address} - Personal event: ${value} -> ${newValue}`);
       if (this.personalEvent.hasEnded(timestamp)) this.personalEvent = null;
       return newValue;
     }
     if (SolarIoT.meteoEvent) {
       const newValue = value + SolarIoT.meteoEvent.intensity;
-      this.logger.log(`IoT ${this.wallet.address} - Solar event: ${value} -> ${newValue}`);
+      this.logger.debug(`${this.wallet.address} - Solar event: ${value} -> ${newValue}`);
       if (SolarIoT.meteoEvent.hasEnded(timestamp)) SolarIoT.meteoEvent = null;
       return newValue;
     }
@@ -64,8 +64,14 @@ export default class SolarIoT extends IoT {
   }
 
   protected rollForEvents(timestamp: number): void {
-    if (!this.personalEvent) this.personalEvent = PersonalEvent.rollForEvent(timestamp);
-    if (!SolarIoT.meteoEvent) SolarIoT.meteoEvent = MeteoEvent.rollForEvent(timestamp);
+    if (!this.personalEvent) {
+      this.personalEvent = PersonalEvent.rollForEvent(timestamp);
+      if (this.personalEvent) this.logger.log(`${this.wallet.address} - New Personal event`);
+    }
+    if (!SolarIoT.meteoEvent) {
+      SolarIoT.meteoEvent = MeteoEvent.rollForEvent(timestamp);
+      if (SolarIoT.meteoEvent) this.logger.log(`${this.wallet.address} - New SolarIoT event`);
+    }
   }
 
   protected get minValue(): number {
