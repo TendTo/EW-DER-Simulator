@@ -21,12 +21,12 @@ export default class IoTFactory {
     ders: NumberOfDERs
   ): Promise<IIoT[]> {
     const masterKey = hdkey.fromMasterSeed(await mnemonicToSeed(mnemonic));
-    let counter = 0;
     const iots: IIoT[] = [];
-    Object.entries(ders).forEach(([source, number]: [keyof typeof EnergySource, number], i) => {
+    Object.entries(ders).forEach(([source, number]: [keyof typeof EnergySource, number]) => {
       for (let i = 0; i < number; i++) {
+        // Generate a new address that identifies each iot based on the source type and its index
         const wallet = masterKey
-          .derivePath(`m/44'/60'/0'/${EnergySource[source]}/${counter++}`)
+          .derivePath(`m/44'/60'/0'/${EnergySource[source]}/${i}`)
           .getWallet();
         const sk = wallet.getPrivateKeyString();
         if (source === "Wind") iots.push(new WindIoT(aggregator, sk));
