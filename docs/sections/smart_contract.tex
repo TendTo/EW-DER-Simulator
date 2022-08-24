@@ -1,0 +1,107 @@
+\section{Smart Contract: ExamContract}
+
+Per la realizzazione dello \gls{smart-contract}, è stata utilizzata la piattaforma \gls{ewc}.
+Il contratto è stato scritto in Solidity, il linguaggio di programmazione orientato agli oggetti, più diffuso per l'implementazione di contratti su varie piattaforme blockchain tra cui Ethereum. \\
+
+\subsection{Funzionalità}
+Lo \gls{smart-contract} ha come scopo quello di tenere traccia del bilancio di tutti i \gls{prosumer} che fanno riferimento all'\gls{aggregator} che lo ha rilasciato su \gls{ewc}. \\
+Ogni \gls{prosumer} sottoscrive un \gls{agreement} con l'\gls{aggregator}, stabilendo i termini della loro collaborazione.
+Sono parte di questo accordo la fonte energetica utilizzata, la quantità di energia prodotta e il suo prezzo, e la flessibilità che il \gls{prosumer} è in grado di fornire. \\
+In qualsiasi momento il \gls{prosumer} è in grado di avviare un evento di flessibilità.
+L'\gls{event-log} emesso nel momento in cui il metodo predisposto viene invocato avvisa tutti i \gls{der} della richiesta,
+ed ognuno di essi reagirà a quest'ultima nei termini del proprio \gls{agreement}. \\
+Ogni richiesta è caratterizzata dai seguenti valori:
+\begin{itemize}
+    \item \textbf{Flessibilità:} variazione che la rete deve produrre rispetto alla \gls{baseline}
+    \item \textbf{Inizio:} limite di tempo entro il quale tutti i \gls{der} devono raggiungere il valore di flessibilità richiesto
+    \item \textbf{Fine:} fine del periodo di flessibilità. Dal momento indicato, i \gls{der} hanno 15 minuti per tornare alla baseline
+\end{itemize} 
+Non ci possono essere due richieste di flessibilità contemporanee.
+
+\subsection{Implementazione dello smart contract}
+
+Dopo aver individuato e circoscritto i requisiti necessari, è arrivato il momento dell'implementazione dello \gls{smart-contract}.
+
+\subsubsection{Strumenti di sviluppo}
+
+Lo sviluppo dello \gls{smart-contract} si è svolto in locale, utilizzando il framework hardhat \cite{soft:hardhat}.
+Si tratta di un ambiente di sviluppo per \gls{smart-contract} dotato di moltissimi componenti
+che consentono di svolgere operazioni come il debugging, la compilazione e il testing di \gls{smart-contract}. \\
+\\
+Una feature aggiuntiva realizzata dal plugin @typechain/hardhat \cite{soft:typechain_hardhat} è la creazione automatica di
+classi proxy e funzioni che descrivono accuratamente i metodi dello \gls{smart-contract},
+che è poi possibile importare ed utilizzare in qualsiasi file typescript, semplificando l'interazione con lo \gls{smart-contract}. \\
+\\
+hardhat si occupa anche del deployment dello \gls{smart-contract} su \gls{ewc}. \\
+Fornendo una chiave privata associata ad un account con sufficiente credito e un nodo \gls{rpc-api} a cui collegarsi,
+è estremamente facile realizzare un semplice script (\autoref{cod:deployment}) che si occupi di distribuire lo \gls{smart-contract} sulla blockchain scelta.
+
+\inputminted{typescript}{../contracts/scripts/deployAggregatorContract.ts}
+\captionof{listing}{Script che si occupa del deployment dello \gls{smart-contract} su \gls{ewc} \label{cod:deployment}}
+
+\subsubsection{Test}
+
+Il framework utilizzato mette a disposizione anche una serie di metodologie per poter testare facilmente e velocemente lo \gls{smart-contract}. \\
+Utilizzando un'apposita estensione della libreria chai \cite{soft:chai}, combinata con una blockchain simulata in locale da hardhat
+è possibile effettuare il deploy dello \gls{smart-contract} e verificare che tutti i suoi metodi si comportino come previsto. \\
+I test variano dal controllo del valore di ritorno del metodo invocato, al verificare che lo stato del contratto sia stato alterato nella maniera corretta,
+e anche assicurarsi che venga prodotta l'eccezione prevista su input invalidi. \\
+Mettendo insieme tutti i test, è stata raggiunta una \href{https://app.codecov.io/gh/TendTo/EW-DER-Simulator}{notevole copertura} del codice \footnote{https://app.codecov.io/gh/TendTo/EW-DER-Simulator}. \\
+\\
+Segue qualche esempio di test utilizzato:
+\begin{minted}{typescript}
+    describe("requestFlexibility", function () {
+
+      it("create a new flexibility request", async function () {
+        await contract.requestFlexibility(start, end, gridFlexibility);
+        const request = await contract.flexibilityRequest();
+        expect(request.start.toNumber()).to.equal(start);
+        expect(request.end.toNumber()).to.equal(end);
+        expect(request.gridFlexibility.toNumber()).to.equal(gridFlexibility);
+      });
+
+      it("revert on unauthorized use with 'UnauthorizedAggregatorError(msg.sender)'", async function () {
+        await expect(iot1Contract.requestFlexibility(start, end, gridFlexibility))
+          .to.be.revertedWithCustomError(contract, ContractError.UnauthorizedAggregatorError)
+          .withArgs(iot1Addr);
+      });
+    });
+\end{minted}
+
+\subsection{Strutture dati}
+
+Per la gestione dei dati all'interno della blockchain lo \gls{smart-contract} utilizza un approccio ibrido. \\
+Viene salvato in maniera persistente, e quindi occupa spazio di archiviazione nel contratto, solo ciò di cui lo stesso ha bisogno per
+svolgere i controlli di validazione previsti. \\
+Al contrario, tutto il resto viene reso pubblico ed immutabile attraverso lo strumento degli \gls{event-log},
+emessi nel momento in cui avviene l'evento corrispondente. \\
+Questo approccio è più economico rispetto allo storage tradizionale, ma impedisce al contratto stesso di recuperare i dati emessi in precedenza. \\
+\\
+Lo storage tradizionale è utilizzato per le strutture dati:
+\begin{minted}{solidity}
+    //Admins's address
+    address public immutable admin;
+    //SubjectID -> Subject
+    mapping(uint256 => Subject) public subjects;
+    //StudentAddress -> StudentId
+    mapping(address => uint256) public studentIds;
+    //StudentID -> (SubjectID, subjectCareer)
+    mapping(uint256 => StudentCareer) public careers;
+\end{minted}
+
+Sono invece previsti i seguenti eventi per produrre gli \gls{event-log} corrispondente:
+
+\begin{minted}[fontsize=\footnotesize]{solidity}
+    event TestPassed(uint256 indexed subjectId, uint8 indexed testIdx, uint256 indexed studentId, uint8 mark);
+    event TestFailed(uint256 indexed subjectId, uint8 indexed testIdx, uint256 indexed studentId, uint8 mark);
+    event TestAccepted(uint256 indexed subjectId, uint8 indexed testIdx, uint256 indexed studentId, uint8 mark);
+    event TestRejected(uint256 indexed subjectId, uint8 indexed testIdx, uint256 indexed studentId);
+    event MissingTestRequirements(uint256 indexed subjectId, uint8 indexed testIdx, uint256 indexed studentId);
+    event TestResetted(uint256 indexed subjectId, uint8 indexed testIdx, uint256 indexed studentId);
+    event SubjectPassed(uint256 indexed subjectId, uint256 indexed studentId, uint8 mark);
+    event SubjectAccepted(uint256 indexed subjectId, uint256 indexed studentId, uint8 mark);
+    event SubjectResetted(uint256 indexed subjectId, uint256 indexed studentId);
+    event MissingSubjectRequrements(uint256 indexed subjectId, uint256 indexed studentId);
+    event AuthorizedProfAdded(uint256 subjectId, address indexed profAddr);
+    event AuthorizedProfRemoved(uint256 subjectId, address indexed profAddr);
+\end{minted}
