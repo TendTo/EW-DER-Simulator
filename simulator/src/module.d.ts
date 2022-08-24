@@ -87,6 +87,10 @@ export type ElectronAPI = GetApiType<
     CONTRACT_ADDRESS?: string;
     DER_RPC_URL?: string;
     AGG_RPC_URL?: string;
+    N_SOLAR?: string;
+    N_WIND?: string;
+    TICK_INCREMENT?: string;
+    TICK_INTERVAL?: string;
   };
 };
 

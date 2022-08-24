@@ -60,7 +60,7 @@ if (existsSync(envPath)) {
   const env = readFileSync(envPath, "utf8").trim().split("\n");
   env.forEach((line) => {
     const [key, value] = line.split("=");
-    api.env[key.trim()] = value.trim();
+    if (key && value) api.env[key.trim()] = value.trim();
   });
 }
 contextBridge.exposeInMainWorld("electronAPI", api);

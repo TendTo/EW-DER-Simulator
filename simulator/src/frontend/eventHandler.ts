@@ -16,6 +16,8 @@ export default class EventHandler {
 
   constructor() {
     this.addHandlers();
+    console.log("Default blockchain data", this.formWrapper.blockchainData);
+    console.log("Default clock data", this.formWrapper.clockData);
   }
 
   private addHandlers() {
