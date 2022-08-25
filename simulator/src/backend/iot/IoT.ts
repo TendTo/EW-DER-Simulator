@@ -41,6 +41,7 @@ abstract class IoT implements IIoT {
   private async registerAgreement() {
     if (this.running) return;
     // Register the new agreement
+    this.logger.log(`${this.address} - Sending agreement`);
     this.contract
       .registerAgreement(this.agreement.struct)
       .then(() => this.logger.log(`${this.address} - Agreement Sent`))

@@ -286,7 +286,7 @@
     plural={aggregatori},
     description={
             Un nuovo ruolo che nasce nell'ambito della fornitura di energia e che raggruppa i partecipanti locali (utilizzatori, produttori e \gls{prosumer}). Ha il compito di determinare l'utilizzo dell'energia e può occuparsi della vendita di energia in eccesso prodotta dai \gls{der}.
-            L'aggregatore fa da intermediario tra i \gls{prosumer} e i \gls{tso} o i \gls{dso} che si interfacciano con questa realtà l ocale.
+            L'aggregatore fa da intermediario tra i \gls{prosumer} e i \gls{tso} o i \gls{dso} che si interfacciano con le realtà locali.
         }
 }
 \newglossaryentry{dso}
@@ -449,7 +449,7 @@
     text={smart contract},
     plural={smart contracts},
     description={
-            Uno smart contract è un programma in grado di essere eseguito sulla blockchain \gls{ethereum}.
+            Uno smart contract è un programma in grado di essere eseguito sulla blockchain.
             Come ogni altra cosa in ambito blockchain, una volta entrato a far parte dei quest'ultima
             il codice non può più essere modificato. \\
             Tuttavia gli smart contract hanno la possibilità di possedere uno stato interno che può essere
@@ -514,5 +514,17 @@
             Apporto energetico che i \gls{der} aggregati sono in grado di produrre a regime.
             Sebbene il valore reale potrebbe essere soggetto a variazioni, si presuppone che le oscillazioni siano centrate sulla baseline. \\
             Nal caso di una richiesta di flessibilità, la variazione è calcolata a partire dalla baseline.
+        }
+}
+\newglossaryentry{eoa}
+{
+    name={Externally Owned Account (EOA)},
+    first={Externally Owned Account (EOA)},
+    text={EOA},
+    plural={EOAs},
+    description={
+            Sono account della blockchain identificati da un indirizzo pubblico associato ad una chiave privata.
+            Chiunque sia in possesso della chiave privata è in grado di firmare transazioni a nome dell'account. \\
+            Per invocare un metodo di uno \gls{smart-contract}, è necessario che la transazione sia stata originata da un account EOA.
         }
 }

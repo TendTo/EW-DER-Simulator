@@ -5,6 +5,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage[italian]{babel}
 \usepackage{minted}
+\usepackage{titlesec} % Remove chapter header
 \usepackage{color}
 \usepackage{hyperref} % Extensive support for hypertext in LATEX (https://ctan.org/pkg/hyperref)
 \usepackage{csquotes}
@@ -42,3 +43,12 @@
 % Minted
 %%%%%%%%%%%%%%%%%%%%%%%%
 \setminted[solidity]{tabsize=2,breaklines,fontsize=\footnotesize}
+\setminted[typescript]{tabsize=2,breaklines,fontsize=\footnotesize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+% Remove chapter header
+%%%%%%%%%%%%%%%%%%%%%%%%
+\titleformat{\chapter}[display]{\normalfont\bfseries}{}{0pt}{\Huge}
+\newpagestyle{mystyle}
+{\sethead[\thepage][][\chaptertitle]{}{}{\thepage}}
+\pagestyle{mystyle}
