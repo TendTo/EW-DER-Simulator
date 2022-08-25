@@ -237,16 +237,18 @@
               <thead>
                 <tr>
                   <th>Start flexibility</th>
+                  <th>Number of IoT</th>
                   <th>Success Start</th>
                   <th>Success Flexibility</th>
-                  <th>Percentage difference requested - provided</th>
-                  <th>Success Reset to baseline</th>
+                  <th>Percentage difference</th>
+                  <th>Success Reset</th>
                 </tr>
               </thead>
               <tbody id="flexibilityLogTBody">
                 <!-- Log row template -->
                 <template id="flexibilityLogTemplate">
                   <tr>
+                    <td></td>
                     <td></td>
                     <td></td>
                     <td></td>
@@ -262,23 +264,27 @@
             <table style="grid-area: flexibilityTable">
               <thead>
                 <tr>
-                  <th>Totale</th>
+                  <th>Number of flexibilities</th>
+                  <th>Number of IoT</th>
                   <th>Success Start</th>
                   <th>Success Flexibility</th>
-                  <th>Percentage difference requested - provided</th>
-                  <th>Success Reset to baseline</th>
+                  <th>Percentage difference</th>
+                  <th>Success Reset</th>
                   <th>Flexibility success</th>
                 </tr>
               </thead>
               <tbody id="totalFlexibilityTBody">
-                <tr>
-                  <td></td>
-                  <td></td>
-                  <td></td>
-                  <td></td>
-                  <td></td>
-                  <td></td>
-                </tr>
+                <template id="totalFlexibilityTemplate">
+                  <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                </template>
               </tbody>
             </table>
             <!-- End Flexibility table -->

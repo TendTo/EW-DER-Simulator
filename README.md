@@ -101,13 +101,12 @@ Other more specific options are available [here](https://docs.nethermind.io/neth
 - [x] Interazione con la blockchain Volta
 - [x] Registrazione di un agreement all'avvio
 - [x] Differenziare il numero di DER per tipologia
-- [ ] Aggiungere funzionalità di flessibilità
+- [x] Aggiungere funzionalità di flessibilità
 - [x] Aggiungere possibilità di imprevisti
-- [ ] Rimanere in attesa di Log di flessibilità
+- [x] Rimanere in attesa di Log di flessibilità
 - [x] Aggiungere la visualizzazione dei Log degli agreement
 - [x] Aggiungere scala temporale
 - [x] Aggiungere misura aggregata
-- [ ] Aggiungere label del singolo DER
 - [x] Aggiungere i pulsanti di chiusura della finestra
 - [ ] Verificare il fallimento di registrazioni degli agreement
 - [x] Aggiungere un sistema di notifiche frontend
@@ -121,9 +120,9 @@ Other more specific options are available [here](https://docs.nethermind.io/neth
 - [x] Log flessibilità: [2022-08-02T16:46:04.521] [DEBUG] flexibility - 0,25,97,95,95,1
 - [x] Average flexibility in percentuale
 - [x] Pause button
-- [ ] Zoom on flexibility
-- [ ] Invert flexibility flow
-- [ ] Optimize flexibility from typescript
+- [x] Zoom on flexibility
+- [x] Invert flexibility flow
+- [x] Optimize flexibility from typescript
 
 ## ⛏ Tools
 

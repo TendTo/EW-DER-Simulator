@@ -50,10 +50,11 @@ export type AgreementLogRow = {
 
 export type FlexibilityLogRow = {
   id: number;
+  nIoT: number;
   successStart: number;
   successReset: number;
   successFlexibility: number;
-  averageValue: number;
+  percentageDIfference: number;
   success: boolean;
 };
 

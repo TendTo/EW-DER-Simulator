@@ -369,7 +369,7 @@ export default class Aggregator implements ITickable {
 
       const flexibilityLogger = getLogger("flexibility");
       flexibilityLogger.log(
-        `${result.id},${result.successStart},${result.successFlexibility},${result.successReset},${result.averageValue},${result.success},`
+        `${result.id},${result.nIoT},${result.successStart},${result.successFlexibility},${result.successReset},${result.percentageDIfference},${result.success},`
       );
       IPCHandler.onFlexibilityEvent(result);
       this.logger.log(`Sending 'endFlexibilityRequest' command`);

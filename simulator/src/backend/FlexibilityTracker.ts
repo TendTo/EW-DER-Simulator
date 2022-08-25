@@ -1,4 +1,5 @@
-import FlexibilityResult, { ErrorCheck } from "./FlexibilityResult";
+import { FlexibilityLogRow } from "src/frontend/types";
+import FlexibilityResult from "./FlexibilityResult";
 import { IIoT } from "./iot";
 
 type IoTFlexibilityData = Record<string, FlexibilityResult>;
@@ -74,7 +75,7 @@ export default class FairFlexibilityTracker {
     return this.#iotTracker;
   }
   /**
-   * Format the flexibility results so that they can be used by the {@link Aggregator} 
+   * Format the flexibility results so that they can be used by the {@link Aggregator}
    * as parameters in the {@link AggregatorContract.endFlexibilityRequest} function.
    */
   public get contractResults(): FlexibilityResultData[] {
@@ -91,7 +92,7 @@ export default class FairFlexibilityTracker {
   /**
    * Format the flexibility results so that they can be displayed in the frontend.
    */
-  public get result() {
+  public get result(): FlexibilityLogRow {
     // Sum the values coming from each IoT
     const [succStart, succFlexibility, succReset, averageFlexibility] = Object.values(
       this.#iotTracker
@@ -109,10 +110,12 @@ export default class FairFlexibilityTracker {
     // Return the percentage of the values
     return {
       id: this.#startTimestamp,
+      nIoT: nIots,
       successStart: succStart / nIots,
       successReset: succReset / nIots,
       successFlexibility: succFlexibility / nIots,
-      averageValue: (averageFlexibility - this.flexibilityBaseline) / this.#flexibilityBaseline,
+      percentageDIfference:
+        (averageFlexibility - this.flexibilityBaseline) / this.#flexibilityBaseline,
       success:
         succStart / nIots >= 0.95 && succReset / nIots >= 0.95 && succFlexibility / nIots >= 0.95,
     };
