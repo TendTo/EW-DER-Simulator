@@ -1,0 +1,66 @@
+@startuml frontend-classes
+
+remove @unlinked
+skinparam Shadowing false
+
+class ButtonWrapper {
+    +loading(boolean)
+    +playing(boolean)
+    +pause()
+}
+
+class ChartWrapper {
+    +<<get/set>> title: string
+    +setup(ChartSetup)
+    +setBaseline(number)
+    +setStart(number)
+    +setData(List<number>, ?List<string|number>)
+    +shiftData(number, ?(string|number))
+    +shiftManyData(List<number>, ?List<string|number>)
+    +reset(?boolean)
+}
+
+class EventHandler {
+    -isPlaying: boolean
+    -nActiveDers: number
+    -addHandlers()
+    -avoidNumberScroll()
+    -onFlexibilityRequest()
+    -onStartLoading()
+    -onStopLoading()
+    -onStartSimulation()
+    -onStopSimulation()
+    -onNewAggregatedReading()
+    -onAggregatorBalance()
+    -onToast()
+    -onFlexibilityEvent()
+    -onAgreementEvent()
+    -onSetBaseline()
+    -onPauseResumeSimulator()
+}
+
+class FromWrapper {
+    +<<get>> blockchainData: BlockchainOptions
+    +<<get>> clockData: ClockOptions
+    +<<get>> flexibilityData: FlexibilityOptions
+    +<<get>> derVariationData: DerVariationOptions
+    -parseLocalDate(string)
+    +addSettingsFormOnSubmit(Function)
+    +addFlexibilityFormOnSubmit(Function)
+    +addDerFormOnSubmit(Function)
+}
+
+class TableManager {
+    +addAgreementLogRow(AgreementLogRow)
+    +addFlexibilityLogRow(FlexibilityLogRow)
+    +setTotalFlexibilityRow()
+    +resetTotalFlexibilityRow()
+    +addTotalFlexibilityRow()
+    +reset()
+}
+
+class ToastWrapper {
+    +show(string, ?ToastType, ?number)
+}
+
+@enduml

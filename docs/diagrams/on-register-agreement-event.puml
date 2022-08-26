@@ -1,10 +1,10 @@
 @startuml on-register-agreement-event
-title On RegisterAgreement Event
+' title On RegisterAgreement Event
 
 !include ./participants.puml
 
 'New RegisterAgreement event
-aggregator <- ewc ++ : **RegisterAgreement**
+aggregator <- ewc ++ : **RegisterAgreementEvent**
 aggregator -> aggregator : //updateBaseline//
 
 'Frontend
@@ -15,5 +15,6 @@ return <&check>
 ipc <- aggregator ++ : //onAgreementEvent//
 eh <- ipc : //onAgreementEvent//
 return <&check>
+deactivate aggregator
 
 @enduml

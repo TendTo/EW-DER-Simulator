@@ -1,3 +1,112 @@
-\section{Simulatore}
+\chapter{Simulatore}
 
-\subsection{}
+La parte più importante del progetto è stata verificare empiricamente e rapidamente le prestazioni di un architettura
+che affidi la gestione dell'energia ad un sistema distribuito \gls{blockchain}, utilizzando la testnet di \gls{ewc}, Volta.
+Per simulare rapidamente un gran numero di \gls{der} che fanno capo ad un \gls{aggregator} e fanno parte della sua rete,
+è stato realizzato un apposito simulatore.
+
+\section{Strumenti di sviluppo}
+
+L'applicazione è stata realizzata utilizzando il framework Electron \cite{sftw:electron}.
+Questa scelta ha permesso di realizzare un'applicazione che può essere facilmente esportata ed eseguita su qualsiasi dei moderni sistemi operativi
+Windows, MacOS o Linux.
+L'interazione con la \gls{blockchain} è veicolata attraverso la libreria ethers \cite{sftw:ethers}.
+La libreria chartjs \cite{sftw:chartjs} viene invece utilizzata per rappresentare il grafico dell'energia aggregata prodotta ad ogni intervallo.
+
+\section{Struttura dell'applicazione}
+
+Il framework Electron presenta due parti ben distinte e separate, il backend e il frontend.
+La struttura del progetto riflette fedelmente questa divisione.
+
+\subsection{Backend}
+
+Il backend è il cervello dell'applicazione, e si occupa di simulare le azioni dei \gls{der} e dell'\gls{aggregator} e le interazioni fra di loro (\autoref{dg:backend}). \\
+Alcune procedure prevedono che le comunicazioni passino attraverso la \gls{blockchain},
+chiamando un apposto metodo dello \gls{smart-contract} o un l'\gls{event-log} corrispondente.
+
+\include{diagrams/backend}
+
+Il passare del tempo all'interno della simulazione viene scandito dalla classe Clock, che richiama tutti i callback registrati ad ogni \textit{tick}.
+Tutti i \gls{der} producono l'energia prevista dall'\gls{agreement}, e l'\gls{aggregator} riceve un valore aggregato, che verrà visualizzato nel grafico. \\
+\\
+All'avvio della simulazione, l'\gls{aggregator} e il Clock vengono inizializzati con i parametri specificati dall'utente \autoref{cod:simulation-data}.
+L'aggregatore, a sua volta, utilizza la IoTFactory per inizializzare il corretto numero di IoT di ogni tipo. \\
+Ognuno di essi avrà una propria identità sulla \gls{blockchain}, caratterizzata dalla coppia di chiavi pubblica e privata.
+Inoltre, simulazioni successive assegneranno sempre la stessa identità ad ogni IoT dello stesso tipo nello stesso ordine.
+Il quinto IoT Solare, ad esempio, avrà sempre lo stesso indirizzo, così come il tredicesimo IoT Eolico, e saranno tutti diversi tra loro. \\
+\\
+
+\begin{minted}{yaml}
+    # chiave privata
+    SK: string 
+    # indirizzo del contratto
+    CONTRACT_ADDRESS: 0x384e79D871eA213768F4e91970032a04A7C55993 
+    # indirizzo del nodo rpc dei der
+    DER_RPC_URL: http://<ip>:<port> 
+    # indirizzo del nodo rpc dell'aggregatore
+    AGG_RPC_URL: http://<ip>:<port>
+    # numero di der solari
+    N_SOLAR: 1
+    # numero di der eolici
+    N_WIND: 1
+    # increment di tempo nella simulazione (sec)
+    TICK_INCREMENT: 1
+    # intervallo di tempo tra un tick e l'altro (sec)
+    TICK_INTERVAL: 1
+\end{minted}
+\captionof{listing}{lista dei parametri principali con cui può essere inizializzata la simulazione \label{cod:simulation-data}}
+
+La fase di setup (\autoref{dg:start-simulation-sequence}) prevede di interagire anche con la \gls{blockchain}.
+Dopo aver raccolto alcuni dati, l'\gls{aggregator} resetterà lo smart contract e invierà i fondi a ciascun \gls{der}, se tale opzione era stata selezionata. \\
+Se il setup si conclude correttamente, il grafico inizierà a mostrare i dati aggregati provenienti dai \gls{der}.
+Contemporaneamente, questi ultimi inizieranno a registrare il proprio \gls{agreement} attraverso lo \gls{smart-contract}. \\
+Quando l'\gls{aggregator} riceve l'\gls{event-log} corrispondente, la produzione dell'IoT corrispondente viene aggiunta a quella aggregata.
+Il periodo di registrazione presenta un ritardo variabile proporzionale al numero di \gls{der} utilizzati nella simulazione. \\
+\\
+
+\include{diagrams/start-simulation-sequence}
+
+La simulazione permette di inviare un segnale di richiesta di flessibilità (\autoref{dg:request-flexibility}), specificando di che percentuale la baseline deve essere alterata. \\
+Ricevuto il segnale, il'\gls{aggregator} invoca il metodo \texttt{requestFlexibility} dello \gls{smart-contract}. \\
+Dopo il ritardo dovuto alla normale funzionamento della \gls{blockchain},
+i \gls{der} verranno notificati della richiesta attraverso l'\gls{event-log},
+e provvederanno ad soddisfare la richiesta (\autoref{dg:on-request-flexibility-event}). \\
+Al termine della durata della flessibilità, gli IoT torneranno al loro regime abituale. \\
+Giunto alla fine del periodo di grazia per il ritorno alla baseline, dopo quindici minuti dal termine della flessibilità,
+l'\gls{aggregator} utilizzerà il metodo \texttt{endFlexibilityRequest} per registrare il risultato di ciascun \gls{der} che ha partecipato. \\
+I \gls{prosumer} avranno quindi l'occasione di reclamare la loro ricompensa (\autoref{dg:on-end-request-flexibility-event}),
+a patto che la flessibilità fornita rientri in un intervallo di tolleranza definito attorno al valore atteso e quello registrato in precedenza dall'\gls{aggregator}. \\
+
+\include{diagrams/request-flexibility}
+
+\subsection{Frontend}
+
+Il frontend consiste in una comune pagina web, che però è in grado di scambiare messaggi con il backend.
+Le componenti sono quelle che ci si potrebbe aspettare da questo tipo di applicativo:
+
+\begin{itemize}
+    \item una pagina html
+    \item pagine di stile css
+    \item script javascript
+\end{itemize}
+
+Quest'ultima parte è suddivisa in classi (\autoref{dg:frontend}) specializzate nella gestione dei dati da inviare o appena ricevuti. \\
+Tutti gli eventi passano dalla classe EventHandler, per poi venire smistati ed inviati al destinatario appropriato,
+ed è sempre a questa che i form di input e i bottoni si rivolgono quando viene registrato un input da parte di un utente. \\
+\\
+La schermata presentata all'utente (\autoref{fig:simulator-flexibility}) è composta da diverse sezioni:
+\begin{itemize}
+    \item a sinistra è presente il menù utilizzato per determinare i parametri della simulazione
+    \item in alto al centro c'è il grafico che verrà popolato dalle letture aggregate provenienti dai \gls{der}
+    \item in basso al centro una tabella elenca gli \gls{agreement} correttamente registrati dei \gls{der}
+    \item in alto a destra è presente il piccolo form che permette di avviare una richiesta di flessibilità
+    \item al centro a destra una tabella elenca i risultati delle flessibilità precedenti
+    \item in basso a destra una tabella elenca i risultati complessivi delle flessibilità precedenti
+\end{itemize}
+
+\include{diagrams/frontend}
+
+\begin{figure}[h]
+    \includegraphics[width=\textwidth]{img/SimulatorFlexibility.jpg}
+    \caption{Schermata del simulatore alla conclusione di un evento di flessibilità \label{fig:simulator-flexibility}}
+\end{figure}

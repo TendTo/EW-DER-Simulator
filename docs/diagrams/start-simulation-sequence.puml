@@ -1,5 +1,5 @@
 @startuml start-simulation-sequence
-title Start simulation Sequence
+' title Start simulation Sequence
 
 !include ./participants.puml
 
@@ -7,7 +7,7 @@ title Start simulation Sequence
 --> eh ++ : Start simulation button click
 eh -> eh : //onStartSimulation//
 note over eh : Get the parameters of the simulation from user input
-eh -> ipc -- : //startSimulation//
+eh -> ipc  : //startSimulation//
 
 'Backend
 activate ipc
@@ -49,5 +49,7 @@ aggregator -> clockl : //start//
 return <&check>
 return <&check>
 ipc -> ipc : //onStopLoading//
+return <&check>
+deactivate eh
 
 @enduml

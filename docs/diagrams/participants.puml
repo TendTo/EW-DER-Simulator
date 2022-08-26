@@ -76,19 +76,19 @@ skinparam participant {
 }
 
 box "Frontend" #FrontendColor
-participant  "<$electron,color=Blue>\nEvent Handler" as eh #FrontendColor
+participant  "Event Handler" as eh #FrontendColor
 end box
 box "Backend" #BackendColor
-participant "<$electron,color=Blue>\nIPC Handler" as ipc #BackendColor
-participant "<$clock,color=RosyBrown>\nClock" as clockl #BackendColor
-participant "<$ma_counter,color=Gray>\nTracker" as tracker #BackendColor
-participant "<$bolt,color=Orange>\nAggregator" as aggregator #BackendColor
-participant "<$ma_factory,color=DarkGray>\nIoT Factory" as factory #BackendColor
-participant "<$solar_panel,color=DarkGreen>\nIoT" as iot #BackendColor
-participant "<$clock,color=RosyBrown>\nClock" as clockr #BackendColor
+participant "IPC Handler" as ipc #BackendColor
+participant "Clock" as clockl #BackendColor
+participant "Tracker" as tracker #BackendColor
+participant "Aggregator" as aggregator #BackendColor
+participant "IoT Factory" as factory #BackendColor
+participant "IoT" as iot #BackendColor
+participant "Clock" as clockr #BackendColor
 end box
 box "Blockchain" #BlockchainColor
-participant "<$ew_logo,color=Purple>\nEW chain" as ewc #BlockchainColor
+participant "EW chain" as ewc #BlockchainColor
 end box
 
 @enduml

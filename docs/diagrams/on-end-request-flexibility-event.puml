@@ -1,12 +1,12 @@
 @startuml on-end-request-flexibility-event
-title On EndRequestFlexibility Event
+' title On EndRequestFlexibility Event
 
 !include ./participants.puml
 
-'New RequestFlexibility event for IoT
-iot <- ewc ++ : **RequestFlexibility**
+'New EndRequestFlexibility event for IoT
+iot <- ewc ++ : **EndRequestFlexibilityEvent**
 iot -> iot : //confirmProvidedFlexibility//
-iot -> ewc : //provideFlexibilityFair//
+iot -> ewc --: //provideFlexibilityFair//
 note over iot : Remove the **FlexibilityEvent**
 
 @enduml

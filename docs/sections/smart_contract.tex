@@ -109,8 +109,26 @@ event RewardProduction(address indexed prosumer, uint256 indexed timestamp, int2
 
 \section{Metodi principali}
 
-Di seguito sono elencati i metodi principali e il loro funzionamento.
-% \captionof{listing}{Metodo chiamato da un \gls{prosumer} che intende registrare un agreement con l'\gls{aggregator} \label{cod:registerAgreement}}
+Di seguito sono elencati i metodi principali e il loro funzionamento, definiti nell'interfaccia IAggregatorContract.
+
 \begin{minted}[fontsize=\footnotesize]{solidity}
-function registerAgreement(Agreement calldata _agreement) external
+function registerAgreement(Agreement calldata _agreement) external;
 \end{minted}
+\captionof{listing}{Metodo chiamato da un \gls{prosumer} che intende registrare un agreement con l'\gls{aggregator} \label{cod:registerAgreement}}
+
+\begin{minted}[fontsize=\footnotesize]{solidity}
+function requestFlexibility(uint256 _start, uint256 _end, int256 _flexibility) external;
+\end{minted}
+\captionof{listing}{Metodo chiamato dall'\gls{aggregator} quando è necessario richiedere della flessibilità alla rete \label{cod:requestFlexibility}}
+
+\begin{minted}[fontsize=\footnotesize]{solidity}
+function endFlexibilityRequest(uint256 _start, FlexibilityResult[] calldata _results) external;
+\end{minted}
+\captionof{listing}{Metodo chiamato dall'\gls{aggregator} quando la richiesta di flessibilità si e conclusa e si è ritornati alla baseline. \\
+  Vengono anche caricati i risultati registrati dall'\gls{aggregator}  \label{cod:endFlexibilityRequest}}
+
+\begin{minted}[fontsize=\footnotesize]{solidity}
+function provideFlexibilityFair(uint256 _start, int256 _flexibility) external;
+\end{minted}
+\captionof{listing}{Metodo chiamato dai \gls{prosumer}. La flessibilità dichiarata viene confrontata con quella attesa e quella registrata dall'\gls{aggregator}. \\
+  Se rientra nel margine di errore, il \gls{prosumer} viene ricompensato  \label{cod:provideFlexibilityFair}}

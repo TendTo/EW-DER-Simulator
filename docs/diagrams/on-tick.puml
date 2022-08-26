@@ -1,5 +1,5 @@
 @startuml on-tick
-title On Tick
+' title On Tick
 
 !include ./participants.puml
 
@@ -20,6 +20,8 @@ loop foreach IoTs callback in callbacks
     end
     return <&check>
 end
+deactivate iot
+deactivate clockr
 
 'On tick aggregator
 clockr -> aggregator ++ : //onTick//
@@ -37,6 +39,7 @@ alt the flexibility has ended
     eh <- ipc : //onFlexibilityEvent//
     return <&check>
     aggregator -> ewc : //endFlexibilityRequest//
+    deactivate aggregator
 end
 
 @enduml

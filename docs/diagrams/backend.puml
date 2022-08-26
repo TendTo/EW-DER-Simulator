@@ -1,0 +1,21 @@
+@startuml backend
+
+!include ./backend-classes.puml
+
+'Clock
+ITickable <|-- IoT
+ITickable <|-- Aggregator
+IoT --> Clock
+Aggregator --> Clock
+
+'IoT
+IIoT <|-- IoT
+IoT <|-- SolarIoT
+IoT <|-- WindIoT
+
+
+
+Aggregator -up-> IIoT
+
+
+@enduml

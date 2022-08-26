@@ -1,0 +1,131 @@
+@startuml backend-classes
+
+remove @unlinked
+skinparam Shadowing false
+
+interface IIoT {
+    +<<get>> production: number
+    +<<get>> expectedFlexibility: number
+    +<<get>> value: number
+    +<<get>> address: string
+    +<<get>> agreement: Agreement
+    +startProducing()
+    +stopProducing(sendLog: boolean): void;
+    +agreementStatus(registered: boolean): void;
+}
+
+abstract IoT {
+    -wallet: Wallet
+    +<<readonly>> agreement: Agreement
+    #{abstract}<<get>> minValue: number
+    #{abstract}<<get>> maxValue: number
+    #{abstract}<<get>> minCost: number
+    #{abstract}<<get>> maxCost: number
+    -registerAgreement()
+    -listenToEvents()
+    #shouldApplyFlexibility(number)
+    #provideFlexibility(BigNumber, BigNumber, BigNumber, RequestFlexibilityEvent)
+    #confirmProvidedFlexibility(BigNumber, BigNumber, BigNumber, EndRequestFlexibilityEvent)
+    #{abstract} rollForEvents(number)
+    #{abstract} produce(number): number
+    #{abstract} skipTick(): boolean
+    #{abstract} createAgreement(): Agreement
+    #{abstract} applyFlexibilityEvent(number, number): number
+    #{abstract} applyEvents(number, number): number
+    +setAgreementStatus(boolean)
+    +startProducing()
+    +stopProducing(?boolean)
+}
+
+class SolarIoT {
+
+}
+
+class WindIoT {
+
+}
+
+class Aggregator {
+    -iots: List<IIoT>
+    -wallet: Wallet
+    +<<readonly>> clock: Clock
+    +<<readonly>> tracker: FairFlexibilityTracker
+    +<<get>> iotLength: number
+    +<<get>> baseline: number
+    +<<get>> timestamp: number
+    +<<get>> gridFlexibility: number
+    -getNetworkInfo()
+    -resetContract()
+    -listenContractLogs()
+    -distributeFounds(List<IIoT>)
+    -onRegisterAgreement(string, Agreement, RegisterAgreementEvent)
+    -onReviseAgreement(string, Agreement, Agreement, RegisterAgreementEvent)
+    -onCancelAgreement(string, Agreement, RegisterAgreementEvent)
+    -checkStopTracker(number)
+    -updateBaseline()
+    +setupSimulation()
+    +requestFlexibility(FlexibilityOptions)
+    +startSimulation()
+    +stopSimulation()
+    +onIoTReading(IIoT, number)
+    +variateIoTs(DerVariationOptions)
+}
+
+class FairFlexibilityTracker {
+    +<<get>> tracked: IoTFlexibilityData
+    +<<get>> contractResults: List<FlexibilityResultData>
+    +<<get>> result: FlexibilityLogRow
+    +<<get>> isActive: boolean
+    +<<get>> flexibilityBaseline: number
+    +<<get>> flexibilityStart: number
+    +<<get>> flexibilityStop: number
+    +<<get>> flexibilityReset: number
+    +activate(FlexibilityActivationData)
+    +deactivate()
+    +parseReading(IIoT, number, number)
+    +hasEnded(number)
+}
+
+class FlexibilityResult {
+    +<<get>> value: number
+    +<<get>> average: number
+    +<<get>> intAverage: number
+    +<<get>> intervalError: boolean
+    +<<get>> startError: boolean
+    +<<get>> stopError: boolean
+    +<<get>> providingFlexibility: boolean
+    +addFlexibilityValue(number)
+    +addResetValue(number)
+    +startProvidingFlexibility()
+}
+
+class Clock {
+    +<<get>> timestamp: number
+    +<<get>> season: Season
+    +<<get>> month: number
+    +<<get>> day: number
+    +<<get>> hour: number
+    +<<get>> minute: number
+    +<<get>> second: number
+    +<<get>> timestampString: number
+    +<<get>> tickIntervalsInOneHour: number
+    +start()
+    +stop()
+    +pauseResumeSimulation()
+    +addFunction(callback: TickCallback)
+    +removeFunction(callback: TickCallback)
+    +reset()
+    +tick()
+}
+
+class IoTFactory {
+    +{static} createIoTs(Aggregator, string, NumberOfDERs): List<IIoT>
+}
+
+interface ITickable {
+    +onTick(Clock, number)
+}
+
+
+
+@enduml
