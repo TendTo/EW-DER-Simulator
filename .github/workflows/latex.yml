@@ -1,0 +1,28 @@
+name: Latex CI
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "docs/**"
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: xu-cheng/latex-action@v2
+        with:
+          working_directory: docs
+          root_file: index.tex
+          post_compile: mv index.pdf Relazione_EW_Simulator.pdf
+          latexmk_shell_escape: true
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Relazione_EW_Simulator.pdf
+          path: docs/Relazione_EW_Simulator.pdf
