@@ -1,14 +1,14 @@
 \chapter{Smart Contract: ExamContract}
 
 Per la realizzazione dello \gls{smart-contract}, è stata utilizzata la piattaforma \gls{ewc}.
-Il contratto è stato scritto in Solidity, il linguaggio di programmazione orientato agli oggetti, più diffuso per l'implementazione di contratti su varie piattaforme blockchain tra cui Ethereum. \\
+Il contratto è stato scritto in Solidity, il linguaggio di programmazione orientato agli oggetti, più diffuso per l'implementazione di \gls{smart-contract} su piattaforme blockchain basate su Ethereum. \\
 
 \section{Funzionalità}
 Lo \gls{smart-contract} ha come scopo quello di tenere traccia del bilancio di tutti i \gls{prosumer} che fanno riferimento all'\gls{aggregator} che lo ha rilasciato su \gls{ewc}. \\
 Ogni \gls{prosumer} sottoscrive un \gls{agreement} con l'\gls{aggregator}, stabilendo i termini della loro collaborazione.
 Sono parte di questo accordo la fonte energetica utilizzata, la quantità di energia prodotta e il suo prezzo, e la flessibilità che il \gls{prosumer} è in grado di fornire. \\
 In qualsiasi momento il \gls{prosumer} è in grado di avviare un evento di flessibilità.
-L'\gls{event-log} emesso nel momento in cui il metodo predisposto viene invocato avvisa tutti i \gls{der} della richiesta,
+L'\gls{event-log}, emesso nel momento in cui il metodo predisposto viene invocato, notifica tutti i \gls{der} della richiesta,
 ed ognuno di essi reagirà a quest'ultima nei termini del proprio \gls{agreement}. \\
 Ogni richiesta è caratterizzata dai seguenti valori:
 \begin{itemize}
@@ -20,18 +20,18 @@ Non ci possono essere due richieste di flessibilità contemporanee.
 
 \section{Sviluppo dello smart contract}
 
-Lo sviluppo dello smart contract è stato realizzato utilizzando una pletora di framework e librerie open source.
+Lo sviluppo dello smart contract è stato realizzato utilizzando molti framework e librerie open source.
 
 \subsection{Strumenti di sviluppo}
 
-Lo sviluppo dello \gls{smart-contract} si è svolto in locale, utilizzando il framework hardhat \cite{sftw:hardhat}.
-Si tratta di un ambiente di sviluppo per \gls{smart-contract} dotato di moltissimi componenti
+Lo sviluppo dello \gls{smart-contract} si è svolto in locale, utilizzando il framework hardhat \cite{sftw:hardhat},
+un ambiente di sviluppo per \gls{smart-contract} dotato di moltissimi componenti
 che consentono di svolgere operazioni come il debugging, la compilazione e il testing di \gls{smart-contract}. \\
 Una feature aggiuntiva realizzata dal plugin \href{https://www.npmjs.com/package/@typechain/hardhat}{@typechain/hardhat} \cite{sftw:typechain_hardhat} è la creazione automatica di
 classi proxy e funzioni che descrivono accuratamente i metodi dello \gls{smart-contract},
 che è poi possibile importare ed utilizzare in qualsiasi file typescript, semplificando l'interazione con lo \gls{smart-contract}. \\
 \\
-hardhat si occupa anche del deployment dello \gls{smart-contract} su \gls{ewc}. \\
+hardhat include anche le funzionalità per rilasciare lo \gls{smart-contract} su \gls{ewc}. \\
 Fornendo una chiave privata associata ad un account con sufficiente credito e un nodo \gls{rpc-api} a cui collegarsi,
 è estremamente facile realizzare un semplice script (\autoref{cod:deployment}) che si occupi di distribuire lo \gls{smart-contract} sulla blockchain scelta.
 
@@ -40,11 +40,11 @@ Fornendo una chiave privata associata ad un account con sufficiente credito e un
 
 \subsection{Test}
 
-Il framework utilizzato mette a disposizione anche una serie di metodologie per poter testare facilmente e velocemente lo \gls{smart-contract}. \\
+Il framework utilizzato mette a disposizione anche una serie di librerie per un testing rapido e agevole dello \gls{smart-contract}. \\
 Utilizzando un'apposita estensione della libreria chai \cite{sftw:chai}, combinata con una blockchain simulata in locale da hardhat
 è possibile effettuare il deploy dello \gls{smart-contract} e verificare che tutti i suoi metodi si comportino come previsto. \\
-I test variano dal controllo del valore di ritorno del metodo invocato, al verificare che lo stato del contratto sia stato alterato nella maniera corretta,
-e anche assicurarsi che venga prodotta l'eccezione prevista su input invalidi. \\
+I test spaziano dal controllo del valore di ritorno del metodo invocato, alla verifica della corretta alterazione dello stato del contratto,
+assicurandosi inoltre che venga prodotta la dovuta eccezione in caso di input invalidi. \\
 Mettendo insieme tutti i test, è stata raggiunta una \href{https://app.codecov.io/gh/TendTo/EW-DER-Simulator}{notevole copertura} del codice \footnote{https://app.codecov.io/gh/TendTo/EW-DER-Simulator}. \\
 \\
 Segue qualche esempio di test utilizzato:
@@ -132,3 +132,34 @@ function provideFlexibilityFair(uint256 _start, int256 _flexibility) external;
 \end{minted}
 \captionof{listing}{Metodo chiamato dai \gls{prosumer}. La flessibilità dichiarata viene confrontata con quella attesa e quella registrata dall'\gls{aggregator}. \\
   Se rientra nel margine di errore, il \gls{prosumer} viene ricompensato  \label{cod:provideFlexibilityFair}}
+
+\section{Funzionamento dello smart contract}
+
+Lo \gls{smart-contract} \textit{AggregatorContract} implementa l'interfaccia \textit{IAggregatorContract}
+ed è l'unico \gls{smart-contract} che è necessario rilasciare sulla \gls{blockchain} per poter avviare la simulazione. \\
+Esso si occupa degli aspetti che riguardano la gestione del bilancio dei singoli prosumer
+e stando in ascolto degli \gls{event-log} che produce i \gls{prosumer} possono essere notificati riguardo ad una richiesta di flessibilità da parte dell'\gls{aggregator}. \\
+\\
+Le prime tre funzioni, \textit{registerAgreement}, \textit{reviseAgreement} e \textit{cancelAgreement} vengono invocate da un \gls{prosumer} che modificare il proprio \gls{agreement} con il \gls{prosumer}.
+Ciò include la creazione dell'\gls{agreement}, l'alterazione dei termini dello stesso o la sua cancellazione. \\
+Nello specifico, dopo aver controllato che l'operazione sia consentita, la struttura dati \textit{agreements} viene aggiornata,
+e il prosumer viene aggiunto o rimosso dalla lista \textit{prosumerList} e nel mapping \textit{prosumers}.
+\\
+L'\gls{aggregator} ha la possibilità di invocare il metodo \textit{requestFlexibility} per richiedere della flessibilità alla rete. \\
+Questo farà si che venga salvata una struttura dati con i parametri della richiesta quali inizio, fine e flessibilità.
+Al contempo, verrà anche emesso un \gls{event-log}.
+Tutti i \gls{der} in ascolto saranno notificati della richiesta, e potranno provvedere a soddisfarla. \\
+\\
+Al termine della richiesta, il \gls{aggregator} invocherà il metodo \textit{endFlexibilityRequest}, passando come parametro la lista dei risultati della richiesta che ha registrato.
+Dopo aver controllato che l'evento di flessibilità a cui ci riferisce è valido, i valori comunicati saranno salvati in una apposita struttura dati, per poter essere consultati in seguito,
+e l'\gls{event-log} \textit{EndRequestFlexibility} sarà emesso. \\
+\\
+Da questo momento in poi, i \gls{der} hanno la possibilità di invocare il metodo \textit{provideFlexibilityFair} per richiedere la loro ricompensa. \\
+Questa verrà aggiunta al loro bilancio a patto che il valore riportato sia coerente con quello comunicato dall'\gls{aggregator} al passaggio precedente. \\
+Un evento verrà emesso a seconda del risultato del controllo: \textit{FlexibilityProvisioningSuccess}, se l'operazione è stata un successo, \textit{FlexibilityProvisioningError} altrimenti \\
+\\
+Sono presenti anche alcune funzioni di utility per poter testare lo \gls{smart-contract} più facilmente.
+La funzione \textit{sendFunds} permette di ripartire la quantità di Volta inviata fra una lista di indirizzi,
+e viene utilizzata per inizializzare i \gls{der}.
+La funzione \textit{resetContract}, invece, azzera le strutture dati.
+Infine, la \textit{selfDestruct} rimuove lo \gls{smart-contract} dalla \gls{blockchain}.
