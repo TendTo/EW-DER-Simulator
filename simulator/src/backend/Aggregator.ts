@@ -22,8 +22,7 @@ import {
   ETHPerIoT,
   FlexibilityEndOffset,
   FlexibilityStartOffset,
-  maxFeePerGas,
-  maxPriorityFeePerGas,
+  gasPrice,
 } from "./constants";
 import { IIoT, IoTFactory } from "./iot";
 import IPCHandler from "./IPCHandler";
@@ -92,7 +91,7 @@ export default class Aggregator implements ITickable {
         flexibilityStart,
         flexibilityStop,
         Math.floor(this.#baseline + (this.#baseline * flexibilityValue) / 100),
-        { maxFeePerGas, maxPriorityFeePerGas }
+        { gasPrice }
       );
       IPCHandler.sendToast("Aggregator - Flexibility request sent", "success");
       this.logger.log("Flexibility request sent");
@@ -118,11 +117,7 @@ export default class Aggregator implements ITickable {
       // Send the funds to each IoT (arrayPromiseSplitter splits the array in chunks if it is too long)
       const tx = await arrayPromiseSplitter(
         (addresses: string[]) =>
-          this.contract.sendFunds(addresses, {
-            value: ETHPerIoT.mul(addresses.length),
-            maxFeePerGas,
-            maxPriorityFeePerGas,
-          }),
+          this.contract.sendFunds(addresses, { value: ETHPerIoT.mul(addresses.length), gasPrice }),
         iotList.map((iot) => iot.address)
       );
       await tx.wait();
@@ -160,7 +155,7 @@ export default class Aggregator implements ITickable {
     this.logger.log("Resetting smart contract");
     try {
       // Call the resetContract function and wait for the transaction to complete
-      const tx = await this.contract.resetContract({ maxFeePerGas, maxPriorityFeePerGas });
+      const tx = await this.contract.resetContract({ gasPrice });
       await tx.wait();
       this.logger.log("Contract resetted");
     } catch (e) {
@@ -384,11 +379,7 @@ export default class Aggregator implements ITickable {
       this.logger.log(`Sending 'endFlexibilityRequest' command`);
       // Call the endFlexibilityRequest function (arrayPromiseSplitter splits the array in chunks if it is too long)
       arrayPromiseSplitter(
-        (results) =>
-          this.contract.endFlexibilityRequest(start, results, {
-            maxFeePerGas,
-            maxPriorityFeePerGas,
-          }),
+        (results) => this.contract.endFlexibilityRequest(start, results, { gasPrice }),
         contractResults
       )
         .then(() => this.logger.log("Sent 'endFlexibilityRequest' command"))

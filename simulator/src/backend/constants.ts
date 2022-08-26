@@ -28,3 +28,4 @@ export const FlexibilityStartOffset = 15 * 60;
 export const FlexibilityEndOffset = 30 * 60;
 export const maxFeePerGas = ethers.utils.parseUnits("1.7", "gwei");
 export const maxPriorityFeePerGas = ethers.utils.parseUnits("1.6", "gwei");
+export const gasPrice = ethers.utils.parseUnits("25", "gwei");

@@ -6,7 +6,7 @@ import IIoT from "./IIoT";
 import { getLogger, Logger } from "log4js";
 import Clock from "../clock";
 import { PersonalEvent, FlexibilityEvent } from "./events";
-import { maxFeePerGas, maxPriorityFeePerGas, NodeErrors } from "../constants";
+import { gasPrice, NodeErrors } from "../constants";
 import IPCHandler from "../IPCHandler";
 import type {
   EndRequestFlexibilityEvent,
@@ -41,7 +41,7 @@ abstract class IoT implements IIoT {
     // Register the new agreement
     this.logger.log(`${this.address} - Sending agreement`);
     this.contract
-      .registerAgreement(this.agreement.struct, { maxFeePerGas, maxPriorityFeePerGas })
+      .registerAgreement(this.agreement.struct, { gasPrice })
       .then(() => this.logger.log(`${this.address} - Agreement Sent`))
       .catch((e) => {
         if (e.code === NodeErrors.UNPREDICTABLE_GAS_LIMIT) {
@@ -132,8 +132,7 @@ abstract class IoT implements IIoT {
       this.logger.log(`${this.address} - Sending 'provideFlexibilityFair'`);
       this.contract
         .provideFlexibilityFair(this.flexibilityEvent.start, this.flexibilityEvent.flexibility, {
-          maxFeePerGas,
-          maxPriorityFeePerGas,
+          gasPrice,
         })
         .then(() => this.logger.log(`${this.address} - Flexibility provided`))
         .catch((e) => this.logger.error(`${this.address} - Error providing flexibility`, e));
