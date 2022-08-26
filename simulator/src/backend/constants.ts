@@ -1,4 +1,4 @@
-import { BigNumber } from "ethers";
+import { BigNumber, ethers } from "ethers";
 
 export enum EnergySource {
   Battery,
@@ -26,3 +26,5 @@ export const MeteoEventProbability = 0;
 export const FlexibilityErrorMargin = 10;
 export const FlexibilityStartOffset = 15 * 60;
 export const FlexibilityEndOffset = 30 * 60;
+export const maxFeePerGas = ethers.utils.parseUnits("1.7", "gwei");
+export const maxPriorityFeePerGas = ethers.utils.parseUnits("1.6", "gwei");

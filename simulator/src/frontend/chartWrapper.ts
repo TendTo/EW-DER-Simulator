@@ -25,21 +25,20 @@ export default class ChartWrapper {
   private counter = 0;
   private maxDataPoints: number;
   private isFixed: boolean;
-  private callbacks: ((maxPoints: number) => void)[] = [];
 
-  public set data(newData: number[]) {
+  private set data(newData: number[]) {
     this.chart.data.datasets[0].data = newData;
   }
 
-  public get data(): number[] {
+  private get data(): number[] {
     return this.chart.data.datasets[0].data as number[];
   }
 
-  public set labels(newLabels: (number | string)[]) {
+  private set labels(newLabels: (number | string)[]) {
     this.chart.data.labels = newLabels;
   }
 
-  public get labels(): (number | string)[] {
+  private get labels(): (number | string)[] {
     return this.chart.data.labels as (number | string)[];
   }
 
@@ -53,24 +52,24 @@ export default class ChartWrapper {
     this.chart.options.plugins.title.text = title;
   }
 
-  public get baseline() {
+  private get baseline() {
     return this.chart.options.plugins.annotation.annotations["baseline"];
   }
 
-  public set maxY(y: number) {
+  private set maxY(y: number) {
     this.chart.options.scales.y.max = y;
   }
 
-  public set minY(y: number) {
+  private set minY(y: number) {
     this.chart.options.scales.y.min = y;
   }
 
-  public set baseline(newValue: number) {
+  private set baseline(newValue: number) {
     this.chart.options.plugins.annotation.annotations["baseline"].yMin = newValue;
     this.chart.options.plugins.annotation.annotations["baseline"].yMax = newValue;
   }
 
-  public set verticalLines(points: [number, number, number]) {
+  private set verticalLines(points: [number, number, number]) {
     const annotations = this.chart.options.plugins.annotation.annotations;
     annotations["startFlexibility"].xMax = points[0];
     annotations["startFlexibility"].xMin = points[0];
@@ -80,7 +79,7 @@ export default class ChartWrapper {
     annotations["restoreValue"].xMin = points[2];
   }
 
-  public set flexibilityBaseline(flexibilityBaseline: number) {
+  private set flexibilityBaseline(flexibilityBaseline: number) {
     this.chart.options.plugins.annotation.annotations["flexibilityBaseline"] = flexibilityBaseline
       ? {
           type: "line",
@@ -244,17 +243,5 @@ export default class ChartWrapper {
     this.data = [];
     this.counter = 0;
     if (update) this.chart.update();
-  }
-
-  public onMaxPointsReached() {
-    this.callbacks.forEach((callback) => callback(this.maxDataPoints));
-  }
-
-  public addCallback(callback: (maxPoints: number) => void) {
-    this.callbacks.push(callback);
-  }
-
-  public removeCallback(callback: (maxPoints: number) => void) {
-    this.callbacks = this.callbacks.filter((c) => c !== callback);
   }
 }

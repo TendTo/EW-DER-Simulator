@@ -6,7 +6,7 @@ import IIoT from "./IIoT";
 import { getLogger, Logger } from "log4js";
 import Clock from "../clock";
 import { PersonalEvent, FlexibilityEvent } from "./events";
-import { NodeErrors } from "../constants";
+import { maxFeePerGas, maxPriorityFeePerGas, NodeErrors } from "../constants";
 import IPCHandler from "../IPCHandler";
 import type {
   EndRequestFlexibilityEvent,
@@ -19,17 +19,15 @@ import type {
  * The readings it produces are instead sent directly to the aggregator.
  */
 abstract class IoT implements IIoT {
+  protected readonly logger: Logger = getLogger("iot");
   public readonly agreement: Agreement;
+  protected running: boolean = false;
   protected contract: AggregatorContract;
   protected wallet: Wallet;
-  protected running: boolean;
-  protected readonly logger: Logger;
   protected personalEvent: PersonalEvent;
   protected flexibilityEvent: FlexibilityEvent;
 
   protected constructor(protected aggregator: Aggregator, sk: string) {
-    this.logger = getLogger("iot");
-    this.running = false;
     this.wallet = new Wallet(sk, new providers.JsonRpcProvider(aggregator.derRpcUrl));
     this.agreement = this.createAgreement();
     this.contract = aggregator.contract.connect(this.wallet);
@@ -43,7 +41,7 @@ abstract class IoT implements IIoT {
     // Register the new agreement
     this.logger.log(`${this.address} - Sending agreement`);
     this.contract
-      .registerAgreement(this.agreement.struct)
+      .registerAgreement(this.agreement.struct, { maxFeePerGas, maxPriorityFeePerGas })
       .then(() => this.logger.log(`${this.address} - Agreement Sent`))
       .catch((e) => {
         if (e.code === NodeErrors.UNPREDICTABLE_GAS_LIMIT) {
@@ -61,7 +59,7 @@ abstract class IoT implements IIoT {
    * When a new agreement has been registered or cancelled, the aggregator will receive the event and change the state of the IoT accordingly.
    * @param registered whether the agreement has been registered and the {@link Aggregator.onRegisterAgreement} function has been called.
    */
-  public agreementStatus(registered: boolean) {
+  public setAgreementStatus(registered: boolean) {
     this.running = registered;
   }
   /**
@@ -101,7 +99,7 @@ abstract class IoT implements IIoT {
    * Stop the IoT from being active and producing readings at each tick.
    * @param cancelAgreement whether to cancel the agreement when stopping the production
    */
-  public stopProducing(cancelAgreement: boolean) {
+  public stopProducing(cancelAgreement?: boolean) {
     this.running = false;
     this.aggregator.clock.removeFunction(this.onTick);
     if (cancelAgreement) this.contract.cancelAgreement();
@@ -133,7 +131,10 @@ abstract class IoT implements IIoT {
     if (this.flexibilityEvent && this.flexibilityEvent.start === start.toNumber()) {
       this.logger.log(`${this.address} - Sending 'provideFlexibilityFair'`);
       this.contract
-        .provideFlexibilityFair(this.flexibilityEvent.start, this.flexibilityEvent.flexibility)
+        .provideFlexibilityFair(this.flexibilityEvent.start, this.flexibilityEvent.flexibility, {
+          maxFeePerGas,
+          maxPriorityFeePerGas,
+        })
         .then(() => this.logger.log(`${this.address} - Flexibility provided`))
         .catch((e) => this.logger.error(`${this.address} - Error providing flexibility`, e));
       this.flexibilityEvent = null;

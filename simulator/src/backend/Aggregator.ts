@@ -17,7 +17,14 @@ import {
   NumberOfDERs,
 } from "../module";
 import Clock from "./clock";
-import { EnergySource, ETHPerIoT, FlexibilityEndOffset, FlexibilityStartOffset } from "./constants";
+import {
+  EnergySource,
+  ETHPerIoT,
+  FlexibilityEndOffset,
+  FlexibilityStartOffset,
+  maxFeePerGas,
+  maxPriorityFeePerGas,
+} from "./constants";
 import { IIoT, IoTFactory } from "./iot";
 import IPCHandler from "./IPCHandler";
 import ITickable from "./ITickable";
@@ -84,7 +91,8 @@ export default class Aggregator implements ITickable {
       const tx = await this.contract.requestFlexibility(
         flexibilityStart,
         flexibilityStop,
-        Math.floor(this.#baseline + (this.#baseline * flexibilityValue) / 100)
+        Math.floor(this.#baseline + (this.#baseline * flexibilityValue) / 100),
+        { maxFeePerGas, maxPriorityFeePerGas }
       );
       IPCHandler.sendToast("Aggregator - Flexibility request sent", "success");
       this.logger.log("Flexibility request sent");
@@ -112,7 +120,8 @@ export default class Aggregator implements ITickable {
         (addresses: string[]) =>
           this.contract.sendFunds(addresses, {
             value: ETHPerIoT.mul(addresses.length),
-            gasLimit: 8000000,
+            maxFeePerGas,
+            maxPriorityFeePerGas,
           }),
         iotList.map((iot) => iot.address)
       );
@@ -151,7 +160,7 @@ export default class Aggregator implements ITickable {
     this.logger.log("Resetting smart contract");
     try {
       // Call the resetContract function and wait for the transaction to complete
-      const tx = await this.contract.resetContract();
+      const tx = await this.contract.resetContract({ maxFeePerGas, maxPriorityFeePerGas });
       await tx.wait();
       this.logger.log("Contract resetted");
     } catch (e) {
@@ -177,7 +186,7 @@ export default class Aggregator implements ITickable {
   ) {
     if (event.blockNumber < this.blockNumber) return;
     // Activate the IoT that sent the event
-    this.iots.find((iot) => iot.address === prosumer).agreementStatus(true);
+    this.iots.find((iot) => iot.address === prosumer).setAgreementStatus(true);
     // Update the baseline with the new event
     this.updateBaseline();
     IPCHandler.onAgreementEvent({
@@ -228,7 +237,7 @@ export default class Aggregator implements ITickable {
   ) {
     if (event.blockNumber < this.blockNumber) return;
     // Deactivate the IoT that sent the event
-    this.iots.find((iot) => iot.address === prosumer).agreementStatus(false);
+    this.iots.find((iot) => iot.address === prosumer).setAgreementStatus(false);
     // Update the baseline removing the old agreement
     this.updateBaseline();
     IPCHandler.onAgreementEvent({
@@ -375,7 +384,11 @@ export default class Aggregator implements ITickable {
       this.logger.log(`Sending 'endFlexibilityRequest' command`);
       // Call the endFlexibilityRequest function (arrayPromiseSplitter splits the array in chunks if it is too long)
       arrayPromiseSplitter(
-        (results) => this.contract.endFlexibilityRequest(start, results, { gasLimit: 8000000 }),
+        (results) =>
+          this.contract.endFlexibilityRequest(start, results, {
+            maxFeePerGas,
+            maxPriorityFeePerGas,
+          }),
         contractResults
       )
         .then(() => this.logger.log("Sent 'endFlexibilityRequest' command"))

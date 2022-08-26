@@ -12,5 +12,5 @@ export default interface IIoT extends ITickable {
 
   stopProducing(sendLog: boolean): void;
 
-  agreementStatus(registered: boolean): void;
+  setAgreementStatus(registered: boolean): void;
 }
