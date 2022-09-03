@@ -62,13 +62,15 @@ contract AggregatorContract is IAggregatorContract {
         if (_agreement.value == 0) revert ZeroValueError("value");
         // Just to make sure not to add the same address twice. This would be prevented by the modifier
         if (agreements[msg.sender].value == 0) {
+            // Register the prosumer in the list of prosumers
             prosumers[msg.sender].idx = prosumerList.length;
             prosumerList.push(msg.sender);
         } else {
             energyBalance -= agreements[msg.sender].value;
         }
-
+        // Set the agreement
         agreements[msg.sender] = _agreement;
+        // Change the energy balance
         energyBalance += _agreement.value;
 
         emit RegisterAgreement(msg.sender, _agreement);
@@ -76,18 +78,22 @@ contract AggregatorContract is IAggregatorContract {
 
     function reviseAgreement(Agreement calldata _agreement) external agreementExists(msg.sender) {
         if (_agreement.value == 0) revert ZeroValueError("value");
-
         emit ReviseAgreement(msg.sender, agreements[msg.sender], _agreement);
+
+        // Update the energy balance, removing the old value and adding the new one
         energyBalance += _agreement.value - agreements[msg.sender].value;
+        // Change the agreement 
         agreements[msg.sender] = _agreement;
     }
 
     function cancelAgreement() external agreementExists(msg.sender) {
         emit CancelAgreement(msg.sender, agreements[msg.sender]);
 
+        // Remove the prosumer from the list of prosumers
         removeProsumerFromList(msg.sender);
-        energyBalance -= agreements[msg.sender].value;
         delete agreements[msg.sender];
+        // Remove the agreement
+        energyBalance -= agreements[msg.sender].value;
     }
 
     function requestFlexibility(
@@ -96,16 +102,20 @@ contract AggregatorContract is IAggregatorContract {
         int256 _gridFlexibility
     ) external isAggregator {
         emit RequestFlexibility(_start, _end, _gridFlexibility);
+
+        // Create a FlexibilityRequest struct, so the parameters can be accessed by future requests
         flexibilityRequest = FlexibilityRequest(_start, _end, _gridFlexibility);
     }
 
     function endFlexibilityRequest(uint256 _start, FlexibilityResult[] calldata _results)
         external
         isAggregator
-    {
+    {   
+        // Check if the request is still valid
         if (flexibilityRequest.start != _start)
             revert FlexibilityRequestNotFoundError(flexibilityRequest.start, _start);
 
+        // Store the results
         for (uint256 i = 0; i < _results.length; i++) {
             flexibilityResults[_results[i].prosumer] = _results[i].flexibility;
         }
@@ -185,6 +195,7 @@ contract AggregatorContract is IAggregatorContract {
      * whose address is in the list.
      */
     function sendFunds(address payable[] calldata iotAddr) external payable {
+        // Value to send to each iot
         uint256 singleValue = msg.value / iotAddr.length;
         for (uint256 i = 0; i < iotAddr.length; i++) {
             iotAddr[i].transfer(singleValue);

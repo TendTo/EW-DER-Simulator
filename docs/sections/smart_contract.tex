@@ -112,26 +112,174 @@ event RewardProduction(address indexed prosumer, uint256 indexed timestamp, int2
 Di seguito sono elencati i metodi principali e il loro funzionamento, definiti nell'interfaccia IAggregatorContract.
 
 \begin{minted}[fontsize=\footnotesize]{solidity}
-function registerAgreement(Agreement calldata _agreement) external;
+function registerAgreement(Agreement calldata _agreement)
+  external
+  agreementDoesNotExist(msg.sender)
+{
+  if (_agreement.value == 0) revert ZeroValueError("value");
+  // Just to make sure not to add the same address twice. This would be prevented by the modifier
+  if (agreements[msg.sender].value == 0) {
+      // Register the prosumer in the list of prosumers
+      prosumers[msg.sender].idx = prosumerList.length;
+      prosumerList.push(msg.sender);
+  } else {
+      energyBalance -= agreements[msg.sender].value;
+  }
+  // Set the agreement
+  agreements[msg.sender] = _agreement;
+  // Change the energy balance
+  energyBalance += _agreement.value;
+
+  emit RegisterAgreement(msg.sender, _agreement);
+}
 \end{minted}
-\captionof{listing}{Metodo chiamato da un \gls{prosumer} che intende registrare un agreement con l'\gls{aggregator} \label{cod:registerAgreement}}
+\captionof{listing}{Metodo chiamato da un \gls{prosumer} che intende registrare un \gls{agreement} con l'\gls{aggregator} \label{cod:registerAgreement}}
 
 \begin{minted}[fontsize=\footnotesize]{solidity}
-function requestFlexibility(uint256 _start, uint256 _end, int256 _flexibility) external;
+function reviseAgreement(Agreement calldata _agreement) external agreementExists(msg.sender) {
+  if (_agreement.value == 0) revert ZeroValueError("value");
+  emit ReviseAgreement(msg.sender, agreements[msg.sender], _agreement);
+
+  // Update the energy balance, removing the old value and adding the new one
+  energyBalance += _agreement.value - agreements[msg.sender].value;
+  // Change the agreement 
+  agreements[msg.sender] = _agreement;
+}
+\end{minted}
+\captionof{listing}{Metodo chiamato da un \gls{prosumer} che intende modificare il proprio \gls{agreement} \label{cod:reviseAgreement}}
+
+\begin{minted}[fontsize=\footnotesize]{solidity}
+function cancelAgreement() external agreementExists(msg.sender) {
+  emit CancelAgreement(msg.sender, agreements[msg.sender]);
+
+  // Remove the prosumer from the list of prosumers
+  removeProsumerFromList(msg.sender);
+  delete agreements[msg.sender];
+  // Remove the agreement
+  energyBalance -= agreements[msg.sender].value;
+}
+\end{minted}
+\captionof{listing}{Metodo chiamato da un \gls{prosumer} che intende annullare il proprio \gls{agreement} \label{cod:cancelAgreement}}
+
+\begin{minted}[fontsize=\footnotesize]{solidity}
+function requestFlexibility(
+  uint256 _start,
+  uint256 _end,
+  int256 _gridFlexibility
+) external isAggregator {
+  emit RequestFlexibility(_start, _end, _gridFlexibility);
+
+  // Create a FlexibilityRequest struct, so the parameters can be accessed by future requests
+  flexibilityRequest = FlexibilityRequest(_start, _end, _gridFlexibility);
+}
 \end{minted}
 \captionof{listing}{Metodo chiamato dall'\gls{aggregator} quando è necessario richiedere della flessibilità alla rete \label{cod:requestFlexibility}}
 
 \begin{minted}[fontsize=\footnotesize]{solidity}
-function endFlexibilityRequest(uint256 _start, FlexibilityResult[] calldata _results) external;
+function endFlexibilityRequest(uint256 _start, FlexibilityResult[] calldata _results)
+  external
+  isAggregator
+{   
+  // Check if the request is still valid
+  if (flexibilityRequest.start != _start)
+      revert FlexibilityRequestNotFoundError(flexibilityRequest.start, _start);
+
+  // Store the results
+  for (uint256 i = 0; i < _results.length; i++) {
+      flexibilityResults[_results[i].prosumer] = _results[i].flexibility;
+  }
+
+  emit EndRequestFlexibility(
+      flexibilityRequest.start,
+      flexibilityRequest.end,
+      flexibilityRequest.gridFlexibility
+  );
+}
 \end{minted}
 \captionof{listing}{Metodo chiamato dall'\gls{aggregator} quando la richiesta di flessibilità si e conclusa e si è ritornati alla baseline. \\
   Vengono anche caricati i risultati registrati dall'\gls{aggregator}  \label{cod:endFlexibilityRequest}}
 
 \begin{minted}[fontsize=\footnotesize]{solidity}
-function provideFlexibilityFair(uint256 _start, int256 _flexibility) external;
+function provideFlexibilityFair(uint256 _start, int256 _flexibility)
+  external
+  agreementExists(msg.sender)
+{
+  if (_flexibility == 0) revert ZeroValueError("flexibility");
+  if (flexibilityRequest.start != _start)
+      revert FlexibilityRequestNotFoundError(flexibilityRequest.start, _start);
+
+  // Each prosumer is expected to provide a flexibility proportional
+  // to the value it normally provides.
+  int256 reward = 0;
+  int256 expectedValue = (flexibilityRequest.gridFlexibility * agreements[msg.sender].value) /
+      energyBalance;
+  int256 result = flexibilityResults[msg.sender];
+
+  if (result == 0) {
+      // An error has occurred in the provisioning process.
+  } else if (_start != flexibilityRequest.start) {
+      // The prosumer didn't request a reward for this flexibility request
+  } else if (
+      inErrorMargin(_flexibility, result, flexibilityMargin) &&
+      inErrorMargin(_flexibility, expectedValue, flexibilityMargin)
+  ) {
+      // The prosumer will receive the reward
+      reward = agreements[msg.sender].flexibilityPrice * result;
+      emit FlexibilityProvisioningSuccess(
+          flexibilityRequest.start,
+          msg.sender,
+          result,
+          reward
+      );
+  } else {
+      // The flexibility provided does not match the one requested
+      // or the one actually provided
+      emit FlexibilityProvisioningError(
+          flexibilityRequest.start,
+          msg.sender,
+          result,
+          _flexibility,
+          expectedValue
+      );
+  }
+
+  // Assign the reward to the prosumer and delete the result
+  prosumers[msg.sender].balance += reward;
+  delete flexibilityResults[msg.sender];
+}
 \end{minted}
 \captionof{listing}{Metodo chiamato dai \gls{prosumer}. La flessibilità dichiarata viene confrontata con quella attesa e quella registrata dall'\gls{aggregator}. \\
   Se rientra nel margine di errore, il \gls{prosumer} viene ricompensato  \label{cod:provideFlexibilityFair}}
+
+\begin{minted}[fontsize=\footnotesize]{solidity}
+function sendFunds(address payable[] calldata iotAddr) external payable {
+  // Value to send to each iot
+  uint256 singleValue = msg.value / iotAddr.length;
+  for (uint256 i = 0; i < iotAddr.length; i++) {
+      iotAddr[i].transfer(singleValue);
+  }
+}
+\end{minted}
+\captionof{listing}{Metodo utilizzado dall'\gls{aggregator} nella fase di setup della simulazione per inviare i fondi ai \gls{prosumer} \label{cod:sendFunds}}
+
+\begin{minted}[fontsize=\footnotesize]{solidity}
+function resetContract() external isAggregator {
+  energyBalance = 0;
+  for (uint256 i = 0; i < prosumerList.length; i++) {
+      delete agreements[prosumerList[i]];
+  }
+  delete prosumerList;
+  delete flexibilityRequest;
+}
+\end{minted}
+\captionof{listing}{Metodo utilizzado dall'\gls{aggregator} per resettare il contratto fra le simulazioni \label{cod:resetContract}}
+
+\begin{minted}[fontsize=\footnotesize]{solidity}
+function selfDestruct() external isAggregator {
+  selfdestruct(payable(aggregator));
+}
+\end{minted}
+\captionof{listing}{Metodo utilizzado dall'\gls{aggregator} eliminare il contratto \label{cod:selfDestruct}}
 
 \section{Funzionamento dello smart contract}
 
@@ -140,26 +288,26 @@ ed è l'unico \gls{smart-contract} che è necessario rilasciare sulla \gls{block
 Esso si occupa degli aspetti che riguardano la gestione del bilancio dei singoli prosumer
 e stando in ascolto degli \gls{event-log} che produce i \gls{prosumer} possono essere notificati riguardo ad una richiesta di flessibilità da parte dell'\gls{aggregator}. \\
 \\
-Le prime tre funzioni, \textit{registerAgreement}, \textit{reviseAgreement} e \textit{cancelAgreement} vengono invocate da un \gls{prosumer} che modificare il proprio \gls{agreement} con il \gls{prosumer}.
+Le prime tre funzioni, \textit{registerAgreement} (\autoref{cod:registerAgreement}), \textit{reviseAgreement} (\autoref{cod:reviseAgreement}) e \textit{cancelAgreement} (\autoref{cod:cancelAgreement}) vengono invocate da un \gls{prosumer} che modificare il proprio \gls{agreement} con il \gls{prosumer}.
 Ciò include la creazione dell'\gls{agreement}, l'alterazione dei termini dello stesso o la sua cancellazione. \\
 Nello specifico, dopo aver controllato che l'operazione sia consentita, la struttura dati \textit{agreements} viene aggiornata,
 e il prosumer viene aggiunto o rimosso dalla lista \textit{prosumerList} e nel mapping \textit{prosumers}.
 \\
-L'\gls{aggregator} ha la possibilità di invocare il metodo \textit{requestFlexibility} per richiedere della flessibilità alla rete. \\
+L'\gls{aggregator} ha la possibilità di invocare il metodo \textit{requestFlexibility} (\autoref{cod:requestFlexibility}) per richiedere della flessibilità alla rete. \\
 Questo farà si che venga salvata una struttura dati con i parametri della richiesta quali inizio, fine e flessibilità.
 Al contempo, verrà anche emesso un \gls{event-log}.
 Tutti i \gls{der} in ascolto saranno notificati della richiesta, e potranno provvedere a soddisfarla. \\
 \\
-Al termine della richiesta, il \gls{aggregator} invocherà il metodo \textit{endFlexibilityRequest}, passando come parametro la lista dei risultati della richiesta che ha registrato.
+Al termine della richiesta, il \gls{aggregator} invocherà il metodo \textit{endFlexibilityRequest} (\autoref{cod:endFlexibilityRequest}), passando come parametro la lista dei risultati della richiesta che ha registrato.
 Dopo aver controllato che l'evento di flessibilità a cui ci riferisce è valido, i valori comunicati saranno salvati in una apposita struttura dati, per poter essere consultati in seguito,
 e l'\gls{event-log} \textit{EndRequestFlexibility} sarà emesso. \\
 \\
-Da questo momento in poi, i \gls{der} hanno la possibilità di invocare il metodo \textit{provideFlexibilityFair} per richiedere la loro ricompensa. \\
+Da questo momento in poi, i \gls{der} hanno la possibilità di invocare il metodo \textit{provideFlexibilityFair} (\autoref{cod:provideFlexibilityFair}) per richiedere la loro ricompensa. \\
 Questa verrà aggiunta al loro bilancio a patto che il valore riportato sia coerente con quello comunicato dall'\gls{aggregator} al passaggio precedente. \\
 Un evento verrà emesso a seconda del risultato del controllo: \textit{FlexibilityProvisioningSuccess}, se l'operazione è stata un successo, \textit{FlexibilityProvisioningError} altrimenti \\
 \\
 Sono presenti anche alcune funzioni di utility per poter testare lo \gls{smart-contract} più facilmente.
-La funzione \textit{sendFunds} permette di ripartire la quantità di Volta inviata fra una lista di indirizzi,
+La funzione \textit{sendFunds} (\autoref{cod:sendFunds}) permette di ripartire la quantità di Volta inviata fra una lista di indirizzi,
 e viene utilizzata per inizializzare i \gls{der}.
-La funzione \textit{resetContract}, invece, azzera le strutture dati.
-Infine, la \textit{selfDestruct} rimuove lo \gls{smart-contract} dalla \gls{blockchain}.
+La funzione \textit{resetContract} (\autoref{cod:resetContract}), invece, azzera le strutture dati.
+Infine, la \textit{selfDestruct} (\autoref{cod:selfDestruct}) rimuove lo \gls{smart-contract} dalla \gls{blockchain}.

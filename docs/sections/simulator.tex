@@ -70,7 +70,7 @@ La simulazione permette di inviare un segnale di richiesta di flessibilità (\au
 Ricevuto il segnale, il'\gls{aggregator} invoca il metodo \texttt{requestFlexibility} dello \gls{smart-contract}. \\
 Dopo il ritardo dovuto alla normale funzionamento della \gls{blockchain},
 i \gls{der} verranno notificati della richiesta attraverso l'\gls{event-log},
-e provvederanno ad soddisfare la richiesta (\autoref{dg:on-request-flexibility-event}). \\
+e provvederanno a soddisfare la richiesta (\autoref{dg:on-request-flexibility-event}). \\
 Al termine della durata della flessibilità, gli IoT torneranno al loro regime abituale. \\
 Giunto alla fine del periodo di grazia per il ritorno alla baseline, dopo quindici minuti dal termine della flessibilità,
 l'\gls{aggregator} utilizzerà il metodo \texttt{endFlexibilityRequest} per registrare il risultato di ciascun \gls{der} che ha partecipato. \\
@@ -78,6 +78,10 @@ I \gls{prosumer} avranno quindi l'occasione di reclamare la loro ricompensa (\au
 a patto che la flessibilità fornita rientri in un intervallo di tolleranza definito attorno al valore atteso e quello registrato in precedenza dall'\gls{aggregator}. \\
 
 \include{diagrams/request-flexibility}
+
+\include{diagrams/on-request-flexibility-event}
+
+\include{diagrams/on-end-request-flexibility-event}
 
 \subsection{Frontend}
 

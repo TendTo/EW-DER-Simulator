@@ -63,6 +63,7 @@ sprite $ew_logo [48x48/16] {
 !define BlockchainColor WhiteSmoke
 
 hide unlinked
+autonumber
 
 skinparam DefaultTextAlignment center
 skinparam MaxMessageSize 120

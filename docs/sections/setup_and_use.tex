@@ -53,4 +53,13 @@ Il resoconto della flessibilità sarà prodotto alla conclusione di quest'ultima
 Al fine di poter avere un'idea chiara del comportamento del simulatore e poter notare eventuali errori,
 è stato integrato un sistema di logging capillare.
 I log con livello di priorità \textit{INFO} o superiore sono stampati sulla console,
-ma è possibile consultare i log integrali o quelli specifici ad un certo componente dalla cartella \textit{simulator/logs}.
+ma è possibile consultare i log integrali o quelli specifici ad un certo componente dalla cartella \textit{simulator/logs}. \\
+Per visualizzare l'andamento delle varie simulazioni, è particolarmente indicativo consultare il file \textit{simulator/logs/flexibility.log}. \\
+
+Ogni riga conterrà i dati inerenti alla flessibilità nel formato:
+\begin{center}
+    {\scriptsize
+        \texttt{blockNumber,numberOfIoT,percentageSuccessStart,percentageSuccessFlexibility,percentageSuccessReset,\\
+        percentageDifferenceFromObjective,success}
+    }
+\end{center}
