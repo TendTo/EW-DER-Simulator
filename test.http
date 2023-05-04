@@ -1,4 +1,0 @@
-POST https://volta-rpc.energyweb.org
-Content-Type: application/json
-
-{"method":"eth_syncing","params":[],"id":1,"jsonrpc":"2.0"}   
